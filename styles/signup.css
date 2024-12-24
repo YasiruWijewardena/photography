@@ -1,0 +1,31 @@
+/* styles/Signup.css */
+
+.signup-page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .signup-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .signup-tabs button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    background-color: #eee;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .signup-tabs button.active {
+    background-color: #1d4ed8;
+    color: #fff;
+  }
+  
+  .signup-form {
+    /* Additional form styling */
+  }
+  

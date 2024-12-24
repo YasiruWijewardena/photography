@@ -1,0 +1,257 @@
+.ReactModal__Body--open .carousel-modal-overlay {
+    opacity: 1;
+  }
+  
+  .carousel-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 300ms ease-in-out;
+    z-index: 1000;
+  }
+  
+  .carousel-modal-content {
+    width: 80vw;
+    height: 80vh;
+    outline: none; /* remove default modal focus ring */
+    transition: width 300ms, height 300ms;
+  }
+  
+  .carousel-modal-content.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+  }
+  
+  .carousel-modal {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    /* overflow: hidden; no scrolling for the entire container */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+  
+  .carousel-modal.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    border-radius: 0;
+  }
+  
+  .image-gallery,.image-gallery-content, .image-gallery-slide-wrapper,.image-gallery-swipe, .image-gallery-slides, .image-gallery-slide {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* The main layout for each slide: image on the left, metadata on the right */
+  .slider-layout {
+    width: 100%;
+    height: 100%;
+    display: flex; /* side by side */
+    flex-direction: row;
+  }
+  
+  /* The image area takes up the majority of the width */
+  .slider-image-container {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  /* The actual image is fully contained, no scrolling required */
+  .carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  
+  /* The metadata panel is on the right side, can scroll if it’s tall */
+  .slider-metadata-panel {
+    flex: 0.7;
+    background: #fff;
+    overflow-y: auto;
+    padding: 20px;
+    box-sizing: border-box;
+    height: fit-content;
+    border-radius: 0 20px 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: auto;
+  }
+  
+  .slider-metadata-panel ul {
+    list-style: none;
+    line-height: 1em;
+    display: grid;
+    padding: 0;
+  }
+  
+  .slider-metadata-panel ul li{
+    padding: 20px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;;
+    margin-bottom: 20px;
+    border-radius: 20px;
+  }
+  
+  .slider-metadata-panel ul li span {
+    display: block;
+  }
+  
+  .image-gallery-left-nav .image-gallery-svg, .image-gallery-right-nav .image-gallery-svg {
+    height: 40px!important;
+    width: 40px!important;
+  }
+  
+  .image-gallery-icon:hover {
+    color: #ffffff!important;
+  }
+  
+  .image-gallery-left-nav, .image-gallery-right-nav {
+    bottom: 0!important;
+    top: auto!important;
+    padding: 0!important;
+  }
+  
+  .carousel-modal .image-gallery-left-nav {
+    left: -50px!important;
+  }
+  
+  .carousel-modal .image-gallery-right-nav  {
+    right: -50px!important;
+  }
+  
+  .carousel-modal.fullscreen .image-gallery-left-nav {
+    left: 0!important;
+  }
+  
+  .carousel-modal.fullscreen .image-gallery-right-nav  {
+    right: 0!important;
+  }
+
+  .gallery-btn-container {
+    z-index: 999999;
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .modal-close-button {
+   margin-right: 20px;
+   margin-left: 20px;
+   background: none;
+   border: 0;
+   outline: unset;
+   cursor: pointer;
+  }
+  
+  /* .gallery-btn-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1001; 
+    opacity: 0.8; 
+  } */
+  
+  .fullscreen-toggle-button,
+  .gallery-close-button-container {
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: none;
+    position: absolute;
+  }
+  
+  .carousel-modal.fullscreen .fullscreen-toggle-button {
+    left: 0;
+  }
+  
+  .carousel-modal.fullscreen .gallery-close-button-container  {
+    right: 0;
+  }
+  
+  .fullscreen-toggle-button{
+    left: -50px
+  }
+  .gallery-close-button-container {
+    right: -50px;
+  }
+  
+  .gallery-close-button {
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    
+  }
+  
+  .open-fullscreen-toggle-button,
+  .close-fullscreen-toggle-button {
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    transform: scaleX(-1);
+    
+  }
+  
+  /* Ensure the carousel modal covers the entire screen in fullscreen */
+  .carousel-modal-content.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    border: none;
+  }
+  
+  .carousel-modal.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+  }
+  
+  /* Hide controls when not active */
+  .gallery-btn-container {
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .gallery-btn-container.hidden {
+    opacity: 0;
+  }
+  
+  /* Smooth transition for control visibility */
+  .gallery-btn-container {
+    opacity: 1;
+  }
+
+
+  .slider-photographer-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .photographer-profile-picture {
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .photographer-name-link {
+    font-size: 20px;
+    line-height: 1.7em;
+    font-family: "Parkinsans", serif;
+    color: black;
+    cursor: pointer;
+  }
