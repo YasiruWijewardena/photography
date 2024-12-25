@@ -1,8 +1,8 @@
 // pages/photographer/[id]/profile.js
 
 import { getSession } from 'next-auth/react';
-import PhotographerLayout from '../../../../components/PhotographerLayout';
-import prisma from '../../../../lib/prisma'; 
+import PhotographerLayout from '../../../components/PhotographerLayout';
+import prisma from '../../../lib/prisma'; 
 import PropTypes from 'prop-types';
 
 export default function ProfilePage({ photographer, isOwner }) {

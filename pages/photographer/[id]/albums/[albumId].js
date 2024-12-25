@@ -555,60 +555,660 @@
 //   return <PhotographerLayout>{page}</PhotographerLayout>;
 // };
 
-
 // pages/photographer/[id]/albums/[albumId].js
 
-// pages/photographer/[id]/albums/[albumId].js
-
-import { getSession } from 'next-auth/react'; // Ensure getSession is imported
-import prisma from '../../../../lib/prisma'; // Adjust the path as necessary
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../../../pages/api/auth/[...nextauth].js';
+import axios from '../../../../lib/axios';
+import Image from 'next/image';
+import Masonry from 'react-masonry-css';
+import Modal from 'react-modal';
 import PhotographerLayout from '../../../../components/PhotographerLayout';
-import AlbumDetail from '../../../../components/AlbumDetail'; // Ensure this component handles 'album.photographs' correctly
+import AddPhotosModal from '../../../../components/AddPhotosModal';
+import AssignPhotosModal from '../../../../components/AssignPhotosModal';
+import CreateAlbumModal from '../../../../components/CreateAlbumModal';
+import ImageGallery from 'react-image-gallery';
+import 'react-image-gallery/styles/css/image-gallery.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
+import CloseFullscreenRoundedIcon from '@mui/icons-material/CloseFullscreenRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+
+if (typeof window !== 'undefined') {
+  Modal.setAppElement('#__next');
+}
+
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.6, ease: [0.25, 0.8, 0.25, 1] },
+  },
+};
 
 export default function AlbumPage({ album, photographerId, isOwner }) {
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  // Safely initialize so we never get "undefined is not an object"
+  // Even if album is undefined, we default to an object with photographs: []
+  const [currentAlbum, setCurrentAlbum] = useState(
+    album || { photographs: [] }
+  );
+
+  const [loadingAlbum] = useState(false);
+
+  
+
+  // Edit mode states
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(currentAlbum.title || '');
+  const [editedDescription, setEditedDescription] = useState(
+    currentAlbum.description || ''
+  );
+
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
+
+  // Modals
+  const [isAddPhotosModalOpen, setIsAddPhotosModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [availableAlbums, setAvailableAlbums] = useState([]);
+  const [selectedTargetAlbum, setSelectedTargetAlbum] = useState(null);
+  const [loadingAvailableAlbums, setLoadingAvailableAlbums] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
+
+  // Carousel states
+  const [isCarouselOpen, setIsCarouselOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Auto-hide carousel controls
+  const [showControls, setShowControls] = useState(true);
+  const controlTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    setCurrentAlbum(album || { photographs: [] });
+
+     // Also reset edit-related states:
+    setIsEditMode(false);
+    setEditedTitle(album?.title || '');
+    setEditedDescription(album?.description || '');
+
+  }, [album]);
+
+  // Handle auto-hide of controls in fullscreen carousel
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () =>
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowControls(true);
+      if (controlTimeoutRef.current) {
+        clearTimeout(controlTimeoutRef.current);
+      }
+      controlTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000); // Hide after 3 seconds
+    };
+
+    if (isCarouselOpen) {
+      document.addEventListener('mousemove', handleMouseMove);
+      handleMouseMove(); // run once immediately
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      setShowControls(true);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (controlTimeoutRef.current) {
+        clearTimeout(controlTimeoutRef.current);
+      }
+    };
+  }, [isCarouselOpen]);
+
+  // ------------------------------
+  // Photo selection
+  // ------------------------------
+  const toggleSelectPhoto = (photoId) => {
+    setSelectedPhotoIds((prev) =>
+      prev.includes(photoId)
+        ? prev.filter((pid) => pid !== photoId)
+        : [...prev, photoId]
+    );
+  };
+
+  const handleExitEditMode = () => {
+    setIsEditMode(false);
+    // Reset to the latest data in currentAlbum
+    setEditedTitle(currentAlbum.title || '');
+    setEditedDescription(currentAlbum.description || '');
+  };
+
+  // ------------------------------
+  // Deleting photos (reflect in UI)
+  // ------------------------------
+  const handleDeletePhotos = async () => {
+    if (selectedPhotoIds.length === 0) return;
+    const confirmDelete = confirm(
+      'Are you sure you want to permanently delete the selected photos?'
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete('/api/photographs', {
+        data: { photoIds: selectedPhotoIds },
+      });
+      alert('Selected photos deleted successfully.');
+
+      // Remove the deleted photos from currentAlbum.photographs array
+      setCurrentAlbum((prev) => ({
+        ...prev,
+        photographs: prev.photographs.filter(
+          (p) => !selectedPhotoIds.includes(p.id)
+        ),
+      }));
+
+      setSelectedPhotoIds([]);
+    } catch (error) {
+      console.error('Error deleting photos:', error);
+      alert('Failed to delete photos.');
+    }
+  };
+
+  // ------------------------------
+  // Assigning (moving) photos
+  // ------------------------------
+  const fetchAvailableAlbums = async () => {
+    setLoadingAvailableAlbums(true);
+    try {
+      const res = await axios.get('/api/albums', {
+        params: { excludeId: currentAlbum.id },
+      });
+      setAvailableAlbums(res.data.albums || []);
+    } catch (error) {
+      console.error('Error fetching available albums:', error);
+      alert('Failed to fetch available albums.');
+    } finally {
+      setLoadingAvailableAlbums(false);
+    }
+  };
+
+  const handleAssignPhotos = async () => {
+    if (selectedPhotoIds.length === 0) return;
+    setIsAssignModalOpen(true);
+    await fetchAvailableAlbums();
+  };
+
+  const handleConfirmAssignment = async () => {
+    if (!selectedTargetAlbum) {
+      alert('Please select an album to assign the photos to.');
+      return;
+    }
+
+    const targetAlbumId = Number(selectedTargetAlbum.value);
+    try {
+      setAssigning(true);
+      await axios.post('/api/photographs/assign', {
+        photoIds: selectedPhotoIds,
+        targetAlbumId,
+      });
+      alert('Selected photos moved successfully.');
+
+      // Remove the moved photos from currentAlbum
+      setCurrentAlbum((prev) => ({
+        ...prev,
+        photographs: prev.photographs.filter(
+          (p) => !selectedPhotoIds.includes(p.id)
+        ),
+      }));
+      setSelectedPhotoIds([]);
+      setIsAssignModalOpen(false);
+      setSelectedTargetAlbum(null);
+    } catch (error) {
+      console.error('Error assigning photos:', error);
+      alert('Failed to assign photos.');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  // ------------------------------
+  // Album Edit & Delete
+  // ------------------------------
+  const handleSaveAlbumChanges = async () => {
+    try {
+      const response = await axios.put(`/api/albums/${currentAlbum.id}`, {
+        title: editedTitle,
+        description: editedDescription,
+      });
+
+      alert('Album updated successfully.');
+
+      // Update local state with the new album data
+      setCurrentAlbum((prev) => ({
+        ...prev,
+        title: response.data.album.title,
+        description: response.data.album.description,
+      }));
+
+      setIsEditMode(false);
+    } catch (error) {
+      console.error('Error updating album:', error);
+      alert('Failed to update album.');
+    }
+  };
+
+  const handleDeleteAlbum = async () => {
+    const confirmDelete = confirm(
+      'Are you sure you want to delete this album and all its photos?'
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`/api/albums/${currentAlbum.id}`);
+      alert('Album deleted successfully.');
+      router.push(`/photographer/${photographerId}/albums`);
+    } catch (error) {
+      console.error('Error deleting album:', error);
+      alert('Failed to delete album.');
+    }
+  };
+
+  // ------------------------------
+  // Carousel
+  // ------------------------------
+  const openCarousel = (index) => {
+    setCurrentIndex(index);
+    setIsCarouselOpen(true);
+  };
+
+  const closeCarousel = () => {
+    setIsCarouselOpen(false);
+    setIsFullscreen(false);
+  };
+
+  // ------------------------------
+  // Early Returns / Rendering
+  // ------------------------------
+  if (loadingAlbum) return <p>Loading album...</p>;
+  if (!currentAlbum) return <p>Album not found.</p>;
+
+  // Prepare images for the carousel
+  const carouselImages = currentAlbum.photographs.map((photo) => ({
+    original: photo.image_url,
+    thumbnail: photo.thumbnail_url,
+    description: photo.description,
+    title: photo.title,
+    metadata: {
+      width: photo.image_width,
+      height: photo.image_height,
+      cameraModel: photo.cameraModel,
+      lens: photo.lens,
+      exposure: photo.exposure,
+      focalLength: photo.focalLength,
+    },
+  }));
+
+  // Masonry breakpoint columns
+  const breakpointColumnsObj = {
+    default: 4,
+    1100: 3,
+    700: 2,
+    500: 1,
+  };
+
+  // Modal fade/slide variants
+  const modalVariants = {
+    hidden: { opacity: 0, y: -50 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -50 },
+  };
+
   return (
-    <PhotographerLayout isOwner={isOwner} photographerId={photographerId}>
-      <div className="album-page">
-        <main>
-          <AlbumDetail album={album} isOwner={isOwner} />
-        </main>
-        <style jsx>{`
-          .album-page {
-            display: flex;
-          }
-          main {
-            flex: 1;
-            padding: 20px;
-            margin-left: 250px; /* Adjust based on sidebar width */
-          }
-        `}</style>
-      </div>
-    </PhotographerLayout>
+    <div className="album-page">
+      {/* Album Title & Description */}
+      {!isEditMode ? (
+        <>
+          <h1 className="album-title">{currentAlbum.title}</h1>
+          <p className="album-desc">{currentAlbum.description}</p>
+          {isOwner && (
+            <div className="modal-actions">
+              <button onClick={() => setIsEditMode(true)} className="edit-button">
+                <EditRoundedIcon />
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <h1>
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="album-title-edit"
+            />
+          </h1>
+          <textarea
+            value={editedDescription}
+            onChange={(e) => setEditedDescription(e.target.value)}
+            className="album-desc-edit"
+          />
+          <div className="modal-actions">
+            <button onClick={handleSaveAlbumChanges} className="primary-button">
+              Save Album Changes
+            </button>
+            <button
+              onClick={() => setIsAddPhotosModalOpen(true)}
+              className="primary-button"
+              style={{ marginLeft: '10px' }}
+            >
+              Add Photos
+            </button>
+            <button
+              onClick={handleDeletePhotos}
+              disabled={selectedPhotoIds.length === 0}
+              className="primary-button"
+              style={{ marginLeft: '10px' }}
+            >
+              Delete Selected Photos
+            </button>
+            <button
+              onClick={handleAssignPhotos}
+              disabled={selectedPhotoIds.length === 0}
+              className="primary-button"
+              style={{ marginLeft: '10px' }}
+            >
+              Move Selected Photos
+            </button>
+            <button
+              onClick={handleDeleteAlbum}
+              className="delete-button"
+              style={{ marginLeft: '10px' }}
+            >
+              Delete Album
+            </button>
+            <button
+              onClick={handleExitEditMode}
+              className="cancel-button"
+              style={{ marginLeft: '10px' }}
+            >
+              Exit Edit Mode
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Masonry Photo Grid */}
+      <motion.div initial="hidden" animate="visible" variants={containerVariants}>
+        <Masonry
+          breakpointCols={breakpointColumnsObj}
+          className="my-masonry-grid"
+          columnClassName="my-masonry-grid_column"
+        >
+          {currentAlbum.photographs.length === 0 ? (
+            <p>No photographs in this album.</p>
+          ) : (
+            currentAlbum.photographs.map((photo, index) => (
+              <motion.div key={photo.id} className="photo-card" variants={itemVariants}>
+                {isEditMode && (
+                  <input
+                    type="checkbox"
+                    className="photo-select-checkbox"
+                    checked={selectedPhotoIds.includes(photo.id)}
+                    onChange={() => toggleSelectPhoto(photo.id)}
+                  />
+                )}
+
+                <Image
+                  src={photo.thumbnail_url}
+                  alt={photo.title}
+                  width={photo.thumbnail_width}
+                  height={photo.thumbnail_height}
+                  layout="responsive"
+                  objectFit="contain"
+                  priority={false}
+                  onClick={() => openCarousel(index)}
+                  className="photo-image"
+                />
+              </motion.div>
+            ))
+          )}
+        </Masonry>
+      </motion.div>
+
+      {/* Fullscreen Carousel */}
+      <AnimatePresence>
+        {isCarouselOpen && (
+          <Modal
+            isOpen={isCarouselOpen}
+            onRequestClose={closeCarousel}
+            contentLabel="Photo Carousel"
+            className={`carousel-modal-content ${isFullscreen ? 'fullscreen' : ''}`}
+            overlayClassName="carousel-modal-overlay"
+            closeTimeoutMS={300}
+            shouldCloseOnOverlayClick
+            id="carousel-modal"
+          >
+            <motion.div
+              className={`carousel-modal ${isFullscreen ? 'fullscreen' : ''}`}
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.3 }}
+            >
+              {/* Controls Container */}
+              <AnimatePresence>
+                {showControls && (
+                  <motion.div
+                    className="gallery-btn-container"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <button
+                      onClick={() => {
+                        const elem = document.getElementById('carousel-modal');
+                        if (!isFullscreen) {
+                          elem.requestFullscreen().catch((err) => {
+                            console.error(
+                              `Error attempting to enable fullscreen mode: ${err.message} (${err.name})`
+                            );
+                          });
+                          setIsFullscreen(true);
+                        } else {
+                          document.exitFullscreen();
+                          setIsFullscreen(false);
+                        }
+                      }}
+                      className="fullscreen-toggle-button"
+                      aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                    >
+                      {isFullscreen ? (
+                        <CloseFullscreenRoundedIcon className="close-fullscreen-toggle-button" />
+                      ) : (
+                        <OpenInFullRoundedIcon className="open-fullscreen-toggle-button" />
+                      )}
+                    </button>
+                    <button
+                      onClick={closeCarousel}
+                      className="gallery-close-button-container"
+                      aria-label="Close Carousel"
+                    >
+                      <CloseRoundedIcon className="gallery-close-button" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Image Gallery */}
+              <ImageGallery
+                items={carouselImages}
+                startIndex={currentIndex}
+                showThumbnails={false}
+                showPlayButton={false}
+                showFullscreenButton={false}
+                showNav
+                renderItem={(item) => {
+
+                  const hasMetadata =
+                    item.metadata &&
+                    (
+                      item.metadata.cameraModel ||
+                      item.metadata.lens ||
+                      item.metadata.exposure ||
+                      item.metadata.focalLength
+                    );
+
+                  return (
+                    <div className="slider-layout">
+                      <div className="slider-image-container">
+                        <img src={item.original} alt={item.title} className="carousel-image" />
+                      </div>
+
+                      {
+                        !isFullscreen && hasMetadata && (
+                          <div className="slider-metadata-panel">
+                            <ul>
+                              {item.metadata.cameraModel && (
+                                <li>
+                                  <span>Camera Model: </span>
+                                  <span>{item.metadata.cameraModel}</span>
+                                </li>
+                              )}
+                              {item.metadata.lens && (
+                                <li>
+                                  <span>Lens: </span>
+                                  <span>{item.metadata.lens}</span>
+                                </li>
+                              )}
+                              {item.metadata.exposure && (
+                                <li>
+                                  <span>Exposure: </span>
+                                  <span>{item.metadata.exposure}</span>
+                                </li>
+                              )}
+                              {item.metadata.focalLength && (
+                                <li>
+                                  <span>Focal Length: </span>
+                                  <span>{item.metadata.focalLength}</span>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )
+                      }
+                    </div>
+                  );
+                }}
+              />
+            </motion.div>
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Add Photos Modal */}
+      {isOwner && (
+        <AddPhotosModal
+          isOpen={isAddPhotosModalOpen}
+          onRequestClose={() => setIsAddPhotosModalOpen(false)}
+          albumId={currentAlbum.id}
+          onPhotosAdded={() => {
+            // Optionally refetch or push new photos into local state
+          }}
+        />
+      )}
+
+      {/* Assign Photos Modal */}
+      {isOwner && (
+        <AssignPhotosModal
+          isOpen={isAssignModalOpen}
+          onRequestClose={() => {
+            setIsAssignModalOpen(false);
+            setSelectedTargetAlbum(null);
+          }}
+          availableAlbums={availableAlbums}
+          selectedTargetAlbum={selectedTargetAlbum}
+          setSelectedTargetAlbum={setSelectedTargetAlbum}
+          loadingAvailableAlbums={loadingAvailableAlbums}
+          handleConfirmAssignment={handleConfirmAssignment}
+          assigning={assigning}
+        />
+      )}
+
+      {/* Create Album Modal */}
+      {isOwner && (
+        <CreateAlbumModal
+          isOpen={isCreateAlbumModalOpen}
+          onClose={() => setIsCreateAlbumModalOpen(false)}
+          onAlbumCreated={(newAlbum) => {
+            setIsCreateAlbumModalOpen(false);
+            // Optionally do something with newAlbum
+          }}
+        />
+      )}
+    </div>
   );
 }
 
+AlbumPage.getLayout = function getLayout(page) {
+  const { album, allAlbums, photographerId, isOwner } = page.props;
+  return (
+    <PhotographerLayout
+      isOwner={isOwner}
+      photographerId={photographerId}
+      useAlbumSidebar
+      albums={allAlbums} // <--- pass all the albums here
+    >
+      {page}
+    </PhotographerLayout>
+  );
+};
+
 export async function getServerSideProps(context) {
   const { id, albumId } = context.query;
+  const session = await getServerSession(context.req, context.res, authOptions);
 
-  // Fetch the session based on the incoming request
-  const session = await getSession({ req: context.req });
+  const photographerIdNum = Number(id);
+  const albumIdNum = Number(albumId);
 
-  // Validate the IDs
-  if (
-    !id ||
-    isNaN(Number(id)) ||
-    !albumId ||
-    isNaN(Number(albumId))
-  ) {
+  if (isNaN(photographerIdNum) || isNaN(albumIdNum)) {
     return { notFound: true };
   }
 
   try {
-    const photographerIdNum = Number(id);
-    const albumIdNum = Number(albumId);
+    const prisma = (await import('../../../../lib/prisma')).default;
 
-    // Fetch the album directly using Prisma
-    const album = await prisma.album.findUnique({
+    // --- 1) Get *this* album ---
+    const albumData = await prisma.album.findUnique({
       where: { id: albumIdNum },
       include: {
         photographs: true,
@@ -620,31 +1220,44 @@ export async function getServerSideProps(context) {
       },
     });
 
-    // Check if the album exists and belongs to the authenticated photographer
-    if (!album || album.photographer_id !== photographerIdNum) {
+    if (!albumData || albumData.photographer_id !== photographerIdNum) {
       return { notFound: true };
     }
 
-    // Determine if the current user is the owner
+    // --- 2) Get *all* albums for the same photographer ---
+    const allAlbumsData = await prisma.album.findMany({
+      where: { photographer_id: photographerIdNum },
+      orderBy: { created_at: 'asc' }, // or 'desc' if you prefer
+    });
+
+    // Check if user is the owner
     const isOwner =
       session?.user?.role === 'photographer' &&
-      session.user.id === photographerIdNum;
+      session.user.id === albumData.photographer_id;
 
-    // Serialize Date objects to strings
+    // Serialize the main album
     const serializedAlbum = {
-      ...album,
-      created_at: album.created_at.toISOString(),
-      updated_at: album.updated_at.toISOString(),
-      photographs: album.photographs.map((photo) => ({
+      ...albumData,
+      created_at: albumData.created_at.toISOString(),
+      updated_at: albumData.updated_at.toISOString(),
+      photographs: albumData.photographs.map((photo) => ({
         ...photo,
         created_at: photo.created_at.toISOString(),
         updated_at: photo.updated_at.toISOString(),
       })),
     };
 
+    // Serialize *all* albums
+    const serializedAllAlbums = allAlbumsData.map((a) => ({
+      ...a,
+      created_at: a.created_at.toISOString(),
+      updated_at: a.updated_at.toISOString(),
+    }));
+
     return {
       props: {
         album: serializedAlbum,
+        allAlbums: serializedAllAlbums,
         photographerId: photographerIdNum,
         isOwner,
       },

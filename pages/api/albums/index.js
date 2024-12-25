@@ -62,19 +62,36 @@
 // pages/api/albums/index.js
 
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
+import { authOptions } from '../../../pages/api/auth/[...nextauth].js'; // Adjust path as necessary
 import prisma from '../../../lib/prisma';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
+
+  // Add debugging logs
+  console.log('Session in /api/albums:', session);
+
+  // Must be a photographer
   if (!session || session.user.role !== 'photographer') {
+    console.log('Unauthorized access attempt:', {
+      session,
+      requiredRole: 'photographer',
+    });
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const photographerId = await getPhotographerId(session.user.id);
+  // Get photographerId from session
+  const photographerId = Number(session.user.photographer_id);
+
+  console.log('Photographer ID from session:', photographerId);
+
+  if (!photographerId) {
+    console.log('Photographer ID not found in session.');
+    return res.status(403).json({ error: 'Photographer ID not found in session.' });
+  }
 
   if (req.method === 'GET') {
-    const excludeId = req.query.excludeId ? parseInt(req.query.excludeId, 10) : null;
+    const excludeId = req.query.excludeId ? Number(req.query.excludeId) : null;
     const where = { photographer_id: photographerId };
     if (excludeId) {
       where.id = { not: excludeId };
@@ -85,27 +102,33 @@ export default async function handler(req, res) {
         orderBy: { created_at: 'desc' },
         include: { Category: true },
       });
-      res.status(200).json({ albums });
+      return res.status(200).json({ albums });
     } catch (error) {
       console.error('Error fetching albums:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   } else if (req.method === 'POST') {
     const { title, description, category_id } = req.body;
+    const category_id_int = Number(category_id);
 
-    // Parse category_id to integer
-    const category_id_int = parseInt(category_id, 10);
-
-    if (!title) return res.status(400).json({ error: 'Title is required' });
+    if (!title) {
+      console.log('Title is required for album creation.');
+      return res.status(400).json({ error: 'Title is required' });
+    }
     if (isNaN(category_id_int)) {
+      console.log('Invalid category ID format:', category_id);
       return res.status(400).json({ error: 'Invalid category ID format' });
     }
 
-    // Validate category_id
+    // Validate category
     const category = await prisma.category.findUnique({ where: { id: category_id_int } });
-    if (!category) return res.status(400).json({ error: 'Invalid category' });
+    if (!category) {
+      console.log('Invalid category:', category_id_int);
+      return res.status(400).json({ error: 'Invalid category' });
+    }
 
     try {
+      // Use the "photographerId" from above
       const album = await prisma.album.create({
         data: {
           title,
@@ -113,21 +136,22 @@ export default async function handler(req, res) {
           photographer_id: photographerId,
           category_id: category_id_int,
         },
+        include: {
+          Category: true,
+          photographs: true,
+          // Include other relations if needed
+        },
       });
-      res.status(200).json({ album });
+
+      console.log('Album created successfully:', album);
+      return res.status(200).json({ album });
     } catch (error) {
       console.error('Error creating album:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   } else {
     res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-
-async function getPhotographerId(userId) {
-  const photographer = await prisma.photographer.findUnique({ where: { photo_id: userId } });
-  return photographer?.photo_id;
-}
-
 

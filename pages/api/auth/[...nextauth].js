@@ -62,7 +62,7 @@ export const authOptions = {
           }
         } else if (user.role === 'photographer') {
           if (user.Photographer) {
-            userData.photographer_id = user.Photographer.id;
+            userData.photographer_id = user.id;
             userData.is_approved = user.Photographer.is_approved;
             userData.bio = user.Photographer.bio;
             userData.website = user.Photographer.website;
@@ -152,3 +152,4 @@ export const authOptions = {
 };
 
 export default NextAuth(authOptions);
+

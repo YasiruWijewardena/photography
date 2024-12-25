@@ -45,45 +45,56 @@
 
 // components/PhotographerLayout.js
 
-import MainSidebar from './PhotographerSidebar';
+import PropTypes from 'prop-types';
+import PhotographerSidebar from './PhotographerSidebar';
 import AlbumSidebar from './AlbumSidebar';
-import SettingsSidebar from './SettingsSidebar';
-import { useRouter } from 'next/router';
+import '../styles/public/global.css'; 
+import '../styles/public/photographerLayout.css'; 
 
-export default function PhotographerLayout({ isOwner, photographerId, children }) {
-  const router = useRouter();
-  const path = router.pathname;
-
-  // Determine which sidebar to render based on the current path and ownership
-  let SidebarComponent = null;
-
-  if (isOwner) {
-    if (path.includes('/settings')) {
-      SidebarComponent = <SettingsSidebar photographerId={photographerId} />;
-    } else {
-      SidebarComponent = <MainSidebar photographerId={photographerId} />;
-    }
-  } else {
-    SidebarComponent = <AlbumSidebar photographerId={photographerId} isOwner={isOwner} />;
-  }
+export default function PhotographerLayout({
+  children,
+  isOwner,
+  useAlbumSidebar,
+  albums,
+  photographerId,
+}) {
+  // If NOT the owner, we always show the album sidebar
+  // If the user IS the owner, then we rely on the 'useAlbumSidebar' prop
+  const finalUseAlbumSidebar = isOwner ? useAlbumSidebar : true;
 
   return (
-    <div className="photographer-layout">
-      {SidebarComponent}
-      <main>{children}</main>
-      <style jsx>{`
-        .photographer-layout {
-          display: flex;
-          min-height: 100vh;
-        }
-        main {
-          flex: 1;
-          padding: 20px;
-          margin-left: 250px; /* Adjust based on sidebar width */
-        }
-      `}</style>
+    <div className="photographer-page">
+      <aside className="photogrpager-sidebar-container">
+        {finalUseAlbumSidebar ? (
+          <AlbumSidebar
+            albums={albums || []}        
+            photographerId={photographerId}
+            isOwner={isOwner}
+          />
+        ) : (
+          <PhotographerSidebar
+            photographerId={photographerId}
+            isOwner={isOwner}
+          />
+        )}
+      </aside>
+      <main className="photographer-content-container">{children}</main>
+
     </div>
   );
 }
+
+PhotographerLayout.propTypes = {
+  children: PropTypes.node.isRequired,
+  isOwner: PropTypes.bool.isRequired,
+  photographerId: PropTypes.number,
+  useAlbumSidebar: PropTypes.bool,
+  albums: PropTypes.array,
+};
+
+PhotographerLayout.defaultProps = {
+  useAlbumSidebar: false,
+  albums: [],   // Default to empty array
+};
 
 

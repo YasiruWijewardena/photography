@@ -136,7 +136,7 @@ export default function PhotoManager({ albumId, photos = [], onPhotosChanged, is
     formData.append('albumId', albumId);
     newFiles.forEach(file => formData.append('images', file));
     try {
-      const res = await fetch('/api/photos/add', {
+      const res = await fetch('/api/photographs/add', {
         method: 'POST',
         body: formData
       });
@@ -153,7 +153,7 @@ export default function PhotoManager({ albumId, photos = [], onPhotosChanged, is
   };
 
   const handleDeletePhoto = async (photoId) => {
-    const res = await fetch('/api/photos/delete', {
+    const res = await fetch('/api/photographs/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ photoId })
@@ -166,7 +166,7 @@ export default function PhotoManager({ albumId, photos = [], onPhotosChanged, is
   };
 
   const handleMovePhoto = async (photoId, targetAlbumId) => {
-    const res = await fetch('/api/photos/move', {
+    const res = await fetch('/api/photographs/assign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ photoId, targetAlbumId })
