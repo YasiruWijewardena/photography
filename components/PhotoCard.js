@@ -151,12 +151,13 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { Favorite, FavoriteBorder, Bookmark, BookmarkBorder } from '@mui/icons-material';
-import { IconButton } from '@mui/material';
+import { IconButton, Checkbox } from '@mui/material';
 import '../styles/public/home.css'; 
 import LoginPromptModal from 'components/LoginPromptModal';
 import { usePhotos } from '../context/PhotoContext';
+import { motion } from 'framer-motion';
 
-export default function PhotoCard({ photo, onClick }) {
+export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEditMode  }) {
   const { data: session, status } = useSession();
   const { toggleLike, toggleFavourite } = usePhotos();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -183,10 +184,34 @@ export default function PhotoCard({ photo, onClick }) {
     setIsModalOpen(false);
   };
 
+  const handleSelect = (e) => {
+    onSelect(photo.id);
+  };
+
   return (
     <>
-      <div className="photoCard-container" onClick={onClick}>
+      <motion.div
+        className="photoCard-container"
+        onClick={onClick}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.3 }}
+        whileTap={{ scale: 0.98 }}
+      >
+       
         <div className="photoCard-imageWrapper">
+           {/* Checkbox for selection */}
+        {isEditMode && (
+          <Checkbox
+            checked={isSelected}
+            onChange={handleSelect}
+            onClick={(e) => e.stopPropagation()} // Prevent card click
+            color="primary"
+            inputProps={{ 'aria-label': 'Select photo' }}
+            className="photo-select-checkbox"
+          />
+        )}
           <Image
             src={photo.thumbnail_url}
             alt={photo.title}
@@ -217,7 +242,7 @@ export default function PhotoCard({ photo, onClick }) {
             </div>
           </div>
         </div>
-      </div>
+        </motion.div>
       {/* Login Prompt Modal */}
       <LoginPromptModal isOpen={isModalOpen} onRequestClose={closeModal} />
     </>
