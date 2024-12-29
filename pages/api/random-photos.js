@@ -55,6 +55,7 @@ export default async function handler(req, res) {
       },
     });
 
+
     let nextCursor = null;
     if (photos.length > limit) {
       const nextItem = photos.pop();

@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <PublicLayout>
       <Hero />
-      <PhotoSection />
+      <PhotoSection scope="home" enableFilters={true} />
       <Footer />
     </PublicLayout>
   );
