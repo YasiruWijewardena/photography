@@ -44,7 +44,7 @@ export default function PhotoModal({
 
   useEffect(() => {
     setCurrentIndex(startIndex);
-  }, [startIndex, images]);
+  }, [startIndex]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
