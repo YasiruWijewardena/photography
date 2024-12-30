@@ -39,6 +39,7 @@ handler.post(async (req, res) => {
     // Extract single values
     const firstname = getSingleValue(fields.firstname);
     const lastname = getSingleValue(fields.lastname);
+    const username = getSingleValue(fields.username);
     const email = getSingleValue(fields.email);
     const password = getSingleValue(fields.password);
     const bio = getSingleValue(fields.bio);
@@ -52,6 +53,7 @@ handler.post(async (req, res) => {
     if (
       !firstname ||
       !lastname ||
+      !username ||
       !email ||
       !password ||
       !bio ||
@@ -80,6 +82,15 @@ handler.post(async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'Email already exists.' });
     }
+
+    // Check if the username already exists
+    const existingUsername = await prisma.user.findUnique({
+      where: { username },
+    });
+    if (existingUsername) {
+      return res.status(400).json({ error: 'Username already exists.' });
+    }
+
 
     // Handle profile picture
     let profilePictureUrl = null;
@@ -112,6 +123,7 @@ handler.post(async (req, res) => {
       data: {
         firstname,
         lastname,
+        username,
         email,
         password: hashedPassword,
         role: 'photographer',

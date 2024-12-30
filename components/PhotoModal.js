@@ -228,7 +228,7 @@ export default function PhotoModal({
                           height={100} // Adjust size as needed
                           className="photographer-profile-picture"
                         />
-                        <Link href={`/photographer/${item.photographer.id}`} className="photographer-name-link">
+                        <Link href={`/${item.photographer.username}`} className="photographer-name-link">
                             
                               {item.photographer.name}
                             

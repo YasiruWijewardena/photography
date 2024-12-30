@@ -93,7 +93,7 @@ export default function PublicProfile({ photographerData }) {
       <div className="photographer-albums">
         <div className="albums-grid">
           {photographerData.albums.map((album) => (
-            <Link key={album.id} href={`/photographer/${photographerData.id}/albums/${album.id}`} className="album-card">
+            <Link key={album.id} href={`/${photographerData.username}/albums/${album.slug}`} className="album-card">
               
                 <Image
                   src={album.cover_photo_url || '/default-album.png'}
