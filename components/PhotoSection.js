@@ -158,7 +158,7 @@ import { motion, AnimatePresence } from 'framer-motion'
  */
 export default function PhotoSection({
   scope = 'home',
-  albumId = null,
+  albumSlug = null,
   initialPhotos = [],
   enableFilters = true,
   isOwner = false,
@@ -167,7 +167,7 @@ export default function PhotoSection({
   isEditMode = false,
 }) {
 
-  if (scope === 'album' && !albumId) {
+  if (scope === 'album' && !albumSlug) {
     return null; // Prevent rendering with invalid props
   }
 
@@ -182,10 +182,6 @@ export default function PhotoSection({
 
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
-
-  // Debugging albumId
-  useEffect(() => {
-  }, [albumId]);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -221,7 +217,7 @@ export default function PhotoSection({
       }
       // For Album
       else if (scope === 'album') {
-        endpoint = `/api/albums/${albumId}/photos?cursor=${nextCursor || ''}&limit=20`;
+        endpoint = `/api/albums/${albumSlug}/photos?cursor=${nextCursor || ''}&limit=20`;
       }
 
       if (!endpoint) return;

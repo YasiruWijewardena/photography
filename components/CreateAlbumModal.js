@@ -1,185 +1,18 @@
-// // components/CreateAlbumModal.js
-
-// import { useState, useEffect } from 'react';
-// import Modal from 'react-modal';
-// import { useDropzone } from 'react-dropzone';
-// import axios from 'axios';
-
-// export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
-//   const [title, setTitle] = useState('');
-//   const [description, setDescription] = useState('');
-//   const [files, setFiles] = useState([]);
-//   const [categories, setCategories] = useState([]);
-//   const [selectedCategory, setSelectedCategory] = useState('');
-
-//   useEffect(() => {
-//     // Fetch categories when modal opens
-//     if (isOpen) {
-//       axios.get('/api/categories')
-//         .then(response => setCategories(response.data.categories))
-//         .catch(error => console.error('Error fetching categories:', error));
-//     }
-//   }, [isOpen]);
-
-//   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-//     accept: { 'image/*': [] },
-//     onDrop: (acceptedFiles) => {
-//       const mappedFiles = acceptedFiles.map(file => Object.assign(file, {
-//         preview: URL.createObjectURL(file)
-//       }));
-//       setFiles((prev) => [...prev, ...mappedFiles]);
-//     },
-//   });
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!title.trim()) {
-//       alert('Please provide a title for the album.');
-//       return;
-//     }
-//     if (!selectedCategory) {
-//       alert('Please select a category.');
-//       return;
-//     }
-
-//     try {
-//       const res = await axios.post('/api/albums', { 
-//         title, 
-//         description, 
-//         category_id: parseInt(selectedCategory, 10) // Ensure it's an integer
-//       });
-
-//       const albumId = res.data.album.id;
-
-//       if (files.length > 0) {
-//         const formData = new FormData();
-//         formData.append('albumId', albumId);
-//         files.forEach((file) => formData.append('images', file));
-//         await axios.post('/api/photographs/add', formData);
-//       }
-
-//       onAlbumCreated();
-//       setTitle('');
-//       setDescription('');
-//       setFiles([]);
-//       setSelectedCategory('');
-//       onClose();
-//     } catch (error) {
-//       console.error('Error creating album:', error);
-//       alert('Failed to create album.');
-//     }
-//   };
-
-//   const handleRemoveFile = (file) => {
-//     setFiles(files.filter(f => f !== file));
-//     URL.revokeObjectURL(file.preview);
-//   };
-
-//   return (
-//     <Modal
-//       isOpen={isOpen}
-//       onRequestClose={onClose}
-//       contentLabel="Create New Album"
-//       className={{
-//         base: 'modal-content',
-//         afterOpen: 'modal-content--after-open',
-//         beforeClose: 'modal-content--before-close',
-//       }}
-//       overlayClassName={{
-//         base: 'modal-overlay',
-//         afterOpen: 'modal-overlay--after-open',
-//         beforeClose: 'modal-overlay--before-close',
-//       }}
-//       closeTimeoutMS={300}
-//     >
-//       {/* Close Button */}
-//       <button onClick={onClose} className="modal-close-button">
-//         &times;
-//       </button>
-
-//       <h2 className='modal-titles'>Create New Album</h2>
-//       <form onSubmit={handleSubmit}>
-//         <div className="form-group">
-//           <label>Album Title:</label>
-//           <input
-//             type="text"
-//             value={title}
-//             onChange={(e) => setTitle(e.target.value)}
-//             required
-//           />
-//         </div>
-//         <div className="form-group">
-//           <label>Description:</label>
-//           <textarea
-//             value={description}
-//             onChange={(e) => setDescription(e.target.value)}
-//           ></textarea>
-//         </div>
-//         <div className="form-group">
-//           <label>Category:</label>
-//           <select
-//             value={selectedCategory}
-//             onChange={(e) => setSelectedCategory(e.target.value)}
-//             required
-//           >
-//             <option value="" disabled>Select a category</option>
-//             {categories.map(category => (
-//               <option key={category.id} value={category.id}>{category.name}</option>
-//             ))}
-//           </select>
-//         </div>
-//         <div
-//           {...getRootProps()}
-//           className="dropzone"
-//         >
-//           <input {...getInputProps()} />
-//           {isDragActive ? (
-//             <p>Drop photos here...</p>
-//           ) : (
-//             <p>Drag & drop photos here, or click to select files</p>
-//           )}
-//           {files.length > 0 && <p>{files.length} file(s) selected</p>}
-//         </div>
-
-//         {/* Thumbnails */}
-//         {files.length > 0 && (
-//           <div className="thumbnails">
-//             {files.map((file, index) => (
-//               <div key={index} className="thumbnail">
-//                 <img src={file.preview} alt={file.name} />
-//                 <button
-//                   type="button"
-//                   onClick={() => handleRemoveFile(file)}
-//                   className="remove-button"
-//                 >
-//                   &times;
-//                 </button>
-//               </div>
-//             ))}
-//           </div>
-//         )}
-
-//         <div className="modal-actions">
-//           <button type="submit" className="primary-button">Create Album</button>
-//         </div>
-//       </form>
-//     </Modal>
-//   );
-// }
-
 // components/CreateAlbumModal.js
 
 import { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 
-export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
+export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, photographerUsername }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -211,6 +44,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       // 1) Create the album
       const res = await axios.post('/api/albums', {
@@ -220,8 +55,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
       });
 
       const newAlbum = res.data.album;
-      if (!newAlbum || !newAlbum.id) {
-        throw new Error('Album creation response missing "album.id"');
+      if (!newAlbum || !newAlbum.id || !newAlbum.slug) {
+        throw new Error('Album creation response missing required fields.');
       }
 
       // 2) Upload photos if any
@@ -229,7 +64,11 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
         const formData = new FormData();
         formData.append('albumId', newAlbum.id);
         files.forEach((file) => formData.append('images', file));
-        await axios.post('/api/photographs/add', formData);
+        await axios.post('/api/photographs/add', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       }
 
       // 3) Notify parent about the newly created album
@@ -243,7 +82,9 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
       onClose();
     } catch (error) {
       console.error('Error creating album:', error);
-      alert('Failed to create album.');
+      alert('Failed to create album. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -258,45 +99,54 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
       onRequestClose={onClose}
       contentLabel="Create New Album"
       className={{
-                base: 'modal-content',
-                afterOpen: 'modal-content--after-open',
-                beforeClose: 'modal-content--before-close',
-              }}
-              overlayClassName={{
-                base: 'modal-overlay',
-                afterOpen: 'modal-overlay--after-open',
-                beforeClose: 'modal-overlay--before-close',
-              }}
+        base: 'modal-content',
+        afterOpen: 'modal-content--after-open',
+        beforeClose: 'modal-content--before-close',
+      }}
+      overlayClassName={{
+        base: 'modal-overlay',
+        afterOpen: 'modal-overlay--after-open',
+        beforeClose: 'modal-overlay--before-close',
+      }}
       closeTimeoutMS={300}
+      ariaHideApp={false} // Set to true and bind modal to appElement for accessibility in production
     >
-      <button onClick={onClose} className="modal-close-button">
+      <button onClick={onClose} className="modal-close-button" aria-label="Close Modal">
         &times;
       </button>
 
       <h2 className="modal-titles">Create New Album</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="modal-form">
         <div className="form-group">
-          <label>Album Title:</label>
+          <label htmlFor="album-title">Album Title:</label>
           <input
+            id="album-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            placeholder="Enter album title"
+            aria-required="true"
           />
         </div>
         <div className="form-group">
-          <label>Description:</label>
+          <label htmlFor="album-description">Description:</label>
           <textarea
+            id="album-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter album description"
+            aria-label="Album Description"
           />
         </div>
         <div className="form-group">
-          <label>Category:</label>
+          <label htmlFor="album-category">Category:</label>
           <select
+            id="album-category"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             required
+            aria-required="true"
           >
             <option value="" disabled>
               Select a category
@@ -308,8 +158,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
             ))}
           </select>
         </div>
-        <div {...getRootProps()} className="dropzone">
-          <input {...getInputProps()} />
+        <div {...getRootProps()} className={`dropzone ${isDragActive ? 'active' : ''}`}>
+          <input {...getInputProps()} aria-label="Photo Upload" />
           {isDragActive ? (
             <p>Drop photos here...</p>
           ) : (
@@ -318,7 +168,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
           {files.length > 0 && <p>{files.length} file(s) selected</p>}
         </div>
 
-        {/* Thumbnails */}
+        {/* Thumbnails Preview */}
         {files.length > 0 && (
           <div className="thumbnails">
             {files.map((file, index) => (
@@ -328,6 +178,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
                   type="button"
                   onClick={() => handleRemoveFile(file)}
                   className="remove-button"
+                  aria-label={`Remove ${file.name}`}
                 >
                   &times;
                 </button>
@@ -337,11 +188,21 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
         )}
 
         <div className="modal-actions">
-          <button type="submit" className="primary-button">
-            Create Album
+          <button type="submit" className="primary-button" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating...' : 'Create Album'}
+          </button>
+          <button type="button" onClick={onClose} className="secondary-button">
+            Cancel
           </button>
         </div>
       </form>
     </Modal>
   );
 }
+
+CreateAlbumModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onAlbumCreated: PropTypes.func.isRequired,
+  photographerUsername: PropTypes.string.isRequired, // Pass the photographer's username
+};

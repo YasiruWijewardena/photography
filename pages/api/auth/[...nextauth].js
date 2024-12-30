@@ -50,6 +50,7 @@ export const authOptions = {
           email: user.email,
           firstname: user.firstname,
           lastname: user.lastname,
+          username: user.username,
           role: user.role,
         };
 
@@ -95,6 +96,7 @@ export const authOptions = {
         token.email = user.email;
         token.firstname = user.firstname;
         token.lastname = user.lastname;
+        token.username = user.username;
         token.role = user.role;
 
         if (user.role === 'admin') {
@@ -122,6 +124,7 @@ export const authOptions = {
           email: token.email,
           firstname: token.firstname,
           lastname: token.lastname,
+          username: token.username,
           role: token.role,
         };
 

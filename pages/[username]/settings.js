@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import axios from 'axios';
 import Image from 'next/image';
-import Sidebar from '../../../components/SettingsSidebar'; // Adjust the path based on your project structure
+import Sidebar from '../../components/SettingsSidebar'; // Adjust the path based on your project structure
 
 export default function Settings() {
   const { data: session, status } = useSession();

@@ -39,6 +39,7 @@ export default async function handler(req, res) {
               select: {
                 firstname: true,
                 lastname: true,
+                username: true,
                 email: true,
               },
             },
@@ -78,6 +79,7 @@ export default async function handler(req, res) {
       photographer: {
         id: photo.Photographer.photo_id,
         name: `${photo.Photographer.User.firstname} ${photo.Photographer.User.lastname}`,
+        username: photo.Photographer.User.username,
         profile_picture: photo.Photographer.profile_picture, // Accessed from Photographer
       },
       isLiked: userId ? !!photo.likes.length : false, // Set to false if not logged in
