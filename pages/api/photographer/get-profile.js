@@ -26,6 +26,7 @@ export default async function handler(req, res) {
         id: true,
         firstname: true,
         lastname: true,
+        username: true,
         email: true,
         Photographer: {
           select: {

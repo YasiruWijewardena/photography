@@ -8,6 +8,12 @@
     margin-top: 100px;
 }
 
+.login{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .signup-page h1 ,
 .login h1 {
     font-size: 48px;
@@ -56,9 +62,132 @@
     cursor: pointer;
 }
 
+.roles-submit {
+  font-family: "Parkinsans", serif;
+    font-size: 18px;
+    margin-top: 50px;
+    width: 100%;
+    padding: 15px;
+    border-radius: 20px;
+    color: #fff;
+    border: 0px;
+    background: rgb(0,0,0);
+    cursor: pointer;
+}
+
 .login p {
     font-family: "Parkinsans", serif;
     text-align: center;
+}
+
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Parkinsans", serif;
+  font-size: 16px;
+  margin-top: 50px;
+  margin-bottom: 20px;
+  width: 80%;
+  padding: 15px;
+  border-radius: 20px;
+  color: #fff;
+  border: 0px;
+  background: rgb(0,0,0);
+  cursor: pointer;
+  column-gap: 15px;
+}
+
+.google-logo {
+  max-width: 30px;
+}
+
+.role-selection {
+  margin-top: 50px;
+}
+
+.role-selection h2 {
+  text-align: center;
+}
+
+.roles-container {
+  display: flex;
+  column-gap: 50px;
+  margin-top: 50px;
+}
+
+.roles-inner {
+  max-width: 300px;
+  border: 1px solid #000;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction:column;
+  justify-content: space-between;
+}
+
+.roles-inner p {
+  font-family: "Parkinsans", serif;
+  font-size: 16px;
+  text-align: center;
+}
+
+.photographer-details-form {
+  margin-top: 50px;
+}
+
+.photographer-details-form h2 {
+  text-align: center;
+}
+
+.progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.step-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  border: 1px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.step-circle.active {
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
+}
+
+.step-circle.completed {
+  background-color: rgb(123, 123, 123);
+  color: rgb(255, 255, 255);
+}
+
+.step-label {
+  margin-top: 5px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.step-line {
+  width: 50px;
+  height: 2px;
+  background-color: lightgray;
+  margin: 0 10px;
+  z-index: 0;
 }
 
 

@@ -1,29 +1,25 @@
 // pages/api/auth/signup/photographer.js
 
 import nextConnect from 'next-connect';
-import fs from 'fs-extra';
-import path from 'path';
 import prisma from '../../../../lib/prisma';
 import bcrypt from 'bcrypt';
-import { parseForm, getSingleValue, moveFile } from '@/lib/formUtils';
+import path from 'path';
+import fs from 'fs-extra';
+import { parseForm, getSingleValue, moveFile } from '@/lib/formUtils'; // Adjust the import path as needed
+import { getSession } from 'next-auth/react'; // Import getSession here
 
 export const config = {
   api: {
-    bodyParser: false, // Disables Next.js's default body parser
-    sizeLimit: '1000mb',
+    bodyParser: false, // Disable Next.js's default body parser
+    sizeLimit: '5mb',  // Adjust based on your needs
   },
 };
 
-// Define directories
-const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profile_pictures');
+const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'photographer_profile_pictures');
 
-// Ensure the upload directory exists
-fs.ensureDirSync(uploadDir);
-
-// Initialize Next-Connect handler
 const handler = nextConnect({
   onError(error, req, res) {
-    console.error('Error in API route:', error);
+    console.error('Error in photographer signup API:', error);
     res.status(500).json({ error: `Something went wrong! ${error.message}` });
   },
   onNoMatch(req, res) {
@@ -33,15 +29,10 @@ const handler = nextConnect({
 
 handler.post(async (req, res) => {
   try {
-    // Parse the form data
+    // Parse the form data using Formidable
     const { fields, files } = await parseForm(req);
 
     // Extract single values
-    const firstname = getSingleValue(fields.firstname);
-    const lastname = getSingleValue(fields.lastname);
-    const username = getSingleValue(fields.username);
-    const email = getSingleValue(fields.email);
-    const password = getSingleValue(fields.password);
     const bio = getSingleValue(fields.bio);
     const website = getSingleValue(fields.website);
     const instagram = getSingleValue(fields.instagram);
@@ -50,47 +41,82 @@ handler.post(async (req, res) => {
     const subscription_id = getSingleValue(fields.subscription_id);
 
     // Validate required fields
-    if (
-      !firstname ||
-      !lastname ||
-      !username ||
-      !email ||
-      !password ||
-      !bio ||
-      !mobile_num ||
-      !address ||
-      !subscription_id
-    ) {
-      return res.status(400).json({ error: 'All required fields must be filled.' });
+    if (!bio || !mobile_num || !address || !subscription_id) {
+      // Remove uploaded file if validation fails
+      if (files.profile_picture) {
+        const profilePic = Array.isArray(files.profile_picture)
+          ? files.profile_picture[0]
+          : files.profile_picture;
+        await fs.remove(profilePic.filepath);
+      }
+      return res.status(400).json({ error: 'Bio, mobile number, address, and subscription are required.' });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format.' });
+    // Validate mobile number (basic validation)
+    const mobileNumRegex = /^\d{10,15}$/; // Adjust the regex based on your requirements
+    if (!mobileNumRegex.test(mobile_num)) {
+      if (files.profile_picture) {
+        const profilePic = Array.isArray(files.profile_picture)
+          ? files.profile_picture[0]
+          : files.profile_picture;
+        await fs.remove(profilePic.filepath);
+      }
+      return res.status(400).json({ error: 'Invalid mobile number format.' });
     }
 
-    // Validate password strength
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    // Validate subscription_id (ensure it's a valid integer)
+    const parsedSubscriptionId = parseInt(subscription_id, 10);
+    if (isNaN(parsedSubscriptionId)) {
+      if (files.profile_picture) {
+        const profilePic = Array.isArray(files.profile_picture)
+          ? files.profile_picture[0]
+          : files.profile_picture;
+        await fs.remove(profilePic.filepath);
+      }
+      return res.status(400).json({ error: 'Invalid subscription ID.' });
     }
 
-    // Check if the user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Get the session to identify the user
+    const session = await getSession({ req });
+
+    if (!session) {
+      // Remove uploaded file if unauthorized
+      if (files.profile_picture) {
+        const profilePic = Array.isArray(files.profile_picture)
+          ? files.profile_picture[0]
+          : files.profile_picture;
+        await fs.remove(profilePic.filepath);
+      }
+      return res.status(401).json({ error: 'Unauthorized.' });
+    }
+
+    const userEmail = session.user.email;
+
+    // Find the user by email
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+      include: { Photographer: true },
     });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already exists.' });
+
+    if (!user) {
+      if (files.profile_picture) {
+        const profilePic = Array.isArray(files.profile_picture)
+          ? files.profile_picture[0]
+          : files.profile_picture;
+        await fs.remove(profilePic.filepath);
+      }
+      return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Check if the username already exists
-    const existingUsername = await prisma.user.findUnique({
-      where: { username },
-    });
-    if (existingUsername) {
-      return res.status(400).json({ error: 'Username already exists.' });
+    if (user.role === 'photographer') {
+      if (files.profile_picture) {
+        const profilePic = Array.isArray(files.profile_picture)
+          ? files.profile_picture[0]
+          : files.profile_picture;
+        await fs.remove(profilePic.filepath);
+      }
+      return res.status(400).json({ error: 'User is already a photographer.' });
     }
-
 
     // Handle profile picture
     let profilePictureUrl = null;
@@ -109,45 +135,41 @@ handler.post(async (req, res) => {
 
       // Define the new file name
       const fileExt = path.extname(profilePic.originalFilename);
-      const newFileName = `${Date.now()}-${firstname}-${lastname}${fileExt}`;
+      const newFileName = `${Date.now()}-${user.username}${fileExt}`;
 
       // Move the file to the final directory
       profilePictureUrl = await moveFile(profilePic, uploadDir, newFileName);
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the user and photographer in the database
-    const user = await prisma.user.create({
+    // Create the Photographer record and update the user's role
+    await prisma.user.update({
+      where: { email: userEmail },
       data: {
-        firstname,
-        lastname,
-        username,
-        email,
-        password: hashedPassword,
         role: 'photographer',
         Photographer: {
           create: {
             bio,
-            website,
-            instagram,
+            website: website || '',
+            instagram: instagram || '',
             mobile_num: parseInt(mobile_num, 10),
             address,
             profile_picture: profilePictureUrl,
             is_approved: false,
-            subscription_id: parseInt(subscription_id, 10),
+            subscription_id: parsedSubscriptionId,
           },
         },
       },
-      include: {
-        Photographer: true,
-      },
     });
 
-    return res.status(201).json({ message: 'Photographer created successfully', userId: user.id });
+    return res.status(201).json({ message: 'Photographer details added successfully.' });
   } catch (error) {
     console.error('Error during photographer signup:', error);
+    // Remove the uploaded file in case of error
+    if (error instanceof Error && error.message.includes('Only JPEG, PNG, and GIF files are allowed.')) {
+      if (req.file) {
+        await fs.remove(req.file.filepath);
+      }
+    }
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });

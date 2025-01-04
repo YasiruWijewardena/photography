@@ -1,5 +1,10 @@
+// components/CustomerSignupForm.js
+
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { signIn } from 'next-auth/react';
+import Cookies from 'js-cookie'; // Import js-cookie
+import '../styles/signup.css'; // Ensure you have appropriate styles
 
 export default function CustomerSignupForm() {
   const router = useRouter();
@@ -11,12 +16,13 @@ export default function CustomerSignupForm() {
   });
   const [error, setError] = useState('');
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'profile_image') {
       setFormData({
         ...formData,
-        profile_image: files[0], // Store the file object
+        profile_image: files[0],
       });
     } else {
       setFormData({
@@ -26,9 +32,9 @@ export default function CustomerSignupForm() {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Use FormData to handle file upload
     const data = new FormData();
     data.append('username', formData.username);
     data.append('email', formData.email);
@@ -40,7 +46,7 @@ export default function CustomerSignupForm() {
     try {
       const res = await fetch('/api/auth/signup/customer', {
         method: 'POST',
-        body: data, // FormData handles headers
+        body: data,
       });
       if (res.ok) {
         router.push('/login');
@@ -54,63 +60,82 @@ export default function CustomerSignupForm() {
     }
   };
 
+  const handleGoogleSignUp = () => {
+    // Initiate Google sign-in with a callback URL that redirects to role selection
+    signIn('google', { callbackUrl: 'http://localhost:3000/role-selection' });
+  };
+
   return (
-    <form onSubmit={handleSubmit} className='signup-form'>
-      {error && <p className="error">{error}</p>}
+    <div className="customer-signup-form">
+      {/* Google Sign-Up Button */}
+      <button onClick={handleGoogleSignUp} className="google-signup">
+        <img src="/images/google-logo.png" alt="Google Logo" />
+        Sign up with Google
+      </button>
 
-      {/* Username */}
-      <div className='signup-input-container'>
-        <label htmlFor="username">Username:</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          required
-          value={formData.username}
-          onChange={handleChange}
-        />
+      {/* Divider */}
+      <div className="divider">
+        <span>OR</span>
       </div>
 
-      {/* Email */}
-      <div className='signup-input-container'>
-        <label htmlFor="email">Email:</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-        />
-      </div>
+      {/* Traditional Sign-Up Form */}
+      <form onSubmit={handleSubmit} className="signup-form">
+        {error && <p className="error">{error}</p>}
 
-      {/* Password */}
-      <div className='signup-input-container'>
-        <label htmlFor="password">Password:</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          required
-          value={formData.password}
-          onChange={handleChange}
-        />
-      </div>
+        {/* Username */}
+        <div className="signup-input-container">
+          <label htmlFor="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            value={formData.username}
+            onChange={handleChange}
+          />
+        </div>
 
-      {/* Profile Image (Optional) */}
-      <div className='signup-input-container'>
-        <label htmlFor="profile_image">Profile Image (Optional):</label>
-        <input
-          type="file"
-          id="profile_image"
-          name="profile_image"
-          accept="image/*"
-          onChange={handleChange}
-        />
-      </div>
+        {/* Email */}
+        <div className="signup-input-container">
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            value={formData.email}
+            onChange={handleChange}
+          />
+        </div>
 
-      {/* Submit */}
-      <button type="submit" className='signup-submit'>Sign Up</button>
-    </form>
+        {/* Password */}
+        <div className="signup-input-container">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            value={formData.password}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* Profile Image (Optional) */}
+        <div className="signup-input-container">
+          <label htmlFor="profile_image">Profile Image (Optional):</label>
+          <input
+            type="file"
+            id="profile_image"
+            name="profile_image"
+            accept="image/*"
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* Submit Button */}
+        <button type="submit" className="signup-submit">Sign Up as Customer</button>
+      </form>
+    </div>
   );
 }

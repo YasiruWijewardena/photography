@@ -26,15 +26,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import '../styles/public/photographerLayout.css'; 
 
-export default function SettingsSidebar({ photographerId }) {
+export default function SettingsSidebar({ photographerUsername }) {
     const router = useRouter();
     const path = router.pathname;
   return (
     <div className='sidebar-container'>
-        <button onClick={() => router.push(`/photographer/${photographerId}`)} className='back-button'>← Back</button>
+        <button onClick={() => router.push(`/${photographerUsername}`)} className='back-button'>← Back</button>
       <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
         <li style={{ marginBottom: '10px' }}>
-          <Link href={`/photographer/${photographerId}/settings/general`} className="sidebar-link">General Settings</Link>
+          <Link href={`/${photographerUsername}/settings/general`} className="sidebar-link">General Settings</Link>
         </li>
         {/* Add more settings links if needed */}
       </ul>
