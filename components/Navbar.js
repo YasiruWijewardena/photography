@@ -40,7 +40,7 @@ export default function Navbar() {
                 Hello, {session.user.firstname}
               </Link>
             ) : session.user.role === 'photographer' ? (
-              <Link href={`/photographer/${session.user.id}`} className="navbar-item">
+              <Link href={`/${session.user.username}`} className="navbar-item">
                 Hello, {session.user.firstname}
               </Link>
             ) : (

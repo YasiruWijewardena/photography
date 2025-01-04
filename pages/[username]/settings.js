@@ -14,6 +14,7 @@ export default function Settings() {
   // State variables for profile fields
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
+  const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
@@ -43,8 +44,10 @@ export default function Settings() {
       setLoading(true);
       const response = await axios.get('/api/photographer/get-profile');
       const data = response.data.user;
+      
       setFirstname(data.firstname || '');
       setLastname(data.lastname || '');
+      setUsername(data.username || '');
       setBio(data.Photographer?.bio || '');
       setWebsite(data.Photographer?.website || '');
       setInstagram(data.Photographer?.instagram || '');
@@ -115,7 +118,9 @@ export default function Settings() {
 
   return (
     <div className="settings-page">
-      <Sidebar /> {/* Include the sidebar component */}
+      <Sidebar 
+      photographerUsername={username}
+      /> 
       <div className="settings-content">
         <h1>Settings</h1>
         {error && <p className="error-message">{error}</p>}

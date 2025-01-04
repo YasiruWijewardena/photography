@@ -11,6 +11,7 @@ enum Role {
   photographer
   customer
   admin
+  pending
 }
 
 enum ProjectStatus {
@@ -30,10 +31,11 @@ model User {
   id              Int         @id @default(autoincrement())
   firstname       String      @db.VarChar(100)
   lastname        String      @db.VarChar(100)
-  username        String      @unique @db.VarChar(100)
+  username        String?      @unique @db.VarChar(100)
   email           String      @unique @db.VarChar(100)
   emailVerified   DateTime?
-  password        String      @db.VarChar(255)
+  password        String?      @db.VarChar(255)
+  image          String?  
   role            Role
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
