@@ -251,15 +251,13 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-form">
-      <h1>Sign Up</h1>
+    <div className='signup-page'>
+      <h1>Hello there, glad you are taking the time to join us</h1>
       {/* <ProgressBar currentStep={step} /> */}
 
       {/* Step 1: Traditional Signup Form */}
       {step === 1 && (
-        <form onSubmit={handleTraditionalSubmit} className="signup-form">
-          {error && <p className="error">{error}</p>}
-
+        <div className='signup-container'>
           <button type="button" onClick={handleGoogleSignUp} className="google-button">
             <img src="/google-logo.png" alt="Google Logo" className="google-logo" />
             Sign Up with Google
@@ -269,6 +267,11 @@ const Signup = () => {
           <div className="divider">
             <span>OR</span>
           </div>
+
+          <form onSubmit={handleTraditionalSubmit} className="signup-form">
+          {error && <p className="error">{error}</p>}
+
+          
 
           <div className="signup-input-container">
             <label>First Name:</label>
@@ -314,6 +317,8 @@ const Signup = () => {
           <button type="submit" className="signup-submit">Continue</button>
           
         </form>
+        </div>
+        
       )}
 
       {/* Step 2: Role Selection */}

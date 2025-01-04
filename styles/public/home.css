@@ -1,20 +1,24 @@
 /* Login / sign up */
-.signup-page,
+.signup-container,
 .login {
-    width: 25%;
-    margin: auto;
-    border-radius: 10px;
-    padding: 0 0 20px 0;
-    margin-top: 100px;
-}
-
-.login{
+  width: 25%;
+  margin: auto;
+  border-radius: 10px;
+  padding: 0 0 20px 0;
+  margin-top: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.signup-page h1 ,
+.signup-page h1 {
+  font-size: 36px;
+  text-align: center;
+  color: #000000;
+  font-weight: 500;
+  margin-top: 50px;
+}
+
 .login h1 {
     font-size: 48px;
     text-align: center;
@@ -28,12 +32,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 
 .signup-input-container,
 .login-input-container {
     margin-top: 10px;
-    width: 100%;
+    width: 80%;
 }
 
 .signup-input-container textarea,
@@ -45,7 +50,7 @@
     outline: none;
     border: 1px solid #7777777d;
     padding: 10px 10px;
-    width: 100%;
+    width: 95%;
 }
 
 .signup-submit,

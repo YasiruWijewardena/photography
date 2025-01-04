@@ -139,15 +139,15 @@ export default function Login() {
     <div className="login">
       <h1>Login</h1>
 
-      
-
-      {/* Traditional Sign-In Form */}
-      <form onSubmit={handleSubmit} className="login-form">
-        {/* Google Sign-In Button */}
       <button onClick={handleGoogleSignIn} className="google-button">
         <img src="/google-logo.png" alt="Google Logo" className="google-logo" />
         Sign in with Google
       </button>
+
+      {/* Traditional Sign-In Form */}
+      <form onSubmit={handleSubmit} className="login-form">
+        {/* Google Sign-In Button */}
+      
 
       {/* Divider */}
       <div className="divider">
