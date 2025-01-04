@@ -63,7 +63,7 @@ handler.post(async (req, res) => {
       await prisma.customer.create({
         data: {
           cust_id: updatedUser.id,
-          favourites: JSON.stringify([]),
+          favourites: [],
           profile_image: null,
         },
       });
