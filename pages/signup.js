@@ -1,51 +1,7 @@
-// // pages/signup.js
-
-// import { useState } from 'react';
-// import CustomerSignupForm from '../components/CustomerSignupForm';
-// import PhotographerSignupForm from '../components/PhotographerSignupForm';
-// import '../styles/public/home.css';
-// import '../styles/public/global.css';
-
-// export default function Signup() {
-//   const [activeTab, setActiveTab] = useState('customer');
-
-//   return (
-//     <div className="signup-page">
-//       <h1>Sign Up</h1>
-//       <div className="signup-tabs">
-//         <button
-//           className={`tab-button ${activeTab === 'customer' ? 'active' : ''}`}
-//           onClick={() => setActiveTab('customer')}
-//         >
-//           Customer
-//         </button>
-//         <button
-//           className={`tab-button ${activeTab === 'photographer' ? 'active' : ''}`}
-//           onClick={() => setActiveTab('photographer')}
-//         >
-//           Photographer
-//         </button>
-//       </div>
-//       <div className="signup-form-container">
-//         {activeTab === 'customer' && <CustomerSignupForm />}
-//         {activeTab === 'photographer' && <PhotographerSignupForm />}
-//       </div>
-//     </div>
-//   );
-// }
-
-// function CustomerForm() {
-//   return <div>Customer Signup Form</div>;
-// }
-
-// function PhotographerForm() {
-//   return <div>Photographer Signup Form</div>;
-// }
-
 // pages/signup.js
 
 import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn, signOut, useSession, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import ProgressBar from '../components/ProgressBar';
@@ -100,7 +56,9 @@ const Signup = () => {
         if (session.user.role === 'customer') {
           router.push('/login');
         } else if (session.user.role === 'photographer') {
-          router.push('/photographer-dashboard');
+          setStep(3);
+        }else {
+          router.push('/'); // Default redirect
         }
       }
     }
@@ -170,7 +128,9 @@ const Signup = () => {
 
       if (res.status === 200) {
         if (role === 'customer') {
-          // Redirect to login
+          // Sign out the user to clear the current session
+          await signOut({ redirect: false });
+          // Redirect to login page
           router.push('/login');
         } else if (role === 'photographer') {
           // Proceed to photographer details
@@ -228,15 +188,10 @@ const Signup = () => {
       });
 
       if (res.status === 200) {
-        // Optionally, refresh the session to include updated role
-        await signIn('credentials', {
-          redirect: false,
-          email: signupData.email,
-          password: signupData.password,
-        });
-
-        // Redirect to photographer dashboard
-        router.push('/photographer-dashboard');
+         // Sign out the user to clear the current session
+         await signOut({ redirect: false });
+         // Redirect to login page
+         router.push('/login');
       }
     } catch (err) {
       console.error(err);
@@ -323,7 +278,7 @@ const Signup = () => {
 
       {/* Step 2: Role Selection */}
       {step === 2 && (
-        <div className="role-selection">
+        <div className="role-selection signup-container">
           <h2>Almost there </h2>
           {error && <p className="error">{error}</p>}
           <div className='roles-container'> 
@@ -348,7 +303,7 @@ const Signup = () => {
 
       {/* Step 3: Photographer Details Form */}
       {step === 3 && (
-        <div className='photographer-details-form'>
+        <div className='photographer-details-form signup-container'>
         <h2>Final step </h2>
         <form onSubmit={handlePhotographerSubmit} className="signup-form">
           {error && <p className="error">{error}</p>}
