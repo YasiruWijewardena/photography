@@ -17,8 +17,13 @@ export default function Navbar() {
         {/* Menu Items */}
         <ul className="navbar-menu">
           <li>
-            <Link href="/explore" className="navbar-item">
-              Explore
+            <Link href="/albums" className="navbar-item">
+              Albums
+            </Link>
+          </li>
+          <li>
+            <Link href="/photographers" className="navbar-item">
+              Photographers
             </Link>
           </li>
           <li>
