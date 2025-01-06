@@ -1,0 +1,56 @@
+.albums-page .albums-page-title {
+    margin-top: 100px;
+    margin-bottom: 100px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 64px;
+}
+
+.public-albums-wrapper {
+    padding: 20px
+}
+
+.public-album-container {
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+    border-radius: 20px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.album-detail-container {
+    padding-top: 20px;
+    padding-left: 30px;
+    padding-bottom: 20px;
+    padding-right: 30px;
+    display: grid;
+    grid-template-columns: 0.5fr 2fr 0.5fr;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.photographer-detail-container {
+    display: flex;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.photographer-detail-container .photographer-pro-pic {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.album-slider .swiper-wrapper {
+    height: 300px;
+}
+
+.album-slider .swiper-wrapper  .swiper-slide img{
+    width: 100%!important;
+    height: 100%!important;
+    object-fit: cover;
+}
+
+.album-link {
+    text-align: right;
+    color: #000;
+}
