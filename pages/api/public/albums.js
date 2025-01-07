@@ -1,5 +1,7 @@
 // pages/api/public/albums.js
 
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import prisma from '../../../lib/prisma';
 
 export default async function handler(req, res) {
@@ -7,6 +9,10 @@ export default async function handler(req, res) {
     res.setHeader('Allow', ['GET']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
+
+  // Fetch the session to determine if the user is authenticated
+  const session = await getServerSession(req, res, authOptions);
+  const userId = session?.user?.id;
 
   try {
     const albums = await prisma.album.findMany({
@@ -41,14 +47,25 @@ export default async function handler(req, res) {
                 },
               },
             },
+            _count: { // Include likes_count
+              select: { likes: true },
+            },
+            likes: userId ? { // Fetch likes by the current user
+              where: { user_id: userId },
+              select: { id: true },
+            } : false,
+            favourites: userId ? { // Fetch favourites by the current user
+              where: { user_id: userId },
+              select: { id: true },
+            } : false,
           },
-          take: 10,
+          take: 10, // Adjust as needed
         },
       },
       orderBy: { created_at: 'desc' },
     });
 
-    // Map albums to ensure lowercase 'photographer'
+    // Format the albums data
     const formattedAlbums = albums.map(album => ({
       ...album,
       photographs: album.photographs.map(photo => ({
@@ -60,6 +77,9 @@ export default async function handler(req, res) {
               username: photo.Photographer.User.username,
             }
           : null, // Handle cases where Photographer is missing
+        likes_count: photo._count.likes, // Include likes_count
+        isLiked: userId ? !!photo.likes.length : false, // Determine if the user has liked the photo
+        isFavourited: userId ? !!photo.favourites.length : false, // Determine if the user has favorited the photo
       })),
       photographer: album.Photographer
         ? {

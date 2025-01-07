@@ -90,6 +90,7 @@ import { useSession, getSession } from 'next-auth/react';
 import PhotographerLayout from '../components/PhotographerLayout';
 import Dashboard from './photographer/dashboard'; // Adjust the import path as necessary
 import PublicProfile from '../components/PublicProfile'; // Adjust the import path as necessary
+import PublicLayout from '../components/PublicLayout';
 import prisma from '../lib/prisma';
 import { useEffect } from 'react';
 
@@ -105,13 +106,16 @@ export default function PhotographerPage({ photographerData, isOwner }) {
   }, [isOwner, status, router]);
 
   return (
-    <PhotographerLayout isOwner={isOwner} photographerId={photographerData.id} photographerUsername={photographerData.username}>
+    <PublicLayout>
+<PhotographerLayout isOwner={isOwner} photographerId={photographerData.id} photographerUsername={photographerData.username}>
       {isOwner ? (
         <Dashboard photographerData={photographerData} />
       ) : (
         <PublicProfile photographerData={photographerData} />
       )}
     </PhotographerLayout>
+    </PublicLayout>
+    
   );
 }
 

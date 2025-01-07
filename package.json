@@ -34,6 +34,7 @@
     "next-auth": "^4.24.11",
     "next-connect": "0.12.2",
     "prisma": "6.0.1",
+    "prop-types": "^15.8.1",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-dropzone": "^14.3.5",

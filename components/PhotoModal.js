@@ -1,9 +1,9 @@
 // components/PhotoModal.js
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Modal from 'react-modal';
 import ImageGallery from 'react-image-gallery';
-import Image from 'next/image'; // Correct Import
+import Image from 'next/image';
 import 'react-image-gallery/styles/css/image-gallery.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
@@ -16,6 +16,7 @@ import { usePhotos } from '../context/PhotoContext';
 import { useSession } from 'next-auth/react';
 import LoginPromptModal from '/components/LoginPromptModal';
 import Link from 'next/link'; 
+import PropTypes from 'prop-types'; // Ensure this line is present
 
 // Set the app element for accessibility
 if (typeof window !== 'undefined') {
@@ -31,10 +32,11 @@ const modalVariants = {
 export default function PhotoModal({
   isOpen,
   onRequestClose,
-  images, // Array of photo objects
+  images = [], // Default to empty array
+  albumId = null, // New optional prop
   startIndex = 0,
 }) {
-  const { toggleLike, toggleFavourite } = usePhotos();
+  const { albums, toggleLike, toggleFavourite } = usePhotos();
   const { data: session, status } = useSession();
   const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -42,6 +44,16 @@ export default function PhotoModal({
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const controlTimeoutRef = useRef(null);
 
+  // Determine the source of images
+  let sourceImages = images;
+  if (albumId !== null) {
+    const album = albums.find(a => a.id === albumId);
+    if (album) {
+      sourceImages = album.photographs;
+    }
+  }
+
+  // Update currentIndex only when startIndex changes
   useEffect(() => {
     setCurrentIndex(startIndex);
   }, [startIndex]);
@@ -103,43 +115,51 @@ export default function PhotoModal({
   };
 
   const handleLike = () => {
-    const currentPhoto = images[currentIndex];
+    const currentPhoto = sourceImages[currentIndex];
     if (status !== 'authenticated') {
       setIsLoginModalOpen(true);
       return;
     }
-    toggleLike(currentPhoto.id);
+    toggleLike(currentPhoto.id, albumId); // Pass albumId if available
   };
 
   const handleFavourite = () => {
-    const currentPhoto = images[currentIndex];
+    const currentPhoto = sourceImages[currentIndex];
     if (status !== 'authenticated') {
       setIsLoginModalOpen(true);
       return;
     }
-    toggleFavourite(currentPhoto.id);
+    toggleFavourite(currentPhoto.id, albumId); // Pass albumId if available
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    // Optionally reset other states
   };
 
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
   };
 
-  // Map your photo objects to ImageGallery's expected format
-  const galleryItems = images.map((photo) => ({
-    original: photo.image_url,
-    thumbnail: photo.thumbnail_url,
-    title: photo.title,
-    metadata: {
-      cameraModel: photo.cameraModel,
-      lens: photo.lens,
-      exposure: photo.exposure,
-      focalLength: photo.focalLength,
-    },
-    photographer: photo.photographer, // Include photographer info
-    isLiked: photo.isLiked,
-    isFavourited: photo.isFavourited,
-    likes_count: photo.likes_count,
-  }));
+  // Memoize galleryItems to prevent unnecessary re-renders
+  const galleryItems = useMemo(() => 
+    sourceImages.map((photo) => ({
+      original: photo.image_url,
+      thumbnail: photo.thumbnail_url,
+      title: photo.title,
+      metadata: {
+        cameraModel: photo.cameraModel,
+        lens: photo.lens,
+        exposure: photo.exposure,
+        focalLength: photo.focalLength,
+      },
+      photographer: photo.photographer, // Include photographer info
+      isLiked: photo.isLiked,
+      isFavourited: photo.isFavourited,
+      likes_count: photo.likes_count,
+    })),
+    [sourceImages]
+  );
 
   return (
     <AnimatePresence>
@@ -220,66 +240,63 @@ export default function PhotoModal({
                     </div>
                     {!isFullscreen && (
                       <div className="slider-metadata-panel">
-                      <div className="slider-photographer-info">
-                        <Image
-                          src={item.photographer.profile_picture}
-                          alt={`${item.photographer.name}'s profile picture`}
-                          width={100} // Adjust size as needed
-                          height={100} // Adjust size as needed
-                          className="photographer-profile-picture"
-                        />
-                        <Link href={`/${item.photographer.username}`} className="photographer-name-link">
-                            
-                              {item.photographer.name}
-                            
+                        <div className="slider-photographer-info">
+                          <Image
+                            src={item.photographer?.profile_picture || '/default-profile.png'}
+                            alt={`${item.photographer?.name || 'Unknown Photographer'}'s profile picture`}
+                            width={100} // Adjust size as needed
+                            height={100} // Adjust size as needed
+                            className="photographer-profile-picture"
+                          />
+                          <Link href={`/${item.photographer?.username}`} className="photographer-name-link">
+                            {item.photographer?.name || 'Unknown Photographer'}
                           </Link>
-                      </div>
-                      {/* Like and Favourite Buttons */}
-                      <div className="slider-actions">
-                        <IconButton
-                          onClick={handleLike}
-                          aria-label={item.isLiked ? 'Unlike photo' : 'Like photo'}
-                        >
-                          {item.isLiked ? <Favorite color="error" /> : <FavoriteBorder />}
-                        </IconButton>
-                        <span>{item.likes_count}</span>
-                        <IconButton
-                          onClick={handleFavourite}
-                          aria-label={item.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
-                        >
-                          {item.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder />}
-                        </IconButton>
-                      </div>
-                      {/* Metadata Panel */}
-                      { item.metadata && (
-                        <div className="slider-metadata-details">
-                          <ul>
-                            {item.metadata.cameraModel && (
-                              <li>
-                                <span>Camera Model:</span> <span>{item.metadata.cameraModel}</span>
-                              </li>
-                            )}
-                            {item.metadata.lens && (
-                              <li>
-                                <span>Lens:</span> <span>{item.metadata.lens}</span>
-                              </li>
-                            )}
-                            {item.metadata.exposure && (
-                              <li>
-                                <span>Exposure:</span> <span>{item.metadata.exposure}</span>
-                              </li>
-                            )}
-                            {item.metadata.focalLength && (
-                              <li>
-                                <span>Focal Length:</span> <span>{item.metadata.focalLength}</span>
-                              </li>
-                            )}
-                          </ul>
                         </div>
-                      )}
-                    </div>
+                        {/* Like and Favourite Buttons */}
+                        <div className="slider-actions">
+                          <IconButton
+                            onClick={handleLike}
+                            aria-label={item.isLiked ? 'Unlike photo' : 'Like photo'}
+                          >
+                            {item.isLiked ? <Favorite color="error" /> : <FavoriteBorder />}
+                          </IconButton>
+                          <span>{item.likes_count}</span>
+                          <IconButton
+                            onClick={handleFavourite}
+                            aria-label={item.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                          >
+                            {item.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder />}
+                          </IconButton>
+                        </div>
+                        {/* Metadata Panel */}
+                        {item.metadata && (
+                          <div className="slider-metadata-details">
+                            <ul>
+                              {item.metadata.cameraModel && (
+                                <li>
+                                  <span>Camera Model:</span> <span>{item.metadata.cameraModel}</span>
+                                </li>
+                              )}
+                              {item.metadata.lens && (
+                                <li>
+                                  <span>Lens:</span> <span>{item.metadata.lens}</span>
+                                </li>
+                              )}
+                              {item.metadata.exposure && (
+                                <li>
+                                  <span>Exposure:</span> <span>{item.metadata.exposure}</span>
+                                </li>
+                              )}
+                              {item.metadata.focalLength && (
+                                <li>
+                                  <span>Focal Length:</span> <span>{item.metadata.focalLength}</span>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     )}
-                    
                   </div>
                 )}
               />
@@ -293,3 +310,17 @@ export default function PhotoModal({
     </AnimatePresence>
   );
 }
+
+PhotoModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onRequestClose: PropTypes.func.isRequired,
+  images: PropTypes.array, // Optional
+  albumId: PropTypes.number, // Optional
+  startIndex: PropTypes.number,
+};
+
+PhotoModal.defaultProps = {
+  images: [],
+  albumId: null,
+  startIndex: 0,
+};

@@ -29,6 +29,10 @@
     align-items: center;
 }
 
+.album-details p {
+    font-family: 'Poppins';
+}
+
 .photographer-detail-container {
     display: flex;
     column-gap: 20px;
@@ -50,7 +54,15 @@
     object-fit: cover;
 }
 
-.album-link {
+.album-detail-container .album-link {
     text-align: right;
-    color: #000;
+    color: #ffffff;
+    background-color: #000;
+    border-radius: 20px;
+    width: fit-content;
+    padding:10px;
+    margin-right: 0;
+    margin-left: auto;
+    font-family: 'Poppins';
+
 }
