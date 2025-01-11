@@ -174,7 +174,6 @@ export default function AlbumsPage() {
                       >
                         {album.isFavourited ? <Bookmark color="black" /> : <BookmarkBorder />} 
                       </IconButton>
-                      <p>{album.isFavourited ? "saved" : "save"} </p>
                       
                     </div>
                     {/* View Album Link */}
