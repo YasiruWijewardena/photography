@@ -8,19 +8,26 @@ import { authOptions } from '../../api/auth/[...nextauth]'; // Adjust path as ne
 import PhotographerLayout from '../../../components/PhotographerLayout';
 import PhotoSection from '../../../components/PhotoSection'; // Reuse the same component
 import prisma from '../../../lib/prisma';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
 
 import AddPhotosModal from '../../../components/AddPhotosModal';
 import AssignPhotosModal from '../../../components/AssignPhotosModal';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import { Bookmark, BookmarkBorder } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 import PropTypes from 'prop-types';
-import path from 'path';
 
-export default function AlbumPage({ album, photographerId, isOwner, allAlbums, photographerUsername }) {
+export default function AlbumPage({
+  album,
+  photographerId,
+  isOwner,
+  allAlbums,
+  photographerUsername,
+}) {
   const router = useRouter();
   const { data: session } = useSession();
 
-  // Safely initialize to prevent "undefined is not an object"
+  // Initialize to prevent undefined references
   const [currentAlbum, setCurrentAlbum] = useState(album || { photographs: [] });
 
   // Edit mode states
@@ -38,36 +45,68 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
   const [loadingAvailableAlbums, setLoadingAvailableAlbums] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
-  // Effect to update album data when props change
+  // On prop change, reset local album data
   useEffect(() => {
     setCurrentAlbum(album || { photographs: [] });
-
-    // Reset edit-related states
     setIsEditMode(false);
     setEditedTitle(album?.title || '');
     setEditedDescription(album?.description || '');
   }, [album]);
+
+  // Toggle album favourite (bookmark icon)
+  const handleToggleAlbumFavourite = async () => {
+    if (!session) {
+      alert('Please log in to favourite albums!');
+      return;
+    }
+  
+    // 1) Optimistic UI update
+    setCurrentAlbum((prev) => ({
+      ...prev,
+      isFavourited: !prev.isFavourited,
+    }));
+  
+    // 2) Decide POST or DELETE
+    const method = currentAlbum.isFavourited ? 'DELETE' : 'POST';
+  
+    try {
+      // Use photographerUsername (the album owner’s username) instead of session.user.username
+      const res = await fetch(
+        `/api/users/${photographerUsername}/albums/${currentAlbum.slug}/favourite`,
+        { method }
+      );
+  
+      if (!res.ok) {
+        throw new Error('Request failed');
+      }
+      // If successful, do nothing extra.
+    } catch (error) {
+      console.error('Error toggling favourite:', error);
+      // 3) Roll back the toggle if the request fails
+      setCurrentAlbum((prev) => ({
+        ...prev,
+        isFavourited: !prev.isFavourited,
+      }));
+    }
+  };
 
   // ------------------------------
   // Photo Selection
   // ------------------------------
   const toggleSelectPhoto = (photoId) => {
     setSelectedPhotoIds((prev) =>
-      prev.includes(photoId)
-        ? prev.filter((pid) => pid !== photoId)
-        : [...prev, photoId]
+      prev.includes(photoId) ? prev.filter((pid) => pid !== photoId) : [...prev, photoId]
     );
   };
 
   const handleExitEditMode = () => {
     setIsEditMode(false);
-    // Reset to the latest data in currentAlbum
     setEditedTitle(currentAlbum.title || '');
     setEditedDescription(currentAlbum.description || '');
   };
 
   // ------------------------------
-  // Deleting Photos (Reflect in UI)
+  // Deleting Photos
   // ------------------------------
   const handleDeletePhotos = async () => {
     if (selectedPhotoIds.length === 0) return;
@@ -81,15 +120,10 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
         data: { photoIds: selectedPhotoIds },
       });
       alert('Selected photos deleted successfully.');
-
-      // Remove the deleted photos from currentAlbum.photographs array
       setCurrentAlbum((prev) => ({
         ...prev,
-        photographs: prev.photographs.filter(
-          (p) => !selectedPhotoIds.includes(p.id)
-        ),
+        photographs: prev.photographs.filter((p) => !selectedPhotoIds.includes(p.id)),
       }));
-
       setSelectedPhotoIds([]);
     } catch (error) {
       console.error('Error deleting photos:', error);
@@ -104,7 +138,7 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
     setLoadingAvailableAlbums(true);
     try {
       const res = await axios.get('/api/albums', {
-        params: { excludeId: currentAlbum.id }, // Pass excludeId instead of excludeSlug
+        params: { excludeId: currentAlbum.id }, // Pass excludeId
       });
       setAvailableAlbums(res.data.albums || []);
     } catch (error) {
@@ -126,22 +160,18 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
       alert('Please select an album to assign the photos to.');
       return;
     }
+    const targetAlbumId = selectedTargetAlbum.id;
 
-    const targetAlbumId = selectedTargetAlbum.id; // Use album.id instead of slug
     try {
       setAssigning(true);
       await axios.post('/api/photographs/assign', {
         photoIds: selectedPhotoIds,
-        targetAlbumId, // Send album.id
+        targetAlbumId,
       });
       alert('Selected photos moved successfully.');
-
-      // Remove the moved photos from currentAlbum
       setCurrentAlbum((prev) => ({
         ...prev,
-        photographs: prev.photographs.filter(
-          (p) => !selectedPhotoIds.includes(p.id)
-        ),
+        photographs: prev.photographs.filter((p) => !selectedPhotoIds.includes(p.id)),
       }));
       setSelectedPhotoIds([]);
       setIsAssignModalOpen(false);
@@ -163,17 +193,13 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
         title: editedTitle,
         description: editedDescription,
       });
-
       alert('Album updated successfully.');
-
-      // Update local state with the new album data
       setCurrentAlbum((prev) => ({
         ...prev,
         title: response.data.album.title,
         description: response.data.album.description,
         slug: response.data.album.slug, // Update slug if title changed
       }));
-
       setIsEditMode(false);
     } catch (error) {
       console.error('Error updating album:', error);
@@ -197,20 +223,24 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
     }
   };
 
+  // ------------------------------
   // Handle photos added
+  // ------------------------------
   const handlePhotosAdded = () => {
-    // Optionally, reset or refresh photos in PhotoSection
-    // For simplicity, reload the page or trigger a re-fetch
-    router.reload(); // Simple approach; consider a more efficient update
+    // Simple approach; reload to see newly added photos
+    router.reload();
   };
 
   // ------------------------------
-  // Early Returns / Rendering
+  // Early Return if Not Found
   // ------------------------------
   if (!album) {
-    return <p>Error: Album not found</p>; // Graceful error handling
+    return <p>Error: Album not found</p>;
   }
 
+  // ------------------------------
+  // Rendering
+  // ------------------------------
   return (
     <div className="album-page">
       {/* Album Title & Description */}
@@ -218,9 +248,26 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
         <>
           <h1 className="album-title">{currentAlbum.title}</h1>
           <p className="album-desc">{currentAlbum.description}</p>
+
+          {/* Favourite (Bookmark) Icon */}
+          <IconButton
+            onClick={handleToggleAlbumFavourite}
+            aria-label={
+              currentAlbum.isFavourited ? 'Remove from favourites' : 'Add to favourites'
+            }
+            className="favourite-btn"
+          >
+            {currentAlbum.isFavourited ? <Bookmark /> : <BookmarkBorder />}
+          </IconButton>
+
+          {/* Edit button for owner */}
           {isOwner && (
             <div className="modal-actions">
-              <button onClick={() => setIsEditMode(true)} className="edit-button" aria-label="Edit Album">
+              <button
+                onClick={() => setIsEditMode(true)}
+                className="edit-button"
+                aria-label="Edit Album"
+              >
                 <EditRoundedIcon />
               </button>
             </div>
@@ -247,7 +294,10 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
             <button onClick={handleSaveAlbumChanges} className="primary-button">
               Save Changes
             </button>
-            <button onClick={() => setIsAddPhotosModalOpen(true)} className="primary-button">
+            <button
+              onClick={() => setIsAddPhotosModalOpen(true)}
+              className="primary-button"
+            >
               Add Photos
             </button>
             <button
@@ -298,10 +348,10 @@ export default function AlbumPage({ album, photographerId, isOwner, allAlbums, p
         />
       )}
 
-      {/* Reuse PhotoSection for the album's photos (no filter) */}
+      {/* PhotoSection for the album photos (no filter) */}
       <PhotoSection
         scope="album"
-        albumSlug={currentAlbum.slug} // Pass slug instead of id
+        albumSlug={currentAlbum.slug}
         initialPhotos={currentAlbum.photographs}
         enableFilters={false}
         isOwner={isOwner}
@@ -321,13 +371,14 @@ AlbumPage.propTypes = {
   photographerUsername: PropTypes.string.isRequired,
 };
 
+// Wrap page with PhotographerLayout
 AlbumPage.getLayout = function getLayout(page) {
   const { album, allAlbums, photographerId, isOwner, photographerUsername } = page.props;
   return (
     <PhotographerLayout
       isOwner={isOwner}
       photographerId={photographerId}
-      photographerUsername={photographerUsername} // Pass photographerUsername
+      photographerUsername={photographerUsername}
       useAlbumSidebar
       albums={allAlbums || []}
     >
@@ -336,11 +387,17 @@ AlbumPage.getLayout = function getLayout(page) {
   );
 };
 
+// ------------------------------
+// getServerSideProps
+// ------------------------------
+
+
 export async function getServerSideProps(context) {
   const { username, albumSlug } = context.params;
   const session = await getServerSession(context.req, context.res, authOptions);
+  const userId = session?.user?.id ?? -1;
 
-  // Fetch the photographer based on username
+  // Fetch the photographer (with fallback for subscription, etc.)
   const user = await prisma.user.findUnique({
     where: { username },
     include: {
@@ -357,28 +414,61 @@ export async function getServerSideProps(context) {
     },
   });
 
+  // If photographer not found, 404
   if (!user || !user.Photographer) {
     return { notFound: true };
   }
 
   const photographer = user.Photographer;
-  const photographerId = photographer.photo_id; // Correctly assign photographerId
+  const photographerId = photographer.photo_id;
 
-  // Fetch the album based on the compound unique key (slug + photographer_id)
+  // Fetch the specific album (omitting created_at/updated_at)
   const albumData = await prisma.album.findUnique({
     where: {
       slug_photographer_id: {
         slug: albumSlug,
-        photographer_id: photographerId, // Correctly pass the photographer's ID
+        photographer_id: photographerId,
       },
     },
-    include: {
+    select: {
+      // Basic fields
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+
+      // Relationship: favourites (only need to check if user has any)
+      favourites: {
+        where: { user_id: userId },
+        select: { id: true },
+      },
+
+      // Relationship: photographs (omitting created_at, updated_at)
       photographs: {
-        include: {
-          likes: { where: { user_id: session?.user?.id ?? -1 } },
-          favourites: { where: { user_id: session?.user?.id ?? -1 } },
+        select: {
+          id: true,
+          album_id: true,
+          title: true,
+          description: true,
+          image_url: true,
+          thumbnail_url: true,
+          cameraModel: true,
+          lens: true,
+          exposure: true,
+          focalLength: true,
+          likes_count: true,
+          likes: {
+            where: { user_id: userId },
+            select: { id: true },
+          },
+          favourites: {
+            where: { user_id: userId },
+            select: { id: true },
+          },
           Photographer: {
-            include: {
+            select: {
+              photo_id: true,
+              profile_picture: true,
               User: {
                 select: {
                   firstname: true,
@@ -390,8 +480,23 @@ export async function getServerSideProps(context) {
           },
         },
       },
-      Photographer: true,
-      Category: true,
+
+      // Relationship: main Photographer
+      Photographer: {
+        select: {
+          photo_id: true,
+          profile_picture: true,
+          // Add other fields if needed
+        },
+      },
+
+      // Relationship: Category
+      Category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 
@@ -399,60 +504,50 @@ export async function getServerSideProps(context) {
     return { notFound: true };
   }
 
+  // Check if user has favourited the album
+  const userHasAlbumFavourited = albumData.favourites.length > 0;
+
   // Determine ownership
   const isOwner =
-    session?.user?.role === 'photographer' &&
-    session.user.username === username; // Compare usernames
+    session?.user?.role === 'photographer' && session.user.username === username;
 
-  // Serialize album data
-  const serializedAlbum = {
+  // Build our final "album" object with booleans for isFavourited, isLiked, etc.
+  const album = {
     ...albumData,
-    id: albumData.id,
-    created_at: albumData.created_at.toISOString(),
-    updated_at: albumData.updated_at.toISOString(),
-    photographs: albumData.photographs.map((p) => ({
-      ...p,
-      created_at: p.created_at.toISOString(),
-      updated_at: p.updated_at.toISOString(),
-      isLiked: session?.user ? p.likes.length > 0 : false,
-      isFavourited: session?.user ? p.favourites.length > 0 : false,
+    isFavourited: userHasAlbumFavourited,
+    photographs: albumData.photographs.map((photo) => ({
+      ...photo,
+      isLiked: photo.likes.length > 0,
+      isFavourited: photo.favourites.length > 0,
       photographer: {
-        id: p.Photographer.photo_id, // Correctly reference photo_id
-        name: `${p.Photographer.User.firstname} ${p.Photographer.User.lastname}`,
-        profile_picture: p.Photographer.profile_picture,
+        id: photo.Photographer.photo_id,
+        name: `${photo.Photographer.User.firstname} ${photo.Photographer.User.lastname}`,
+        profile_picture: photo.Photographer.profile_picture,
       },
-      likes: p.likes.map((like) => ({
-        ...like,
-        created_at: like.created_at.toISOString(),
-        updated_at: like.updated_at.toISOString(),
-      })),
-      favourites: p.favourites.map((fav) => ({
-        ...fav,
-        created_at: fav.created_at.toISOString(),
-        updated_at: fav.updated_at.toISOString(),
-      })),
     })),
   };
 
-  // Fetch all albums for sidebar
+  // Fetch all albums for the sidebar (also omitting created_at/updated_at)
   const allAlbumsData = await prisma.album.findMany({
     where: { photographer_id: photographerId },
-    include: {
-      photographs: { take: 1, select: { thumbnail_url: true } },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      photographs: {
+        take: 1,
+        select: { thumbnail_url: true },
+      },
     },
     orderBy: { created_at: 'asc' },
   });
-  const serializedAllAlbums = allAlbumsData.map((a) => ({
-    ...a,
-    created_at: a.created_at.toISOString(),
-    updated_at: a.updated_at.toISOString(),
-  }));
 
   return {
     props: {
-      album: serializedAlbum,
-      allAlbums: serializedAllAlbums,
-      photographerId: photographerId, // Now correctly defined
+      album,
+      allAlbums: allAlbumsData,
+      photographerId,
       isOwner,
       photographerUsername: username,
     },

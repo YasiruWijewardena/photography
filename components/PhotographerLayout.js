@@ -5,6 +5,8 @@ import PhotographerSidebar from './PhotographerSidebar';
 import AlbumSidebar from './AlbumSidebar';
 import '../styles/public/global.css'; 
 import '../styles/public/photographerLayout.css'; 
+import { usePhotos } from '../context/PhotoContext'; // Import usePhotos
+import { useEffect } from 'react';
 
 export default function PhotographerLayout({
   children,
@@ -17,8 +19,6 @@ export default function PhotographerLayout({
   // If NOT the owner, we always show the album sidebar
   // If the user IS the owner, then we rely on the 'useAlbumSidebar' prop
   const finalUseAlbumSidebar = isOwner ? useAlbumSidebar : true;
-
-  console.log(photographerUsername);
 
   return (
     <div className="photographer-page">

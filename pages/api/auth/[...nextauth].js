@@ -37,6 +37,9 @@ export const authOptions = {
           return null;
         }
 
+        // Include photographer_id if the user is a photographer
+        const photographer_id = user.Photographer ? user.Photographer.photo_id : null;
+
         return {
           id: user.id,
           email: user.email,
@@ -44,6 +47,7 @@ export const authOptions = {
           lastname: user.lastname,
           username: user.username,
           role: user.role,
+          photographer_id,
         };
       },
     }),
@@ -75,6 +79,7 @@ export const authOptions = {
         token.lastname = user.lastname;
         token.username = user.username;
         token.role = user.role;
+        token.photographer_id = user.photographer_id;
       }
       return token;
     },
@@ -87,6 +92,7 @@ export const authOptions = {
           lastname: token.lastname,
           username: token.username,
           role: token.role,
+          photographer_id: token.photographer_id
         };
       }
       return session;

@@ -34,6 +34,7 @@
     "next-auth": "^4.24.11",
     "next-connect": "0.12.2",
     "prisma": "6.0.1",
+    "prop-types": "^15.8.1",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-dropzone": "^14.3.5",
@@ -43,7 +44,9 @@
     "react-masonry-css": "^1.0.16",
     "react-modal": "^3.16.1",
     "react-select": "^5.8.3",
-    "sharp": "^0.33.5"
+    "react-swiper": "^0.1.5",
+    "sharp": "^0.33.5",
+    "swiper": "^11.2.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
