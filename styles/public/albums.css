@@ -44,8 +44,13 @@
     object-fit: cover;
 }
 
+.photographer-detail-container .photographer-name {
+    font-weight: 500;
+    color: #000;
+}
+
 .album-slider .swiper-wrapper {
-    height: 300px;
+    height: 400px;
 }
 
 .album-slider .swiper-wrapper  .swiper-slide img{
@@ -61,8 +66,32 @@
     border-radius: 20px;
     width: fit-content;
     padding:10px;
-    margin-right: 0;
-    margin-left: auto;
     font-family: 'Poppins';
 
+}
+
+.album-favourite-container{
+    display: flex;
+    align-items: center;
+    column-gap: 5px;
+}
+
+.album-actions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.album-favourite-container p {
+    font-family: 'Poppins';
+    font-size: 20px;
+    color: #000;
+}
+
+.album-favourite-container button {
+    padding: 0!important;
+}
+
+.album-favourite-container button svg {
+    font-size: 30px!important;
 }

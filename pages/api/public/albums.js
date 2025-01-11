@@ -61,6 +61,10 @@ export default async function handler(req, res) {
           },
           take: 10, // Adjust as needed
         },
+        favourites: userId ? { // Include album's favourites by current user
+          where: { user_id: userId },
+          select: { id: true },
+        } : false,
       },
       orderBy: { created_at: 'desc' },
     });
@@ -88,6 +92,7 @@ export default async function handler(req, res) {
             username: album.Photographer.User.username,
           }
         : null,
+        isFavourited: userId ? !!album.favourites.length : false,
     }));
 
     res.status(200).json({ albums: formattedAlbums });

@@ -61,6 +61,22 @@ export function PhotoProvider({ children }) {
   );
 
   /**
+   * Function to toggle the favourite status of an album.
+   *
+   * @param {number} albumId - The ID of the album to toggle favourite.
+   */
+  const toggleAlbumFavourite = useCallback(
+    (albumId) => {
+      setAlbums((prevAlbums) =>
+        prevAlbums.map((album) =>
+          album.id === albumId ? { ...album, isFavourited: !album.isFavourited } : album
+        )
+      );
+    },
+    []
+  );
+
+  /**
    * Function to toggle the like status of a photo.
    *
    * @param {number} photoId - The ID of the photo to toggle like.
@@ -220,9 +236,14 @@ export function PhotoProvider({ children }) {
    */
   const setAlbumsData = useCallback(
     (fetchedAlbums) => {
+      if (!Array.isArray(fetchedAlbums)) {
+        console.error('setAlbumsData expects an array of albums, received:', fetchedAlbums);
+        return;
+      }
+      console.log('Setting albums data in context:', fetchedAlbums);
       setAlbums(fetchedAlbums);
       // Also populate global photos
-      const allPhotos = fetchedAlbums.flatMap((album) => album.photographs);
+      const allPhotos = fetchedAlbums.flatMap((album) => album.photographs || []);
       addPhotos(allPhotos);
     },
     [addPhotos]
@@ -242,6 +263,7 @@ export function PhotoProvider({ children }) {
         updatePhoto: updateGlobalPhoto, // Retain existing updatePhoto functionality
         toggleLike,
         toggleFavourite,
+        toggleAlbumFavourite, // Expose the new function
       }}
     >
       {children}

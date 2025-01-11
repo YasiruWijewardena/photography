@@ -1,4 +1,4 @@
-// pages/api/albums/[id]/add-photos.js
+// pages/api/albums/[slug]/add-photos.js
 
 import prisma from '../../../../lib/prisma';
 

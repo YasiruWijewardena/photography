@@ -13,6 +13,9 @@ import PhotoModal from '../components/PhotoModal'; // Import PhotoModal
 import { usePhotos } from '../context/PhotoContext'; // Import usePhotos
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { IconButton} from '@mui/material';
+import { Favorite, FavoriteBorder, Bookmark, BookmarkBorder  } from '@mui/icons-material';
+import LoginPromptModal from '../components/LoginPromptModal';
 import PropTypes from 'prop-types';
 
 // Define animation variants
@@ -24,11 +27,13 @@ const albumVariants = {
 
 export default function AlbumsPage() {
   const { data: session, status } = useSession();
-  const { albums, setAlbumsData } = usePhotos(); // Consume albums from context
+  const { albums, setAlbumsData, toggleAlbumFavourite  } = usePhotos(); // Consume albums from context
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [currentAlbumId, setCurrentAlbumId] = useState(null); // New state to track current album
   const [loading, setLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' }); 
 
   // Fetch albums and set them in PhotoContext
   useEffect(() => {
@@ -68,6 +73,38 @@ export default function AlbumsPage() {
     setCurrentPhotoIndex(0);
   };
 
+   // Handler to toggle favourite status
+   const handleToggleFavourite = async (album) => {
+    if (!session) { // Check if user is not logged in
+      setIsLoginModalOpen(true); // Open the login prompt modal
+      return; // Exit the function early
+    }
+
+    // Optimistically update the UI
+    toggleAlbumFavourite(album.id);
+
+    try {
+      const method = album.isFavourited ? 'DELETE' : 'POST';
+      const res = await fetch(`/api/users/${album.photographer.username}/albums/${album.slug}/favourite`, {
+        method: method,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to toggle favourite');
+      }
+
+      // No Snackbar or Alert here
+
+    } catch (error) {
+      console.error('Error toggling favourite:', error);
+      // Optionally, you can implement some silent error handling or logging here
+
+      // Rollback the UI update
+      toggleAlbumFavourite(album.id);
+    }
+  };
+
   if (loading) {
     return (
       <PublicLayout>
@@ -99,7 +136,8 @@ export default function AlbumsPage() {
                   {/* Photographer Info */}
                   <div className='album-detail-container'>
                     <div className='photographer-detail-container'> 
-                      <Image
+                    <Link href={`/${album.photographer?.username}`} passHref>
+                    <Image
                         src={album.photographer?.profile_picture || '/default-profile.png'}
                         alt={album.photographer
                           ? `${album.photographer.name}`
@@ -108,9 +146,16 @@ export default function AlbumsPage() {
                         height={100}
                         className='photographer-pro-pic'
                       />
-                      <h3>
+                      
+                    </Link>
+
+                    <Link href={`/${album.photographer?.username}`} passHref>
+                    
+                      <h3 className='photographer-name'>
                         {album.photographer ? album.photographer.name : 'Unknown Photographer'}
                       </h3>
+                    </Link>
+                      
                     </div>
                     
                     {/* Album Details */}
@@ -119,10 +164,27 @@ export default function AlbumsPage() {
                       <p>{album.description}</p>
                     </div>
 
+                    {/* Favourite Icon */}
+                    <div className='album-actions-container'>
+                    <div className='album-favourite-container'>
+                    <IconButton
+                        onClick={() => handleToggleFavourite(album)}
+                        aria-label={album.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                        className='favourite-btn'
+                      >
+                        {album.isFavourited ? <Bookmark color="black" /> : <BookmarkBorder />} 
+                      </IconButton>
+                      <p>{album.isFavourited ? "saved" : "save"} </p>
+                      
+                    </div>
                     {/* View Album Link */}
                     <Link href={`/${album.photographer?.username}/albums/${album.slug}`} passHref className='album-link'>
                       View in profile
                     </Link>
+                    </div>
+                    
+
+                    
                   </div>
 
                   {/* Image Slider */}
@@ -177,6 +239,12 @@ export default function AlbumsPage() {
             startIndex={currentPhotoIndex}
           />
         )}
+
+        {/* Login Prompt Modal */}
+        <LoginPromptModal
+          isOpen={isLoginModalOpen}
+          onRequestClose={() => setIsLoginModalOpen(false)}
+        />
       </div>
     </PublicLayout>
   );

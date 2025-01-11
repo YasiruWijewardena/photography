@@ -265,7 +265,7 @@ export default function PhotoModal({
                             onClick={handleFavourite}
                             aria-label={item.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
                           >
-                            {item.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder />}
+                            {item.isFavourited ? <Bookmark color="black" /> : <BookmarkBorder />}
                           </IconButton>
                         </div>
                         {/* Metadata Panel */}
