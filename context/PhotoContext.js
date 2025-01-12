@@ -230,21 +230,30 @@ export function PhotoProvider({ children }) {
 
   /**
    * Function to set albums data.
-   * Useful for initializing albums fetched from the server.
+   * Now modified to handle both arrays and functional updates.
    *
-   * @param {Array} fetchedAlbums - Array of album objects with photographs.
+   * @param {Array|Function} fetchedAlbums - Array of album objects with photographs or a function to update albums.
    */
   const setAlbumsData = useCallback(
     (fetchedAlbums) => {
-      if (!Array.isArray(fetchedAlbums)) {
-        console.error('setAlbumsData expects an array of albums, received:', fetchedAlbums);
-        return;
+      if (typeof fetchedAlbums === 'function') {
+        // Handle functional updates
+        setAlbums((prevAlbums) => {
+          const updatedAlbums = fetchedAlbums(prevAlbums);
+          // Extract all photos from the updated albums
+          const allPhotos = updatedAlbums.flatMap((album) => album.photographs || []);
+          addPhotos(allPhotos);
+          return updatedAlbums;
+        });
+      } else if (Array.isArray(fetchedAlbums)) {
+        // Handle direct array updates
+        setAlbums(fetchedAlbums);
+        // Also populate global photos
+        const allPhotos = fetchedAlbums.flatMap((album) => album.photographs || []);
+        addPhotos(allPhotos);
+      } else {
+        console.error('setAlbumsData expects an array or function, received:', fetchedAlbums);
       }
-      console.log('Setting albums data in context:', fetchedAlbums);
-      setAlbums(fetchedAlbums);
-      // Also populate global photos
-      const allPhotos = fetchedAlbums.flatMap((album) => album.photographs || []);
-      addPhotos(allPhotos);
     },
     [addPhotos]
   );
