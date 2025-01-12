@@ -44,7 +44,7 @@ export default function Navbar() {
         <div className="navbar-auth">
           {session ? (
             session.user.role === 'customer' ? (
-              <Link href="/customer/profile" className="navbar-item">
+              <Link href={`/customer/${session.user.username}`} className="navbar-item">
                 Hello, {session.user.firstname}
               </Link>
             ) : session.user.role === 'photographer' ? (
