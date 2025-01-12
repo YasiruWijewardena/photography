@@ -32,7 +32,6 @@ export default async function handler(req, res) {
     if (search) {
       whereClause.title = {
         contains: search,
-        mode: 'insensitive', // Optional: make search case-insensitive
       };
     }
 
