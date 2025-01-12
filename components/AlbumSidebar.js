@@ -15,30 +15,33 @@ export default function AlbumSidebar({
   photographerUsername,
 }) {
   const router = useRouter();
-  const { albumSlug } = router.query; 
+  const { albumSlug } = router.query;
+  const asPath = router.asPath; // e.g., "/dinethpanagoda" or "/dinethpanagoda/albums"
 
   // Local album list
   const [localAlbums, setLocalAlbums] = useState(albums);
 
-  // Modal state
+  // Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Search bar state
+  // Search bar
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Is it the profile page => "/[username]"?
-  const isProfilePage = router.pathname === '/[username]';
+  // Exactly on the profile page => "/dinethpanagoda"
+  const isProfilePage = asPath === `/${photographerUsername}`;
 
-  // Decide if we’re on the "all albums" vs. "single album"
-  // If albumSlug is undefined => all albums page
-  // If albumSlug exists => single album page
-  const isAlbumsIndex = !albumSlug;     // true means "all albums"
-  const isSingleAlbumPage = !!albumSlug; // true means "one specific album"
+  // Exactly on the all albums page => "/dinethpanagoda/albums"
+  const isAlbumsIndex = asPath === `/${photographerUsername}/albums`;
 
-  // Are we on ANY album route? (i.e. /[username]/albums or /[username]/albums/[slug])
-  const isOnAlbumRoutes = router.pathname.startsWith('/[username]/albums');
+  // Single album route => If path starts with /[username]/albums/ plus something after
+  // For example: "/dinethpanagoda/albums/nature"
+  // or you can just check if albumSlug is defined:
+  const isSingleAlbumPage = !!albumSlug;
 
-  // Filter albums by the search query (client-side)
+  // On ANY album route?
+  const isOnAlbumRoutes = asPath.startsWith(`/${photographerUsername}/albums`);
+
+  // Filter
   const filteredAlbums = useMemo(() => {
     if (!searchQuery) return localAlbums;
     const lowerQuery = searchQuery.toLowerCase();
@@ -47,25 +50,20 @@ export default function AlbumSidebar({
     );
   }, [localAlbums, searchQuery]);
 
-  // Handle album creation
+  // Creating
   const handleAlbumCreated = (newAlbum) => {
     if (!newAlbum || !newAlbum.id || !newAlbum.slug) {
       console.error('New album is missing required fields:', newAlbum);
       return;
     }
     setLocalAlbums((prev) => [...prev, newAlbum]);
-    // Navigate to the newly created album
     router.push(`/${photographerUsername}/albums/${newAlbum.slug}`);
   };
 
-  /** Decide which top button to show:
-   * - If on the profile page, show nothing.
-   * - If on the all albums page OR a single album, show "Profile".
-   * - Otherwise, show "Back".
-   */
+  // Top button:
   const TopButton = () => {
     if (isProfilePage) {
-      return null;
+      return null; 
     }
     if (isAlbumsIndex || isSingleAlbumPage) {
       return (
@@ -85,21 +83,22 @@ export default function AlbumSidebar({
     );
   };
 
+  // Debug
   useEffect(() => {
     console.log('AlbumSidebar debug =>', {
       isOwner,
       albumSlug,
       isAlbumsIndex,
       isSingleAlbumPage,
-      path: router.pathname,
+      asPath,
     });
-  }, [isOwner, albumSlug, isAlbumsIndex, isSingleAlbumPage, router.pathname]);
+  }, [isOwner, albumSlug, isAlbumsIndex, isSingleAlbumPage, asPath]);
 
   return (
     <div className="sidebar-container sub-sidebar">
       <TopButton />
 
-      {/* Show "Create Album" if owner and on any album route (all or single) */}
+      {/* Show "Create Album" if owner and on any album route */}
       {isOwner && (isAlbumsIndex || isSingleAlbumPage) && (
         <button
           onClick={() => setShowCreateModal(true)}
@@ -110,7 +109,7 @@ export default function AlbumSidebar({
         </button>
       )}
 
-      {/* Only show the search bar if on a single album */}
+      {/* Search bar if single album */}
       {isSingleAlbumPage && (
         <div className="albumsidebar-search-bar">
           <input
@@ -123,7 +122,7 @@ export default function AlbumSidebar({
       )}
 
       <ul>
-        {/* If user is not the owner and not on album routes, show "Profile" link */}
+        {/* If user is not the owner and not on album routes, show "Profile" */}
         {!isOwner && !isOnAlbumRoutes && (
           <li>
             <Link
@@ -136,25 +135,27 @@ export default function AlbumSidebar({
           </li>
         )}
 
-        {/* All Albums link: clicking it clears the search query */}
+        {/* All Albums link => Clears the search query */}
         <li>
           <Link
             href={`/${photographerUsername}/albums`}
             passHref
-            className={`sub-item ${isAlbumsIndex && !albumSlug ? 'active' : ''}`}
+            className={`sub-item ${isAlbumsIndex ? 'active' : ''}`}
             onClick={() => setSearchQuery('')}
           >
             All Albums
           </Link>
         </li>
 
-        {/* List the filtered albums */}
+        {/* Filtered albums */}
         {filteredAlbums.map((album) => (
           <li key={album.id}>
             <Link
               href={`/${photographerUsername}/albums/${album.slug}`}
               passHref
-              className={`sub-item ${albumSlug === album.slug ? 'active' : ''}`}
+              className={`sub-item ${
+                albumSlug === album.slug ? 'active' : ''
+              }`}
             >
               {album.title}
             </Link>
@@ -162,7 +163,7 @@ export default function AlbumSidebar({
         ))}
       </ul>
 
-      {/* Modal for creating new album (owner only) */}
+      {/* CreateAlbumModal if owner */}
       {isOwner && (
         <CreateAlbumModal
           isOpen={showCreateModal}

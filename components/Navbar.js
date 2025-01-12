@@ -9,34 +9,37 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo */}
-        <Link href="/" className="navbar-logo">
-          Logo
-        </Link>
+        <div className='navbar-left'>
+          {/* Logo */}
+          <Link href="/" className="navbar-logo">
+            Logo
+          </Link>
 
-        {/* Menu Items */}
-        <ul className="navbar-menu">
-          <li>
-            <Link href="/albums" className="navbar-item">
-              Albums
-            </Link>
-          </li>
-          <li>
-            <Link href="/photographers" className="navbar-item">
-              Photographers
-            </Link>
-          </li>
-          <li>
-            <Link href="/about-us" className="navbar-item">
-              About Us
-            </Link>
-          </li>
-          <li>
-            <Link href="/contact-us" className="navbar-item">
-               Contact Us
-            </Link>
-          </li>
-        </ul>
+          {/* Menu Items */}
+          <ul className="navbar-menu">
+            <li>
+              <Link href="/albums" className="navbar-item">
+                Albums
+              </Link>
+            </li>
+            <li>
+              <Link href="/photographers" className="navbar-item">
+                Photographers
+              </Link>
+            </li>
+            <li>
+              <Link href="/about-us" className="navbar-item">
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact-us" className="navbar-item">
+                Contact Us
+              </Link>
+            </li>
+          </ul>
+        </div>
+        
 
         <div className="navbar-auth">
           {session ? (

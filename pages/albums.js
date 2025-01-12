@@ -1,6 +1,6 @@
 // pages/albums.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -25,6 +25,14 @@ const albumVariants = {
   exit: { opacity: 0, scale: 0.95 },
 };
 
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
 export default function AlbumsPage() {
   const { data: session, status } = useSession();
   const { albums, setAlbumsData, toggleAlbumFavourite  } = usePhotos(); // Consume albums from context
@@ -34,6 +42,8 @@ export default function AlbumsPage() {
   const [loading, setLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '' }); 
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch albums and set them in PhotoContext
   useEffect(() => {
@@ -58,6 +68,59 @@ export default function AlbumsPage() {
 
     fetchAlbums();
   }, [session, setAlbumsData]); // Re-fetch when session changes
+
+  const debouncedSearch = useRef(
+    debounce(async (value) => {
+      try {
+        // If empty, fetch all
+        const url = value
+          ? `/api/public/albums?search=${encodeURIComponent(value)}`
+          : '/api/public/albums';
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.error('Failed to fetch albums');
+          setAlbumsData([]);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setAlbumsData(data.albums);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching albums:', error);
+        setAlbumsData([]);
+        setLoading(false);
+      }
+    }, 500)
+  ).current;
+
+  useEffect(() => {
+    setLoading(true);
+    debouncedSearch(searchTerm);
+  }, [searchTerm, debouncedSearch]);
+
+  useEffect(() => {
+    setLoading(true);
+    // initial fetch (no search)
+    (async () => {
+      try {
+        const res = await fetch('/api/public/albums');
+        if (!res.ok) {
+          console.error('Failed to fetch albums');
+          setAlbumsData([]);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setAlbumsData(data.albums);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching albums:', error);
+        setAlbumsData([]);
+        setLoading(false);
+      }
+    })();
+  }, [session, setAlbumsData]);
 
   // Handler to open modal with specific album photos
   const openModal = (albumId, index) => {
@@ -105,21 +168,22 @@ export default function AlbumsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <PublicLayout>
-        <div className='albums-page'>
-          <h1 className='albums-page-title'>Discover Albums</h1>
-          <p>Loading albums...</p>
-        </div>
-      </PublicLayout>
-    );
-  }
-
   return (
     <PublicLayout>
       <div className='albums-page'>
         <h1 className='albums-page-title'>Discover Albums</h1>
+        <div className='albums-filter-options'>
+          <div className="album-search-bar">
+            <input
+              type="text"
+              placeholder="Search Albums..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        {loading && <p className='loading-text'>Loading albums...</p>}
         <div className='public-albums-wrapper'>
           <AnimatePresence>
             {albums.length > 0 ? (

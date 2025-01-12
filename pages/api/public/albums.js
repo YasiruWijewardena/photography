@@ -15,7 +15,17 @@ export default async function handler(req, res) {
   const userId = session?.user?.id;
 
   try {
+    const { search = '' } = req.query;
+    let whereClause = {};
+
+    if (search) {
+      whereClause.title = {
+        contains: search, 
+      };
+    }
+
     const albums = await prisma.album.findMany({
+      where: whereClause,
       include: {
         Photographer: {
           select: {
