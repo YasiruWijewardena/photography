@@ -178,7 +178,7 @@ export default function AlbumsPage() {
                     </div>
                     {/* View Album Link */}
                     <Link href={`/${album.photographer?.username}/albums/${album.slug}`} passHref className='album-link'>
-                      View in profile
+                      View album
                     </Link>
                     </div>
                     

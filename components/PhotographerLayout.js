@@ -21,6 +21,7 @@ export default function PhotographerLayout({
   const finalUseAlbumSidebar = isOwner ? useAlbumSidebar : true;
 
   return (
+    <>
     <div className="photographer-page">
       <aside className="photogrpager-sidebar-container">
         {finalUseAlbumSidebar ? (
@@ -41,6 +42,8 @@ export default function PhotographerLayout({
       <main className="photographer-content-container">{children}</main>
 
     </div>
+    </>
+    
   );
 }
 
