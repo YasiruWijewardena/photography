@@ -130,6 +130,52 @@ width: fit-content;
   width: 20px;
 }
 
+.albumsidebar-search-bar input {
+  border-radius: 20px;
+  border: 1px solid #a2a2a2;
+  padding-left: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 16px;
+  line-height: 1.2em;
+}
+
+.albumsidebar-search-bar input:focus {
+  outline: none;
+}
+
+/* all albums */
+
+.photographer-albums h1 {
+  margin-top: 50px;
+  text-align: center;
+  font-size: 40px;
+}
+
+.albums-filter-options {
+  margin: 20px 0 50px 0 ;
+  display: flex;
+  justify-content: center;
+}
+
+.albums-filter-options .album-search-bar {
+  max-width: 500px;
+  width: 100%;
+}
+
+.albums-filter-options .album-search-bar input{
+  border-radius: 20px;
+  border: 1px solid #a2a2a2;
+  padding: 10px;
+  font-size: 16px;
+  line-height: 1.2em;
+  width: 100%;
+}
+
+.albums-filter-options .album-search-bar input:focus {
+  outline: none;
+}
+
 /* album-page */
 .album-page {
   padding-top: 50px;
