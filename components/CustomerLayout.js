@@ -10,9 +10,6 @@ export default function CustomerLayout({ children, username }) {
       <main className="customer-main-content">
         {children}
       </main>
-      <style jsx>{`
-       
-      `}</style>
     </div>
   );
 }

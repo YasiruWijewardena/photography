@@ -1,22 +1,20 @@
-// components/FavouritedAlbums.js
+// components/PhotographerFavouritedAlbums.js
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
-import '../styles/public/customerLayout.css'; 
 import '../styles/public/albumsLayout.css';
 import '../styles/public/global.css';
 import '../styles/public/home.css';
-import PublicLayout from '../components/PublicLayout';
-import PhotoModal from '../components/PhotoModal';
+import PhotoModal from './PhotoModal';
 import { usePhotos } from '../context/PhotoContext';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconButton } from '@mui/material';
-import { Favorite, FavoriteBorder, Bookmark, BookmarkBorder } from '@mui/icons-material';
-import LoginPromptModal from '../components/LoginPromptModal';
+import { Bookmark, BookmarkBorder } from '@mui/icons-material';
+import LoginPromptModal from './LoginPromptModal';
 import PropTypes from 'prop-types';
 
 // Animation Variants
@@ -26,7 +24,7 @@ const albumVariants = {
   exit: { opacity: 0, scale: 0.95 },
 };
 
-export default function FavouritedAlbums({ username }) {
+export default function PhotographerFavouritedAlbums({ username }) {
   const { data: session } = useSession();
   const { albums, setAlbumsData, toggleAlbumFavourite } = usePhotos();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,12 +34,17 @@ export default function FavouritedAlbums({ username }) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch Albums on Mount
+  // Fetch Favourited Albums on Mount
   useEffect(() => {
     const fetchAlbums = async () => {
+      if (!username) {
+        console.error('Username is undefined. Cannot fetch favourites.');
+        return;
+      }
+
       setLoading(true);
       try {
-        const res = await fetch(`/api/customer/${username}/favourites`);
+        const res = await fetch(`/api/photographer/${username}/favourites`);
         if (!res.ok) throw new Error('Failed to fetch favourited albums');
         const data = await res.json();
         setAlbumsData(data.favourites);
@@ -53,7 +56,9 @@ export default function FavouritedAlbums({ username }) {
       }
     };
 
-    fetchAlbums();
+    if (username) { // Ensure username is defined
+      fetchAlbums();
+    }
   }, [session, setAlbumsData, username]);
 
   // Modal Handlers
@@ -80,7 +85,10 @@ export default function FavouritedAlbums({ username }) {
 
     try {
       const method = album.isFavourited ? 'DELETE' : 'POST';
-      const res = await fetch(`/api/users/${album.photographer.username}/albums/${album.slug}/favourite`, {
+      // **Use the album's photographer's username instead of the current username**
+      const photographerUsername = album.photographer.username;
+
+      const res = await fetch(`/api/photographer/${photographerUsername}/albums/${album.slug}/favourite`, {
         method,
       });
 
@@ -89,7 +97,8 @@ export default function FavouritedAlbums({ username }) {
         throw new Error(errorData.message || 'Failed to toggle favourite');
       }
 
-      const updatedRes = await fetch(`/api/customer/${username}/favourites`);
+      // Optionally, refetch favourites to ensure consistency
+      const updatedRes = await fetch(`/api/photographer/${username}/favourites`);
       if (updatedRes.ok) {
         const updatedData = await updatedRes.json();
         setAlbumsData(updatedData.favourites);
@@ -126,7 +135,7 @@ export default function FavouritedAlbums({ username }) {
                   {/* Photographer Info */}
                   <div className="album-detail-container">
                     <div className="photographer-detail-container">
-                      <Link href={`/${album.photographer?.username}`} passHref>
+                      <Link href={`/${album.photographer?.username}`} className="photographer-name">
                         <Image
                           src={album.photographer?.profile_picture || '/default-profile.png'}
                           alt={album.photographer ? `${album.photographer.name}` : 'Unknown Photographer'}
@@ -136,10 +145,8 @@ export default function FavouritedAlbums({ username }) {
                         />
                       </Link>
 
-                      <Link href={`/${album.photographer?.username}`} passHref>
-                        <h3 className="photographer-name">
-                          {album.photographer ? album.photographer.name : 'Unknown Photographer'}
-                        </h3>
+                      <Link href={`/${album.photographer?.username}`} className="photographer-name">
+                        {album.photographer ? album.photographer.name : 'Unknown Photographer'}
                       </Link>
                     </div>
 
@@ -167,7 +174,6 @@ export default function FavouritedAlbums({ username }) {
                       {/* View Album Link */}
                       <Link
                         href={`/${album.photographer?.username}/albums/${album.slug}`}
-                        passHref
                         className="album-link"
                       >
                         View album
@@ -178,38 +184,38 @@ export default function FavouritedAlbums({ username }) {
                   {/* Image Slider */}
                   {album.photographs.length > 0 && (
                     <div className="swiper-container">
-                    <Swiper
-                      spaceBetween={10}
-                      slidesPerView={4}
-                      navigation
-                      pagination={{ clickable: true }}
-                      className="album-slider"
-                    >
-                      {album.photographs.map((photo, index) => (
-                        <SwiperSlide key={photo.id}>
-                          <div
-                            className="photo-thumbnail-container"
-                            onClick={() => openModal(album.id, index)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <Image
-                              src={photo.thumbnail_url || '/default-thumbnail.jpg'}
-                              alt={photo.title || 'Album Image'}
-                              layout="fill"
-                              objectFit="cover"
-                              className="album-photo-thumbnail"
-                            />
-                          </div>
-                        </SwiperSlide>
-                      ))}
-                    </Swiper>
-                  </div>
+                      <Swiper
+                        spaceBetween={10}
+                        slidesPerView={4}
+                        navigation
+                        pagination={{ clickable: true }}
+                        className="album-slider"
+                      >
+                        {album.photographs.map((photo, index) => (
+                          <SwiperSlide key={photo.id}>
+                            <div
+                              className="photo-thumbnail-container"
+                              onClick={() => openModal(album.id, index)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <Image
+                                src={photo.thumbnail_url || '/default-thumbnail.jpg'}
+                                alt={photo.title || 'Album Image'}
+                                layout="fill"
+                                objectFit="cover"
+                                className="album-photo-thumbnail"
+                              />
+                            </div>
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                    </div>
                   )}
                 </motion.div>
               ))
           ) : (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className='no-album-msg'>
-                          Your favourite albums will be shown here
+              Your favourite albums will be shown here
             </motion.p>
           )}
         </AnimatePresence>
@@ -234,6 +240,6 @@ export default function FavouritedAlbums({ username }) {
   );
 }
 
-FavouritedAlbums.propTypes = {
+PhotographerFavouritedAlbums.propTypes = {
   username: PropTypes.string.isRequired,
 };
