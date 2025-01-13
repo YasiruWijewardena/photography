@@ -11,15 +11,7 @@ export default function CustomerLayout({ children, username }) {
         {children}
       </main>
       <style jsx>{`
-        .customer-layout {
-          display: flex;
-        }
-
-        .customer-main-content {
-          margin-left: 250px; /* Same as sidebar width */
-          padding: 20px;
-          flex: 1;
-        }
+       
       `}</style>
     </div>
   );

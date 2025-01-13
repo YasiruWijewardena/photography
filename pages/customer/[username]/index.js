@@ -1,29 +1,12 @@
 // pages/customer/[username]/index.js
 
-import { getSession, useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { getSession } from 'next-auth/react';
 import CustomerLayout from '../../../components/CustomerLayout';
 import FavouritedAlbums from '../../../components/FavouritedAlbums';
-import { useEffect } from 'react';
+import PropTypes from 'prop-types';
+import '../../../styles/public/albums.css';
 
-export default function CustomerProfile() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const { username } = router.query;
-
-  useEffect(() => {
-    if (status === 'loading') return; // Do nothing while loading
-    if (!session) {
-      router.replace('/login');
-    } else if (session.user.role !== 'customer' || session.user.username !== username) {
-      router.replace('/login'); // Unauthorized access
-    }
-  }, [session, status, router, username]);
-
-  if (status === 'loading') {
-    return <p>Loading...</p>;
-  }
-
+export default function CustomerProfile({ username }) {
   return (
     <CustomerLayout username={username}>
       <FavouritedAlbums username={username} />
@@ -31,13 +14,12 @@ export default function CustomerProfile() {
   );
 }
 
-// Optional: Server-side rendering to protect the route
 export async function getServerSideProps(context) {
   const session = await getSession(context);
-
   const { username } = context.params;
 
-  if (!session || session.user.role !== 'customer' || session.user.username !== username) {
+  // Redirect to login if not authenticated
+  if (!session) {
     return {
       redirect: {
         destination: '/login',
@@ -46,7 +28,24 @@ export async function getServerSideProps(context) {
     };
   }
 
+  // Redirect to login if trying to access another user's profile
+  if (session.user.role !== 'customer' || session.user.username !== username) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  // If authenticated and authorized, proceed to render the page
   return {
-    props: {},
+    props: {
+      username, // Pass username as a prop
+    },
   };
 }
+
+CustomerProfile.propTypes = {
+  username: PropTypes.string.isRequired,
+};
