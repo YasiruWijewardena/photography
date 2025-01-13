@@ -16,6 +16,8 @@ export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEdit
   const { toggleLike, toggleFavourite } = usePhotos();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const isOwner = session?.user?.username === photo.photographer?.username;
+
   const handleLike = (e) => {
     e.stopPropagation(); // Prevent triggering the modal
     if (status !== 'authenticated') {
@@ -87,12 +89,15 @@ export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEdit
                 {photo.isLiked ? <Favorite color="error" /> : <FavoriteBorder className='like-icon'/>}
               </IconButton>
               <span>{photo.likes_count}</span>
-              <IconButton
-                onClick={handleFavourite}
-                aria-label={photo.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
-              >
-                {photo.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder className='like-icon'/>}
-              </IconButton>
+              {!(isOwner) && (
+                <IconButton
+                  onClick={handleFavourite}
+                  aria-label={photo.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                >
+                  {photo.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder className='like-icon'/>}
+                </IconButton>
+              )}
+              
             </div>
           </div>
         </div>
