@@ -6,7 +6,7 @@ import PhotographerFavouritedAlbums from '../../components/PhotographerFavourite
 import PropTypes from 'prop-types';
 import PublicLayout from '../../components/PublicLayout';
 import prisma from '../../lib/prisma'; // Adjust the path based on your project structure
-import '../../styles/public/albums.css';
+import '../../styles/public/favAlbumsLayout.css';
 
 export default function PhotographerFavourites({ photographerData, isOwner }) {
   return (

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import '../styles/public/customerLayout.css'; 
-import '../styles/public/albumsLayout.css';
+import '../styles/public/favAlbumsLayout.css';
 import '../styles/public/global.css';
 import '../styles/public/home.css';
 import PublicLayout from '../components/PublicLayout';

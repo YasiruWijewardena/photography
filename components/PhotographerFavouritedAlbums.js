@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
-import '../styles/public/albumsLayout.css';
+import '../styles/public/favAlbumsLayout.css';
 import '../styles/public/global.css';
 import '../styles/public/home.css';
 import PhotoModal from './PhotoModal';

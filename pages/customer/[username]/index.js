@@ -6,10 +6,12 @@ import FavouritedAlbums from '../../../components/FavouritedAlbums';
 import PropTypes from 'prop-types';
 import '../../../styles/public/albums.css';
 
-export default function CustomerProfile({ username }) {
+export default function CustomerProfile({ username, firstname }) {
   return (
     <CustomerLayout username={username}>
-      <FavouritedAlbums username={username} />
+      <div>
+        <h1>Hello {firstname}</h1>
+      </div>
     </CustomerLayout>
   );
 }
@@ -38,14 +40,18 @@ export async function getServerSideProps(context) {
     };
   }
 
+  const firstname = session.user.firstname;
+
   // If authenticated and authorized, proceed to render the page
   return {
     props: {
       username, // Pass username as a prop
+      firstname
     },
   };
 }
 
 CustomerProfile.propTypes = {
   username: PropTypes.string.isRequired,
+  firstname : PropTypes.string.isRequired,
 };

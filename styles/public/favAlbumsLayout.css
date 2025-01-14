@@ -1,4 +1,37 @@
-/* favourite albums */
+.albums-page .albums-page-title {
+    margin-top: 100px;
+    margin-bottom: 50px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 64px;
+}
+
+.albums-page .albums-filter-options {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 100px;
+}
+
+.albums-page .album-search-bar {
+    max-width: 500px;
+    width: 100%;
+}
+
+.albums-page .album-search-bar input {
+    border-radius: 20px;
+    border: 1px solid #a2a2a2;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 16px;
+    line-height: 1.2em;
+    width: 100%;
+}
+
+.albums-page .album-search-bar input:focus {
+    outline: none;
+}
 
 .public-albums-wrapper {
     padding: 20px
@@ -89,33 +122,6 @@
 
 .album-favourite-container button svg {
     font-size: 30px!important;
-}
-/* Fix for Swiper inside flex/grid containers */
-.swiper-container {
-width: 100%;
-margin: 0 auto;
-}
-
-.album-slider {
-width: 100%;
-}
-
-.swiper-slide {
-min-width: 0; /* Allow the slides to shrink properly */
-width: 100%; /* Take full width of the container */
-}
-
-.photo-thumbnail-container {
-overflow: hidden;
-}
-
-.album-photo-thumbnail {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-object-fit: cover;
 }
 
 .no-album-msg {

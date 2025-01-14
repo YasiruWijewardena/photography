@@ -10,6 +10,14 @@
     overflow-y: auto;
   }
 
+  .fav-page-title {
+    margin-top: 100px;
+    margin-bottom: 100px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 64px;
+}
+
   /* Sidebar Container */
 .sidebar-container {
     width: 210px;
@@ -44,6 +52,30 @@
     text-decoration: none;
   }
 
+  .sub-item.sub-sub-item {
+    font-size: 16px;
+    line-height: 1.2em;
+  }
+
+  .sub-item.sub-sub-item:last-child {
+    margin-bottom: 30px;
+  }
+
+
+  .sub-item button {
+    background-color: unset;
+    font-family: "Poppins", serif;
+    font-size: 18px;
+    line-height: 1.7em;
+    color: #000;
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+    text-decoration: none;
+    border: none;
+    padding: 0;
+  }
+
   .sub-item a {
     color: #000;
   }
@@ -56,12 +88,35 @@
     transition: width 0.3s ease-in-out;
   }
   
+  .sub-item.have-children.active::before {
+    width: 0px;
+  }
+
+  .sub-item.have-children.active {
+    background-color: #000;
+    border-radius: 20px;
+    padding: 10px 20px!important;
+    margin-top: 30px;
+  }
+
+  .sub-item.have-children.active button {
+    color: #ffffff!important;
+  }
+
   .sub-item:hover::before {
     width: 20px;
   }
   
   .sub-item.active::before {
     width: 20px;
+  }
+
+  .sub-item.sub-sub-item:hover::before {
+    width: 30px;
+  }
+  
+  .sub-item.sub-sub-item.active::before {
+    width: 30px;
   }
   
   /* Back Button */
@@ -76,3 +131,27 @@
     cursor: pointer;
   }
 
+.customer-layout .infinite-scroll-end-msg {
+  display: none;
+}
+
+
+/* masonry grid */
+.fav-photoSection-myMasonryGrid {
+  display: flex;
+  margin-left: -15px;
+  width: auto;
+  margin-top: 30px;
+}
+
+.fav-photoSection-myMasonryGridColumn {
+  padding-left: 15px;
+  background-clip: padding-box;
+}
+
+.no-album-msg {
+  color: #8b8b8b;
+  font-family: 'Poppins';
+  font-size: 20px;
+  text-align: center;
+}
