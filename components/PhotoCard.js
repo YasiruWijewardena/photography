@@ -1,4 +1,3 @@
-
 // components/PhotoCard.js
 
 import { useState } from 'react';
@@ -10,11 +9,22 @@ import '../styles/public/home.css';
 import LoginPromptModal from 'components/LoginPromptModal';
 import { usePhotos } from '../context/PhotoContext';
 import { motion } from 'framer-motion';
+import PropTypes from 'prop-types';
 
-export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEditMode  }) {
+export default function PhotoCard({
+  photo,
+  onClick,
+  isSelected,
+  onSelect,
+  isEditMode,
+  isFavouritePage, // New prop to indicate the context
+  onUnfavourite,   // Callback for unfavouriting
+}) {
   const { data: session, status } = useSession();
   const { toggleLike, toggleFavourite } = usePhotos();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const isOwner = session?.user?.username === photo.photographer?.username;
 
   const handleLike = (e) => {
     e.stopPropagation(); // Prevent triggering the modal
@@ -31,7 +41,11 @@ export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEdit
       setIsModalOpen(true);
       return;
     }
-    toggleFavourite(photo.id);
+    if (isFavouritePage && onUnfavourite) {
+      onUnfavourite(photo.id); // Handle unfavourite action
+    } else {
+      toggleFavourite(photo.id);
+    }
   };
 
   const closeModal = () => {
@@ -53,19 +67,18 @@ export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEdit
         transition={{ duration: 0.3 }}
         whileTap={{ scale: 0.98 }}
       >
-       
         <div className="photoCard-imageWrapper">
-           {/* Checkbox for selection */}
-        {isEditMode && (
-          <Checkbox
-            checked={isSelected}
-            onChange={handleSelect}
-            onClick={(e) => e.stopPropagation()} // Prevent card click
-            color="primary"
-            inputProps={{ 'aria-label': 'Select photo' }}
-            className="photo-select-checkbox"
-          />
-        )}
+          {/* Checkbox for selection */}
+          {isEditMode && (
+            <Checkbox
+              checked={isSelected}
+              onChange={handleSelect}
+              onClick={(e) => e.stopPropagation()} // Prevent card click
+              color="primary"
+              inputProps={{ 'aria-label': 'Select photo' }}
+              className="photo-select-checkbox"
+            />
+          )}
           <Image
             src={photo.thumbnail_url}
             alt={photo.title}
@@ -96,9 +109,27 @@ export default function PhotoCard({ photo, onClick, isSelected, onSelect, isEdit
             </div>
           </div>
         </div>
-        </motion.div>
+      </motion.div>
       {/* Login Prompt Modal */}
       <LoginPromptModal isOpen={isModalOpen} onRequestClose={closeModal} />
     </>
   );
 }
+
+PhotoCard.propTypes = {
+  photo: PropTypes.object.isRequired,
+  onClick: PropTypes.func.isRequired,
+  isSelected: PropTypes.bool,
+  onSelect: PropTypes.func,
+  isEditMode: PropTypes.bool,
+  isFavouritePage: PropTypes.bool, // New prop
+  onUnfavourite: PropTypes.func,   // New prop
+};
+
+PhotoCard.defaultProps = {
+  isSelected: false,
+  onSelect: () => {},
+  isEditMode: false,
+  isFavouritePage: false,
+  onUnfavourite: null,
+};

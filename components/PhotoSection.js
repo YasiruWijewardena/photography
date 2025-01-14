@@ -1,6 +1,6 @@
 // components/PhotoSection.js
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Masonry from 'react-masonry-css';
 import PhotoModal from './PhotoModal';
@@ -10,17 +10,21 @@ import { usePhotos } from '../context/PhotoContext';
 import Filter from './Filter';
 import { Box, IconButton, Collapse } from '@mui/material';
 import FilterAltRoundedIcon from '@mui/icons-material/FilterAltRounded';
-import { motion, AnimatePresence } from 'framer-motion'
+import PropTypes from 'prop-types';
 
 /**
  * Props:
- *   scope: 'home' or 'album'
- *   albumId: number (required if scope === 'album')
+ *   scope: 'home' | 'album' | 'favourites'
+ *   type: 'albums' | 'photos' // Relevant when scope is 'favourites'
+ *   albumSlug: string (required if scope === 'album')
  *   initialPhotos?: array (optional, if you want to pass SSR-fetched photos)
  *   enableFilters?: boolean (optional, if you want filters)
+ *   isFavouritePage?: boolean (optional, to indicate if used in Favourites page)
+ *   onUnfavourite?: function (optional, handler for unfavouriting)
  */
 export default function PhotoSection({
   scope = 'home',
+  type = null,
   albumSlug = null,
   initialPhotos = [],
   enableFilters = true,
@@ -28,8 +32,10 @@ export default function PhotoSection({
   onSelectPhoto = () => {},
   selectedPhotoIds = [],
   isEditMode = false,
+  username,
+  isFavouritePage = false, // New prop
+  onUnfavourite = null,    // New prop
 }) {
-
   if (scope === 'album' && !albumSlug) {
     return null; // Prevent rendering with invalid props
   }
@@ -42,7 +48,6 @@ export default function PhotoSection({
     toggleLike,
     toggleFavourite,
   } = usePhotos();
-
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
 
@@ -65,7 +70,8 @@ export default function PhotoSection({
   /**
    * fetchPhotos
    *  - If scope === 'home', fetch from /api/random-photos
-   *  - If scope === 'album', fetch from /api/albums/[albumId]/photos
+   *  - If scope === 'album', fetch from /api/albums/[albumSlug]/photos
+   *  - If scope === 'favourites' and type === 'photos', fetch from /api/customer/[username]/favourites/photos
    */
   const fetchPhotos = async () => {
     try {
@@ -76,11 +82,25 @@ export default function PhotoSection({
           ? `&categories=${filters.categories.join(',')}`
           : '';
         endpoint = `/api/random-photos?cursor=${nextCursor || ''}&limit=20${categoriesQuery}`;
-        
       }
       // For Album
       else if (scope === 'album') {
         endpoint = `/api/albums/${albumSlug}/photos?cursor=${nextCursor || ''}&limit=20`;
+      }
+      // For Favourites Photos
+      else if (scope === 'favourites' && type === 'photos') {
+        if (!username) {
+          // If username is not passed as prop, try to get it from the router
+          const { username: routerUsername } = router.query;
+          if (routerUsername) {
+            endpoint = `/api/customer/${routerUsername}/favourites/photos?cursor=${nextCursor || ''}&limit=20`;
+          } else {
+            console.error('Username is required for fetching favourite photos.');
+            return;
+          }
+        } else {
+          endpoint = `/api/customer/${username}/favourites/photos?cursor=${nextCursor || ''}&limit=20`;
+        }
       }
 
       if (!endpoint) return;
@@ -116,8 +136,15 @@ export default function PhotoSection({
       setHasMore(true);
       fetchPhotos();
     }
+    // Reset and fetch for Favourites Photos
+    else if (scope === 'favourites' && type === 'photos') {
+      resetPhotos();
+      setNextCursor(null);
+      setHasMore(true);
+      fetchPhotos();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, scope, type]);
 
   // If you pass initialPhotos from SSR, we can seed them into context
   // e.g. for an album page, the server might have fetched them
@@ -125,14 +152,14 @@ export default function PhotoSection({
     if (initialPhotos.length > 0) {
       resetPhotos();
       addPhotos(initialPhotos);
-      if (scope === 'album') {
+      if (scope === 'album' || (scope === 'favourites' && type === 'photos')) {
         setHasMore(false); // All photos are loaded via SSR
       } else {
         setHasMore(initialPhotos.length >= 20); // Assume more photos if initialPhotos reach the limit
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialPhotos]);
+  }, [initialPhotos, scope, type]);
 
   // Focus on the first checkbox when filter opens
   useEffect(() => {
@@ -186,7 +213,7 @@ export default function PhotoSection({
         next={fetchPhotos}
         hasMore={hasMore}
         loader={<h4>Loading...</h4>}
-        endMessage={<p class="infinite-scroll-end-msg">No more photos to show.</p>}
+        endMessage={<p className='infinite-scroll-end-msg'>No more photos to show.</p>}
       >
         <Masonry
           breakpointCols={breakpointColumnsObj}
@@ -201,18 +228,44 @@ export default function PhotoSection({
               isSelected={isOwner ? selectedPhotoIds.includes(photo.id) : undefined}
               onSelect={isOwner ? onSelectPhoto : undefined}
               isEditMode={isEditMode} 
+              isFavouritePage={isFavouritePage} // Pass down the prop
+              onUnfavourite={onUnfavourite}     // Pass down the prop
             />
           ))}
         </Masonry>
       </InfiniteScroll>
 
       {/* Photo Modal */}
-      <PhotoModal
+      {photos.length > 0 && (
+        <PhotoModal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        images={photos}
-        startIndex={currentPhotoIndex}
+        images={photos} // Pass the entire list of photos
+        startIndex={currentPhotoIndex} // Specify which photo to start with
+        isFavouritePage={isFavouritePage} // Pass down the prop
+        onUnfavourite={onUnfavourite}     // Pass down the prop
       />
+      )}
     </section>
   );
 }
+
+PhotoSection.propTypes = {
+  scope: PropTypes.oneOf(['home', 'album', 'favourites']),
+  type: PropTypes.oneOf(['albums', 'photos']),
+  albumSlug: PropTypes.string,
+  initialPhotos: PropTypes.array,
+  enableFilters: PropTypes.bool,
+  isOwner: PropTypes.bool,
+  onSelectPhoto: PropTypes.func,
+  selectedPhotoIds: PropTypes.array,
+  isEditMode: PropTypes.bool,
+  username: PropTypes.string,
+  isFavouritePage: PropTypes.bool, // New prop
+  onUnfavourite: PropTypes.func,   // New prop
+};
+
+PhotoSection.defaultProps = {
+  isFavouritePage: false,
+  onUnfavourite: null,
+};

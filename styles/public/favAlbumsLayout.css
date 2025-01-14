@@ -1,0 +1,132 @@
+.albums-page .albums-page-title {
+    margin-top: 100px;
+    margin-bottom: 50px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 64px;
+}
+
+.albums-page .albums-filter-options {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 100px;
+}
+
+.albums-page .album-search-bar {
+    max-width: 500px;
+    width: 100%;
+}
+
+.albums-page .album-search-bar input {
+    border-radius: 20px;
+    border: 1px solid #a2a2a2;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 16px;
+    line-height: 1.2em;
+    width: 100%;
+}
+
+.albums-page .album-search-bar input:focus {
+    outline: none;
+}
+
+.public-albums-wrapper {
+    padding: 20px
+}
+
+.public-album-container {
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+    border-radius: 20px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.album-detail-container {
+    padding-top: 20px;
+    padding-left: 30px;
+    padding-bottom: 20px;
+    padding-right: 30px;
+    display: grid;
+    grid-template-columns: 0.5fr 2fr 0.5fr;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.album-details p {
+    font-family: 'Poppins';
+}
+
+.photographer-detail-container {
+    display: flex;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.photographer-detail-container .photographer-pro-pic {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.photographer-detail-container .photographer-name {
+    font-weight: 500;
+    color: #000;
+}
+
+.album-slider .swiper-wrapper {
+    height: 400px;
+}
+
+.album-slider .swiper-wrapper  .swiper-slide img{
+    width: 100%!important;
+    height: 100%!important;
+    object-fit: cover;
+}
+
+.album-detail-container .album-link {
+    text-align: right;
+    color: #ffffff;
+    background-color: #000;
+    border-radius: 20px;
+    width: fit-content;
+    padding:10px;
+    font-family: 'Poppins';
+
+}
+
+.album-favourite-container{
+    display: flex;
+    align-items: center;
+    column-gap: 5px;
+}
+
+.album-actions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.album-favourite-container p {
+    font-family: 'Poppins';
+    font-size: 20px;
+    color: #000;
+}
+
+.album-favourite-container button {
+    padding: 0!important;
+    margin-bottom: 10px;
+}
+
+.album-favourite-container button svg {
+    font-size: 30px!important;
+}
+
+.no-album-msg {
+    color: #8b8b8b;
+    font-family: 'Poppins';
+    font-size: 20px;
+    text-align: center;
+}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PropTypes from 'prop-types';
 
@@ -18,6 +19,14 @@ export default function PhotographerSidebar({ photographerUsername, isOwner }) {
             
           </Link>
         </li>
+       
+        <li>
+          <Link href={`/${photographerUsername}/favourites`} passHref className="sidebar-link">
+              <FavoriteIcon className="icon" />
+              <span>Favourites</span>
+          </Link>
+        </li>
+      
         {/* Settings Link */}
         <li>
           <Link href={`/${photographerUsername}/settings`} passHref className="sidebar-link">

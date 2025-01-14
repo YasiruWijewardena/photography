@@ -6,17 +6,22 @@ import ImageGallery from 'react-image-gallery';
 import Image from 'next/image';
 import 'react-image-gallery/styles/css/image-gallery.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
-import CloseFullscreenRoundedIcon from '@mui/icons-material/CloseFullscreenRounded';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import '../styles/public/photoModal.css';
+import {
+  OpenInFullRounded,
+  CloseFullscreenRounded,
+  CloseRounded,
+  Favorite,
+  FavoriteBorder,
+  Bookmark,
+  BookmarkBorder
+} from '@mui/icons-material';
+import '../styles/public/photoModal.css'; // Ensure this CSS handles modal and gallery styles
 import { IconButton } from '@mui/material';
-import { Favorite, FavoriteBorder, Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { usePhotos } from '../context/PhotoContext';
 import { useSession } from 'next-auth/react';
-import LoginPromptModal from '/components/LoginPromptModal';
-import Link from 'next/link'; 
-import PropTypes from 'prop-types'; // Ensure this line is present
+import LoginPromptModal from './LoginPromptModal'; // Corrected import path
+import Link from 'next/link';
+import PropTypes from 'prop-types';
 
 // Set the app element for accessibility
 if (typeof window !== 'undefined') {
@@ -32,17 +37,22 @@ const modalVariants = {
 export default function PhotoModal({
   isOpen,
   onRequestClose,
-  images = [], // Default to empty array
-  albumId = null, // New optional prop
-  startIndex = 0,
+  images = [], // Array of photo objects for galleries
+  albumId = null, // Optional: ID of the album for album-specific galleries
+  startIndex = 0, // Starting index for galleries
+  photo = null, // Single photo object for non-gallery modals
+  isFavouritePage = false, // Indicates if used in Favourite Photos page
+  onUnfavourite = null, // Handler for unfavouriting
 }) {
-  const { albums, toggleLike, toggleFavourite } = usePhotos();
+  const { toggleLike, toggleFavourite, albums } = usePhotos();
   const { data: session, status } = useSession();
   const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const controlTimeoutRef = useRef(null);
+  const modalRef = useRef(null); // Ref for the modal element
+  const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
 
   // Determine the source of images
   let sourceImages = images;
@@ -53,24 +63,56 @@ export default function PhotoModal({
     }
   }
 
+  // For single photo modal
+  const isSinglePhoto = photo !== null;
+
   // Update currentIndex only when startIndex changes
   useEffect(() => {
     setCurrentIndex(startIndex);
   }, [startIndex]);
 
+  // Check if Fullscreen API is supported
+  useEffect(() => {
+    const elem = modalRef.current;
+    if (elem) {
+      const isSupported = !!(
+        elem.requestFullscreen ||
+        elem.webkitRequestFullscreen ||
+        elem.mozRequestFullScreen ||
+        elem.msRequestFullscreen
+      );
+      setIsFullscreenSupported(isSupported);
+    }
+  }, [isOpen]);
+
+  // Handle Fullscreen Change Events
   useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
+      if (
+        !document.fullscreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.mozFullScreenElement &&
+        !document.msFullscreenElement
+      ) {
         setIsFullscreen(false);
       }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    // Vendor-prefixed events
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
 
+  // Handle Mouse Movement for Control Visibility
   useEffect(() => {
     const handleMouseMove = () => {
       setShowControls(true);
@@ -99,67 +141,138 @@ export default function PhotoModal({
     };
   }, [isOpen]);
 
+  // Fullscreen Toggle Handler
   const openFullscreen = () => {
-    const elem = document.getElementById('photo-modal');
+    const elem = modalRef.current;
+    if (!elem) {
+      console.error('Modal element not found for fullscreen.');
+      return;
+    }
+
     if (!isFullscreen) {
-      elem.requestFullscreen().catch((err) => {
-        console.error(
-          `Error attempting to enable fullscreen mode: ${err.message} (${err.name})`
-        );
-      });
+      // Check for standard Fullscreen API
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch((err) => {
+          console.error(
+            `Error attempting to enable fullscreen mode: ${err.message} (${err.name})`
+          );
+          alert('Fullscreen mode is not supported on your device.');
+        });
+      }
+      // Vendor-prefixed methods
+      else if (elem.webkitRequestFullscreen) { // Safari
+        elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) { // Firefox
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen();
+      } else {
+        console.warn('Fullscreen API is not supported in this browser.');
+        alert('Fullscreen mode is not supported on your device.');
+      }
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen();
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+      // Vendor-prefixed methods
+      else if (document.webkitExitFullscreen) { // Safari
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) { // Firefox
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) { // IE/Edge
+        document.msExitFullscreen();
+      } else {
+        console.warn('Fullscreen API is not supported in this browser.');
+      }
       setIsFullscreen(false);
     }
   };
 
+  // Like Handler
   const handleLike = () => {
-    const currentPhoto = sourceImages[currentIndex];
-    if (status !== 'authenticated') {
-      setIsLoginModalOpen(true);
-      return;
+    if (isSinglePhoto && photo) {
+      if (status !== 'authenticated') {
+        setIsLoginModalOpen(true);
+        return;
+      }
+      toggleLike(photo.id, albumId); // Pass albumId if available
+    } else {
+      const currentPhoto = sourceImages[currentIndex];
+      if (status !== 'authenticated') {
+        setIsLoginModalOpen(true);
+        return;
+      }
+      toggleLike(currentPhoto.id, albumId); // Pass albumId if available
     }
-    toggleLike(currentPhoto.id, albumId); // Pass albumId if available
   };
 
+  // Favourite Handler
   const handleFavourite = () => {
-    const currentPhoto = sourceImages[currentIndex];
-    if (status !== 'authenticated') {
-      setIsLoginModalOpen(true);
-      return;
+    if (isSinglePhoto && photo) {
+      if (status !== 'authenticated') {
+        setIsLoginModalOpen(true);
+        return;
+      }
+      if (isFavouritePage && onUnfavourite) {
+        onUnfavourite(photo.id);
+      } else {
+        toggleFavourite(photo.id, albumId); // Pass albumId if available
+      }
+    } else {
+      const currentPhoto = sourceImages[currentIndex];
+      if (status !== 'authenticated') {
+        setIsLoginModalOpen(true);
+        return;
+      }
+      if (isFavouritePage && onUnfavourite) {
+        onUnfavourite(currentPhoto.id);
+      } else {
+        toggleFavourite(currentPhoto.id, albumId); // Pass albumId if available
+      }
     }
-    toggleFavourite(currentPhoto.id, albumId); // Pass albumId if available
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    // Optionally reset other states
-  };
-
+  // Close Login Modal
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
   };
 
   // Memoize galleryItems to prevent unnecessary re-renders
-  const galleryItems = useMemo(() => 
-    sourceImages.map((photo) => ({
-      original: photo.image_url,
-      thumbnail: photo.thumbnail_url,
-      title: photo.title,
-      metadata: {
+  const galleryItems = useMemo(() => {
+    if (isSinglePhoto && photo) {
+      return [{
+        original: photo.image_url,
+        thumbnail: photo.thumbnail_url,
+        title: photo.title,
+        description: photo.description,
+        photographer: photo.photographer,
         cameraModel: photo.cameraModel,
         lens: photo.lens,
         exposure: photo.exposure,
         focalLength: photo.focalLength,
-      },
-      photographer: photo.photographer, // Include photographer info
-      isLiked: photo.isLiked,
-      isFavourited: photo.isFavourited,
-      likes_count: photo.likes_count,
-    })),
-    [sourceImages]
-  );
+        isLiked: photo.isLiked,
+        isFavourited: photo.isFavourited,
+        likes_count: photo.likes_count,
+      }];
+    }
+
+    return sourceImages.map((photoItem) => ({
+      original: photoItem.image_url,
+      thumbnail: photoItem.thumbnail_url,
+      title: photoItem.title,
+      description: photoItem.description,
+      photographer: photoItem.photographer,
+      cameraModel: photoItem.cameraModel,
+      lens: photoItem.lens,
+      exposure: photoItem.exposure,
+      focalLength: photoItem.focalLength,
+      isLiked: photoItem.isLiked,
+      isFavourited: photoItem.isFavourited,
+      likes_count: photoItem.likes_count,
+    }));
+  }, [sourceImages, isSinglePhoto, photo]);
 
   return (
     <AnimatePresence>
@@ -173,9 +286,22 @@ export default function PhotoModal({
             overlayClassName="carousel-modal-overlay"
             closeTimeoutMS={300}
             shouldCloseOnOverlayClick={true}
-            id="photo-modal"
+            style={{
+              content: {
+                position: 'relative',
+                padding: '0',
+                border: 'none',
+                background: 'none',
+                inset: '0', // Fullscreen by default, adjusted by CSS on desktop
+              },
+              overlay: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                zIndex: 1000,
+              },
+            }}
           >
             <motion.div
+              ref={modalRef} // Attach the ref here
               className={`carousel-modal ${isFullscreen ? 'fullscreen' : ''}`}
               variants={modalVariants}
               initial="hidden"
@@ -185,7 +311,7 @@ export default function PhotoModal({
             >
               {/* Controls Container */}
               <AnimatePresence>
-                {showControls && (
+                {showControls && isFullscreenSupported && (
                   <motion.div
                     className="gallery-btn-container"
                     initial={{ opacity: 0 }}
@@ -193,24 +319,24 @@ export default function PhotoModal({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <button
+                    <IconButton
                       onClick={openFullscreen}
                       className="fullscreen-toggle-button"
                       aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
                     >
                       {isFullscreen ? (
-                        <CloseFullscreenRoundedIcon className="close-fullscreen-toggle-button" />
+                        <CloseFullscreenRounded className="close-fullscreen-toggle-button" />
                       ) : (
-                        <OpenInFullRoundedIcon className="open-fullscreen-toggle-button" />
+                        <OpenInFullRounded className="open-fullscreen-toggle-button" />
                       )}
-                    </button>
-                    <button
+                    </IconButton>
+                    <IconButton
                       onClick={onRequestClose}
                       className="gallery-close-button-container"
                       aria-label="Close Carousel"
                     >
-                      <CloseRoundedIcon className="gallery-close-button" />
-                    </button>
+                      <CloseRounded className="gallery-close-button" />
+                    </IconButton>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -222,20 +348,17 @@ export default function PhotoModal({
                 showThumbnails={false}
                 showPlayButton={false}
                 showFullscreenButton={false}
-                showNav={true}
+                showNav={galleryItems.length > 1} // Conditionally show navigation
                 onSlide={(current) => setCurrentIndex(current)}
                 renderItem={(item) => (
                   <div className={`slider-layout ${isFullscreen ? 'fullscreen' : ''}`}>
                     <div className="slider-image-container">
-                      {/* Use Next.js Image component */}
-                      <Image
+                      {/* Use standard img tag for compatibility */}
+                      <img
                         src={item.original}
-                        alt={item.title}
-                        width={800} // Adjust based on your design
-                        height={600} // Adjust based on your design
-                        layout="responsive"
-                        objectFit="contain"
+                        alt={item.title || 'Untitled Photo'}
                         className="carousel-image"
+                        style={{ width: '100%', height: 'auto' }} // Ensure responsive
                       />
                     </div>
                     {!isFullscreen && (
@@ -244,8 +367,8 @@ export default function PhotoModal({
                           <Image
                             src={item.photographer?.profile_picture || '/default-profile.png'}
                             alt={`${item.photographer?.name || 'Unknown Photographer'}'s profile picture`}
-                            width={100} // Adjust size as needed
-                            height={100} // Adjust size as needed
+                            width={50} // Adjust size as needed
+                            height={50} // Adjust size as needed
                             className="photographer-profile-picture"
                           />
                           <Link href={`/${item.photographer?.username}`} className="photographer-name-link">
@@ -261,35 +384,40 @@ export default function PhotoModal({
                             {item.isLiked ? <Favorite color="error" /> : <FavoriteBorder />}
                           </IconButton>
                           <span>{item.likes_count}</span>
-                          <IconButton
-                            onClick={handleFavourite}
-                            aria-label={item.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
-                          >
-                            {item.isFavourited ? <Bookmark color="black" /> : <BookmarkBorder />}
-                          </IconButton>
+                          {/* Determine if the user is the owner to hide the Favourite icon */}
+                          {!(
+                            session?.user?.username === item.photographer?.username
+                          ) && (
+                            <IconButton
+                              onClick={handleFavourite}
+                              aria-label={item.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                            >
+                              {item.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder />}
+                            </IconButton>
+                          )}
                         </div>
                         {/* Metadata Panel */}
-                        {item.metadata && (
+                        {(item.cameraModel || item.lens || item.exposure || item.focalLength) && (
                           <div className="slider-metadata-details">
                             <ul>
-                              {item.metadata.cameraModel && (
+                              {item.cameraModel && (
                                 <li>
-                                  <span>Camera Model:</span> <span>{item.metadata.cameraModel}</span>
+                                  <span>Camera Model:</span> <span>{item.cameraModel}</span>
                                 </li>
                               )}
-                              {item.metadata.lens && (
+                              {item.lens && (
                                 <li>
-                                  <span>Lens:</span> <span>{item.metadata.lens}</span>
+                                  <span>Lens:</span> <span>{item.lens}</span>
                                 </li>
                               )}
-                              {item.metadata.exposure && (
+                              {item.exposure && (
                                 <li>
-                                  <span>Exposure:</span> <span>{item.metadata.exposure}</span>
+                                  <span>Exposure:</span> <span>{item.exposure}</span>
                                 </li>
                               )}
-                              {item.metadata.focalLength && (
+                              {item.focalLength && (
                                 <li>
-                                  <span>Focal Length:</span> <span>{item.metadata.focalLength}</span>
+                                  <span>Focal Length:</span> <span>{item.focalLength}</span>
                                 </li>
                               )}
                             </ul>
@@ -314,13 +442,37 @@ export default function PhotoModal({
 PhotoModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onRequestClose: PropTypes.func.isRequired,
-  images: PropTypes.array, // Optional
-  albumId: PropTypes.number, // Optional
+  images: PropTypes.array, // Array of photo objects for galleries
+  albumId: PropTypes.number, // Optional: ID of the album for album-specific galleries
   startIndex: PropTypes.number,
+  photo: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    image_url: PropTypes.string.isRequired,
+    thumbnail_url: PropTypes.string.isRequired,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    cameraModel: PropTypes.string,
+    lens: PropTypes.string,
+    exposure: PropTypes.string,
+    focalLength: PropTypes.string,
+    isLiked: PropTypes.bool,
+    isFavourited: PropTypes.bool,
+    photographer: PropTypes.shape({
+      profile_picture: PropTypes.string,
+      name: PropTypes.string,
+      username: PropTypes.string,
+    }),
+    likes_count: PropTypes.number,
+  }),
+  isFavouritePage: PropTypes.bool, // Indicates if used in Favourite Photos page
+  onUnfavourite: PropTypes.func,   // Handler for unfavouriting
 };
 
 PhotoModal.defaultProps = {
   images: [],
   albumId: null,
   startIndex: 0,
+  photo: null,
+  isFavouritePage: false,
+  onUnfavourite: null,
 };

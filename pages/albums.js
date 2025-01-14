@@ -9,8 +9,8 @@ import '../styles/public/albums.css';
 import PublicLayout from '../components/PublicLayout';
 import '../styles/public/global.css';
 import '../styles/public/home.css';
-import PhotoModal from '../components/PhotoModal'; 
-import { usePhotos } from '../context/PhotoContext'; 
+import PhotoModal from '../components/PhotoModal';
+import { usePhotos } from '../context/PhotoContext';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconButton } from '@mui/material';
@@ -36,10 +36,10 @@ function debounce(fn, delay) {
 
 export default function AlbumsPage() {
   const { data: session } = useSession();
-  const { albums, setAlbumsData, toggleAlbumFavourite } = usePhotos(); 
+  const { albums, setAlbumsData, toggleAlbumFavourite } = usePhotos();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [currentAlbumId, setCurrentAlbumId] = useState(null); 
+  const [currentAlbumId, setCurrentAlbumId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -58,7 +58,7 @@ export default function AlbumsPage() {
     if (searchValue) {
       url += `&search=${encodeURIComponent(searchValue)}`;
     }
-  
+
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error('Failed to fetch albums');
@@ -74,7 +74,7 @@ export default function AlbumsPage() {
         const data = await fetchAlbumsBatch(null, '');
         setAlbumsData(data.albums);
         setNextCursor(data.nextCursor || null);
-        setHasMore(!!data.nextCursor); 
+        setHasMore(!!data.nextCursor);
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -147,7 +147,7 @@ export default function AlbumsPage() {
 
   // Toggle Favourite Handler
   const handleToggleFavourite = async (album) => {
-    if (!session) { 
+    if (!session) {
       setIsLoginModalOpen(true);
       return;
     }
@@ -201,111 +201,119 @@ export default function AlbumsPage() {
           <div className='public-albums-wrapper'>
             <AnimatePresence>
               {albums.length > 0 ? (
-                albums.map((album) => (
-                  <motion.div
-                    key={album.id}
-                    className='public-album-container'
-                    variants={albumVariants}
-                    initial='hidden'
-                    animate='visible'
-                    exit='exit'
-                    transition={{ duration: 0.3 }}
-                  >
-                    {/* Photographer Info */}
-                    <div className='album-detail-container'>
-                      <div className='photographer-detail-container'>
-                        <Link href={`/${album.photographer?.username}`} passHref>
-                          <Image
-                            src={
-                              album.photographer?.profile_picture || '/default-profile.png'
-                            }
-                            alt={
-                              album.photographer
-                                ? `${album.photographer.name}`
-                                : 'Unknown Photographer'
-                            }
-                            width={100}
-                            height={100}
-                            className='photographer-pro-pic'
-                          />
-                        </Link>
+                albums.map((album) => {
+                  // Determine if the current user is the owner of the album
+                  const isOwner =
+                    session?.user?.username === album.photographer?.username;
 
-                        <Link href={`/${album.photographer?.username}`} passHref>
-                          <h3 className='photographer-name'>
-                            {album.photographer
-                              ? album.photographer.name
-                              : 'Unknown Photographer'}
-                          </h3>
-                        </Link>
-                      </div>
+                  return (
+                    <motion.div
+                      key={album.id}
+                      className='public-album-container'
+                      variants={albumVariants}
+                      initial='hidden'
+                      animate='visible'
+                      exit='exit'
+                      transition={{ duration: 0.3 }}
+                    >
+                      {/* Photographer Info */}
+                      <div className='album-detail-container'>
+                        <div className='photographer-detail-container'>
+                          <Link href={`/${album.photographer?.username}`}>
+                            <Image
+                              src={
+                                album.photographer?.profile_picture ||
+                                '/default-profile.png'
+                              }
+                              alt={
+                                album.photographer
+                                  ? `${album.photographer.name}`
+                                  : 'Unknown Photographer'
+                              }
+                              width={100}
+                              height={100}
+                              className='photographer-pro-pic'
+                            />
+                          </Link>
 
-                      {/* Album Details */}
-                      <div className='album-details'>
-                        <h2>{album.title}</h2>
-                        <p>{album.description}</p>
-                      </div>
-
-                      {/* Favourite Icon & View Link */}
-                      <div className='album-actions-container'>
-                        <div className='album-favourite-container'>
-                          <IconButton
-                            onClick={() => handleToggleFavourite(album)}
-                            aria-label={
-                              album.isFavourited
-                                ? 'Remove from favourites'
-                                : 'Add to favourites'
-                            }
-                            className='favourite-btn'
-                          >
-                            {album.isFavourited ? (
-                              <Bookmark color='black' />
-                            ) : (
-                              <BookmarkBorder />
-                            )}
-                          </IconButton>
+                          <Link href={`/${album.photographer?.username}`}>
+                            <h3 className='photographer-name'>
+                              {album.photographer
+                                ? album.photographer.name
+                                : 'Unknown Photographer'}
+                            </h3>
+                          </Link>
                         </div>
-                        {/* View Album Link */}
-                        <Link
-                          href={`/${album.photographer?.username}/albums/${album.slug}`}
-                          passHref
-                          className='album-link'
-                        >
-                          View album
-                        </Link>
-                      </div>
-                    </div>
 
-                    {/* Image Slider */}
-                    {album.photographs.length > 0 && (
-                      <Swiper
-                        spaceBetween={10}
-                        slidesPerView={4}
-                        navigation
-                        pagination={{ clickable: true }}
-                        className='album-slider'
-                      >
-                        {album.photographs.map((photo, index) => (
-                          <SwiperSlide key={photo.id}>
-                            <div
-                              className='photo-thumbnail-container'
-                              onClick={() => openModal(album.id, index)}
-                              style={{ cursor: 'pointer' }}
-                              aria-label={`View ${photo.title || 'Photo'}`}
-                            >
-                              <Image
-                                src={photo.thumbnail_url || '/default-thumbnail.jpg'}
-                                alt={photo.title || 'Album Image'}
-                                layout='fill'
-                                objectFit='cover'
-                                className='album-photo-thumbnail'
-                              />
+                        {/* Album Details */}
+                        <div className='album-details'>
+                          <h2>{album.title}</h2>
+                          <p>{album.description}</p>
+                        </div>
+
+                        {/* Favourite Icon & View Link */}
+                        <div className='album-actions-container'>
+                          {!isOwner && (
+                            <div className='album-favourite-container'>
+                              <IconButton
+                                onClick={() => handleToggleFavourite(album)}
+                                aria-label={
+                                  album.isFavourited
+                                    ? 'Remove from favourites'
+                                    : 'Add to favourites'
+                                }
+                                className='favourite-btn'
+                              >
+                                {album.isFavourited ? (
+                                  <Bookmark color='black' />
+                                ) : (
+                                  <BookmarkBorder />
+                                )}
+                              </IconButton>
                             </div>
-                          </SwiperSlide>
-                        ))}
-                      </Swiper>
-                    )}
-                  </motion.div>
-                ))
+                          )}
+                          {/* View Album Link */}
+                          <Link
+                            href={`/${album.photographer?.username}/albums/${album.slug}`}
+                            className='album-link'
+                          >
+                            View album
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* Image Slider */}
+                      {album.photographs.length > 0 && (
+                        <Swiper
+                          spaceBetween={10}
+                          slidesPerView={4}
+                          navigation
+                          pagination={{ clickable: true }}
+                          className='album-slider'
+                        >
+                          {album.photographs.map((photo, index) => (
+                            <SwiperSlide key={photo.id}>
+                              <div
+                                className='photo-thumbnail-container'
+                                onClick={() => openModal(album.id, index)}
+                                style={{ cursor: 'pointer' }}
+                                aria-label={`View ${photo.title || 'Photo'}`}
+                              >
+                                <Image
+                                  src={photo.thumbnail_url || '/default-thumbnail.jpg'}
+                                  alt={photo.title || 'Album Image'}
+                                  layout='fill'
+                                  objectFit='cover'
+                                  className='album-photo-thumbnail'
+                                />
+                              </div>
+                            </SwiperSlide>
+                          ))}
+                        </Swiper>
+                      )}
+                    </motion.div>
+                  );
+                })
               ) : (
                 <motion.p
                   initial={{ opacity: 0 }}
