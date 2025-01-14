@@ -101,8 +101,8 @@ export default function FavouritedPhotosPage() {
 
       <Masonry
         breakpointCols={breakpointColumnsObj}
-        className="masonry-grid"
-        columnClassName="masonry-grid_column"
+        className="fav-photoSection-myMasonryGrid"
+        columnClassName="fav-photoSection-myMasonryGridColumn"
       >
         {favourites.map((photo, index) => (
           <PhotoCard
