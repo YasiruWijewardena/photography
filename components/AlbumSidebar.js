@@ -16,7 +16,7 @@ export default function AlbumSidebar({
 }) {
   const router = useRouter();
   const { albumSlug } = router.query;
-  const asPath = router.asPath; // e.g., "/dinethpanagoda" or "/dinethpanagoda/albums"
+  const asPath = router.asPath; 
 
   // Local album list
   const [localAlbums, setLocalAlbums] = useState(albums);
@@ -33,9 +33,6 @@ export default function AlbumSidebar({
   // Exactly on the all albums page => "/dinethpanagoda/albums"
   const isAlbumsIndex = asPath === `/${photographerUsername}/albums`;
 
-  // Single album route => If path starts with /[username]/albums/ plus something after
-  // For example: "/dinethpanagoda/albums/nature"
-  // or you can just check if albumSlug is defined:
   const isSingleAlbumPage = !!albumSlug;
 
   // On ANY album route?

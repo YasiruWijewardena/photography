@@ -1,16 +1,11 @@
-// pages/customer/[username]/favourites/photos.js
-
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import CustomerLayout from '../../../../components/CustomerLayout';
-import '../../../../styles/public/customerLayout.css';
+import PhotographerLayout from '../../../components/PhotographerLayout';
+import '../../../styles/public/customerLayout.css';
 import { useEffect, useState } from 'react';
 import Masonry from 'react-masonry-css'; // Import Masonry
-import PhotoModal from '../../../../components/PhotoModal';
-import PhotoCard from '../../../../components/PhotoCard';
-import { IconButton } from '@mui/material';
-import { CloseRounded } from '@mui/icons-material'; // Corrected import
-import PropTypes from 'prop-types';
+import PhotoModal from '../../../components/PhotoModal';
+import PhotoCard from '../../../components/PhotoCard';
 
 export default function FavouritedPhotosPage() {
   const { data: session, status } = useSession();
@@ -22,11 +17,13 @@ export default function FavouritedPhotosPage() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [error, setError] = useState(null);
 
+  const isOwner = session?.user?.username === username;
+
   useEffect(() => {
     if (status === 'loading') return; // Do nothing while loading
     if (!session) {
       router.replace('/login');
-    } else if (session.user.role !== 'customer' || session.user.username !== username) {
+    } else if (!isOwner) {
       router.replace('/login'); // Unauthorized access
     } else {
       fetchAllFavourites();
@@ -37,7 +34,7 @@ export default function FavouritedPhotosPage() {
   const fetchAllFavourites = async () => {
     try {
       // Fetch all favourites without pagination
-      const endpoint = `/api/customer/${username}/favourites/photos`; 
+      const endpoint = `/api/photographer/${username}/favourites/photos`;
       const res = await fetch(endpoint);
       if (!res.ok) {
         throw new Error('Failed to fetch favourite photos.');
@@ -66,19 +63,16 @@ export default function FavouritedPhotosPage() {
     }
   };
 
-  // Function to open the modal at a specific index
   const openModalAtIndex = (index) => {
     setCurrentPhotoIndex(index);
     setIsModalOpen(true);
   };
 
-  // Function to close the modal
   const closeModal = () => {
     setIsModalOpen(false);
-    setCurrentPhotoIndex(0); // Reset index if needed
+    setCurrentPhotoIndex(0);
   };
 
-  // Define Masonry breakpoints for responsiveness
   const breakpointColumnsObj = {
     default: 4,
     1100: 3,
@@ -91,7 +85,13 @@ export default function FavouritedPhotosPage() {
   }
 
   return (
-    <CustomerLayout username={username}>
+        <PhotographerLayout
+      isOwner={isOwner}
+      useAlbumSidebar={false} 
+      photographerUsername={username}
+      photographerId={session?.user?.id || null}
+      albums={[]} 
+    >
       <h1 className="fav-page-title">Your Favourite Photos</h1>
       {error && <p className="error-message">{error}</p>}
 
@@ -108,28 +108,24 @@ export default function FavouritedPhotosPage() {
           <PhotoCard
             key={photo.id}
             photo={photo}
-            onClick={() => openModalAtIndex(index)} // Pass the index here
-            isFavouritePage={true}                // Indicate the context
-            onUnfavourite={handleUnfavourite}     // Pass the unfavourite handler
+            onClick={() => openModalAtIndex(index)}
+            isFavouritePage={true}
+            onUnfavourite={handleUnfavourite}
           />
         ))}
       </Masonry>
 
-      {/* Modal for Photo Details */}
       {favourites.length > 0 && (
         <PhotoModal
           isOpen={isModalOpen}
           onRequestClose={closeModal}
-          images={favourites}                // Pass the entire list of favourites
-          startIndex={currentPhotoIndex}     // Pass the current index
-          isFavouritePage={true}             // Indicate the context
-          onUnfavourite={handleUnfavourite}  // Pass the unfavourite handler
+          images={favourites}
+          startIndex={currentPhotoIndex}
+          isFavouritePage={true}
+          onUnfavourite={handleUnfavourite}
         />
       )}
-    </CustomerLayout>
+    </PhotographerLayout>
+    
   );
 }
-
-FavouritedPhotosPage.propTypes = {
-  // Define prop types if needed
-};

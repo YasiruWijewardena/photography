@@ -21,7 +21,7 @@ export default function PhotographerSidebar({ photographerUsername, isOwner }) {
         </li>
        
         <li>
-          <Link href={`/${photographerUsername}/favourites`} passHref className="sidebar-link">
+          <Link href={`/${photographerUsername}/favourites/albums`} passHref className="sidebar-link">
               <FavoriteIcon className="icon" />
               <span>Favourites</span>
           </Link>
@@ -36,7 +36,6 @@ export default function PhotographerSidebar({ photographerUsername, isOwner }) {
             
           </Link>
         </li>
-        {/* Add more links if you wish */}
       </ul>
     </nav>
   );
