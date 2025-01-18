@@ -44,7 +44,7 @@ export default function PhotographerFavouritedAlbums({ username }) {
 
       setLoading(true);
       try {
-        const res = await fetch(`/api/photographer/${username}/favourites`);
+        const res = await fetch(`/api/photographer/${username}/favourites/albums`);
         if (!res.ok) throw new Error('Failed to fetch favourited albums');
         const data = await res.json();
         setAlbumsData(data.favourites);

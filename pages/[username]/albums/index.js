@@ -102,14 +102,16 @@ AlbumsList.defaultProps = {
 AlbumsList.getLayout = function getLayout(page) {
   const { albums, isOwner, photographerUsername } = page.props;
   return (
-    <PhotographerLayout
-      isOwner={isOwner}
-      photographerUsername={photographerUsername}
-      useAlbumSidebar={true}
-      albums={albums || []}
-    >
-      {page}
-    </PhotographerLayout>
+    
+      <PhotographerLayout
+        isOwner={isOwner}
+        photographerUsername={photographerUsername}
+        useAlbumSidebar={true}
+        albums={albums || []}
+      >
+        {page}
+      </PhotographerLayout>
+    
   );
 };
 

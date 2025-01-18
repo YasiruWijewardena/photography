@@ -1,36 +1,33 @@
-// pages/[username].js
+// pages/[username]/favourites/albums.js
 
-import { useRouter } from 'next/router';
-import { useSession, getSession } from 'next-auth/react';
-import PhotographerLayout from '../components/PhotographerLayout';
-import Dashboard from './photographer/dashboard'; // Adjust the import path as necessary
-import PublicProfile from '../components/PublicProfile'; // Adjust the import path as necessary
-import PublicLayout from '../components/PublicLayout';
-import prisma from '../lib/prisma';
-import { useEffect } from 'react';
+import { getSession } from 'next-auth/react';
+import PhotographerLayout from '../../../components/PhotographerLayout';
+import PhotographerFavouritedAlbums from '../../../components/PhotographerFavouritedAlbums';
+import PropTypes from 'prop-types';
+import prisma from '../../../lib/prisma'; // Adjust the path based on your project structure
+import '../../../styles/public/favAlbumsLayout.css';
 
-export default function PhotographerPage({ photographerData, isOwner }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  // Redirect to login if owner is trying to access their dashboard without authentication
-  useEffect(() => {
-    if (isOwner && status !== 'authenticated') {
-      router.push('/login');
-    }
-  }, [isOwner, status, router]);
-
+export default function PhotographerFavourites({ photographerData, isOwner }) {
   return (
-      <PhotographerLayout isOwner={isOwner} photographerId={photographerData.id} photographerUsername={photographerData.username}>
-        {isOwner ? (
-          <Dashboard photographerData={photographerData} />
-        ) : (
-          <PublicProfile photographerData={photographerData} />
-        )}
+      <PhotographerLayout
+        isOwner={isOwner}
+        photographerId={photographerData.id}
+        photographerUsername={photographerData.username}
+        albums={photographerData.albums}
+      >
+        <PhotographerFavouritedAlbums username={photographerData.username} />
       </PhotographerLayout>
-    
   );
 }
+
+PhotographerFavourites.propTypes = {
+  photographerData: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    username: PropTypes.string.isRequired,
+    albums: PropTypes.array,
+  }).isRequired,
+  isOwner: PropTypes.bool.isRequired,
+};
 
 export async function getServerSideProps(context) {
   const { username } = context.params;
@@ -90,6 +87,16 @@ export async function getServerSideProps(context) {
     const isOwner =
       session?.user?.role === 'photographer' &&
       session.user.username === username; // Compare usernames instead of IDs
+
+    // Redirect to login if not authenticated or not the owner
+    if (!session || session.user.role !== 'photographer' || session.user.username !== username) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      };
+    }
 
     return { props: { photographerData: formattedPhotographer, isOwner } };
   } catch (error) {

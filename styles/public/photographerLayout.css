@@ -1,3 +1,7 @@
+body.photographer-layout {
+  overflow: hidden;
+}
+
 .photographer-page {
   display: flex;
   height: 100vh;
@@ -16,6 +20,7 @@
   overflow-Y: auto;
   overflow-X: hidden;
   padding-left: 50px;
+  padding-bottom: 50px;
 }
 
 /* .photographer-layout {

@@ -1,8 +1,8 @@
-// pages/api/photographer/[username]/favourites.js
+// pages/api/photographer/[username]/favourites/albums.js
 
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]'; 
-import prisma from '../../../../lib/prisma'; // Adjust the path based on your project structure
+import { authOptions } from '../../../auth/[...nextauth]'; 
+import prisma from '../../../../../lib/prisma'; // Adjust the path based on your project structure
 
 export default async function handler(req, res) {
   const { username } = req.query; // Use username from the route
