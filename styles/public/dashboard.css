@@ -10,3 +10,62 @@
     font-family: 'Poppins';
     color: #8b8b8b;
 }
+
+.photographer-dashboard-page {
+    padding: 2rem;
+  }
+  
+  .desc {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+  }
+  
+  .snapshot-cards-container {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 50px;
+    margin-top: 80px;
+  }
+  
+  .snapshot-card {
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .snapshot-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #666;
+  }
+  
+  .snapshot-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+  }
+  
+  .chart-container {
+    column-gap: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .album-chart-container,
+  .photo-chart-container {
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+  }
+  
+  .chart-container h2 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #000000;
+    text-align: center;
+  }
