@@ -1,0 +1,43 @@
+datasource analyticsDb {
+  provider = "mysql"
+  url      = env("ANALYTICS_DATABASE_URL")
+}
+
+generator analyticsClient {
+  provider = "prisma-client-js"
+  output   = "./prisma/generated/analytics"
+}
+
+model ProfileViewEvent {
+  id            Int      @id @default(autoincrement())
+  userId        Int?
+  anonymousId   String?
+  // The user or photographer’s ID you’re viewing
+  profileUserId Int
+  createdAt     DateTime @default(now())
+
+  @@index([profileUserId])
+  @@index([createdAt])
+}
+
+model AlbumViewEvent {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  anonymousId String?
+  albumId     Int
+  createdAt   DateTime @default(now())
+
+  @@index([albumId])
+  @@index([createdAt])
+}
+
+model PhotoViewEvent {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  anonymousId String?
+  photoId     Int
+  createdAt   DateTime @default(now())
+
+  @@index([photoId])
+  @@index([createdAt])
+}

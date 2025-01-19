@@ -15,9 +15,14 @@ export const authOptions = {
       credentials: {
         email: { label: 'Email', type: 'email', placeholder: 'example@email.com' },
         password: { label: 'Password', type: 'password' },
+        loginType: {
+          label: 'Login Type',
+          type: 'text',
+          placeholder: 'optional - e.g. "admin"',
+        },
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
+        const { email, password, loginType } = credentials;
 
         const user = await prisma.user.findUnique({
           where: { email },
@@ -37,6 +42,10 @@ export const authOptions = {
           return null;
         }
 
+        if (loginType === 'admin' && user.role !== 'admin') {
+          return null; // Not an admin in the DB, reject
+        }
+
         // Include photographer_id if the user is a photographer
         const photographer_id = user.Photographer ? user.Photographer.photo_id : null;
 
@@ -48,6 +57,7 @@ export const authOptions = {
           username: user.username,
           role: user.role,
           photographer_id,
+          admin_level: user.Admin?.admin_level || null,
         };
       },
     }),
@@ -80,6 +90,7 @@ export const authOptions = {
         token.username = user.username;
         token.role = user.role;
         token.photographer_id = user.photographer_id;
+        token.admin_level = user.admin_level;
       }
       return token;
     },
@@ -92,7 +103,8 @@ export const authOptions = {
           lastname: token.lastname,
           username: token.username,
           role: token.role,
-          photographer_id: token.photographer_id
+          photographer_id: token.photographer_id,
+          admin_level: token.admin_level,
         };
       }
       return session;

@@ -3,11 +3,13 @@
 import { useRouter } from 'next/router';
 import { useSession, getSession } from 'next-auth/react';
 import PhotographerLayout from '../components/PhotographerLayout';
-import Dashboard from './photographer/dashboard'; // Adjust the import path as necessary
+import Dashboard from './[username]/dashboard.js'; // Adjust the import path as necessary
 import PublicProfile from '../components/PublicProfile'; // Adjust the import path as necessary
 import PublicLayout from '../components/PublicLayout';
 import prisma from '../lib/prisma';
 import { useEffect } from 'react';
+import analyticsDb from '../lib/analyticsPrisma';
+import { getOrSetAnonymousId } from '../lib/anonymousId';
 
 export default function PhotographerPage({ photographerData, isOwner }) {
   const { data: session, status } = useSession();
@@ -90,6 +92,29 @@ export async function getServerSideProps(context) {
     const isOwner =
       session?.user?.role === 'photographer' &&
       session.user.username === username; // Compare usernames instead of IDs
+
+    // -- RECORD A PROFILE VIEW if the visitor is NOT the owner.
+    if (!isOwner) {
+      // If user is logged in, use their userId. Otherwise, use an anonymousId.
+      let userId = null;
+      let anonymousId = null;
+
+      if (session?.user?.id) {
+        userId = session.user.id;
+      } else {
+        // Not logged in, so get or create an anonymousId cookie
+        anonymousId = getOrSetAnonymousId(context.req, context.res);
+      }
+
+      // Log the event in the analytics DB
+     await analyticsDb.profileViewEvent.create({
+      data: {
+        userId: session?.user?.id || null,
+        anonymousId,
+        profileUserId: photographer.photo_id,
+      },
+    });
+    }
 
     return { props: { photographerData: formattedPhotographer, isOwner } };
   } catch (error) {

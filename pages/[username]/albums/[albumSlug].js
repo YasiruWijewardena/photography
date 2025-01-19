@@ -16,6 +16,8 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import { Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import PropTypes from 'prop-types';
+import analyticsDb from '../../../lib/analyticsPrisma'; 
+import { getOrSetAnonymousId } from '../../../lib/anonymousId';
 
 export default function AlbumPage({
   album,
@@ -395,7 +397,17 @@ AlbumPage.getLayout = function getLayout(page) {
 export async function getServerSideProps(context) {
   const { username, albumSlug } = context.params;
   const session = await getServerSession(context.req, context.res, authOptions);
-  const userId = session?.user?.id ?? -1;
+
+  let userId = session?.user?.id ?? -1;;
+  let anonymousId = null;
+  let viewUserId = null;
+
+  if (session?.user?.id) {
+    viewUserId = session.user.id;
+  } else {
+    // Not logged in, so get or create an anonymousId cookie
+    anonymousId = getOrSetAnonymousId(context.req, context.res);
+  }
 
   // Fetch the photographer (with fallback for subscription, etc.)
   const user = await prisma.user.findUnique({
@@ -542,6 +554,17 @@ export async function getServerSideProps(context) {
     },
     orderBy: { created_at: 'asc' },
   });
+
+  //log view
+  if (!isOwner) {
+    await analyticsDb.albumViewEvent.create({
+      data: {
+        userId: viewUserId,
+        anonymousId: anonymousId, 
+        albumId: albumData.id,
+      },
+    });
+  }
 
   return {
     props: {

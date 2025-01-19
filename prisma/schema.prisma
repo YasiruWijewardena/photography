@@ -1,6 +1,6 @@
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL") // Ensure this is correctly set in your .env file
+  url      = env("DATABASE_URL") 
 }
 
 generator client {

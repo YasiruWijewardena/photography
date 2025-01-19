@@ -8,6 +8,8 @@ export default function AdminSignup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
   const [error, setError] = useState(null);
   const router = useRouter();
 
@@ -19,7 +21,7 @@ export default function AdminSignup() {
       const res = await fetch('/api/admin/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ firstname, lastname, username, email, password }),
       });
 
       if (res.ok) {
@@ -38,6 +40,24 @@ export default function AdminSignup() {
     <div className="admin-container">
       <h1 className="admin-header">SIGN UP</h1>
       <form onSubmit={handleSignup} className="admin-form">
+      <div className="admin-input-container">
+      <input
+          type="text"
+          placeholder="firstname"
+          required
+          value={firstname}
+          onChange={(e) => setFirstname(e.target.value)}
+        />
+      </div>
+      <div className="admin-input-container">
+      <input
+          type="text"
+          placeholder="lastname"
+          required
+          value={lastname}
+          onChange={(e) => setLastname(e.target.value)}
+        />
+      </div>
       <div className="admin-input-container">
       <input
           type="text"

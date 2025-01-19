@@ -1,0 +1,12 @@
+.photographer-dashboard-page h1 {
+    text-align: center;
+    font-size: 40px;
+    margin-top: 50px;
+    font-weight: 500;
+}
+
+.photographer-dashboard-page .desc {
+    text-align: center;
+    font-family: 'Poppins';
+    color: #8b8b8b;
+}
