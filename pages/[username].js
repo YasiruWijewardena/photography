@@ -16,7 +16,7 @@ export default function PhotographerPage({ photographerData, isOwner, snapshot, 
 
   // Redirect to login if owner is trying to access their dashboard without authentication
   useEffect(() => {
-    if (isOwner && status !== 'authenticated') {
+    if (isOwner && status === 'unauthenticated') {
       router.push('/login');
     }
   }, [isOwner, status, router]);
@@ -40,7 +40,7 @@ export async function getServerSideProps(context) {
   const { username } = context.params;
   const session = await getSession(context);
 
-  const photographerId = session.user.id; 
+  
 
   // Validate the username
   if (!username || typeof username !== 'string') {
@@ -70,6 +70,7 @@ export async function getServerSideProps(context) {
     }
 
     const photographer = user.Photographer;
+    const photographerId = photographer.photo_id; 
 
     const formattedPhotographer = {
       id: photographer.photo_id, // Photographer's unique ID
@@ -97,6 +98,15 @@ export async function getServerSideProps(context) {
     const isOwner =
       session?.user?.role === 'photographer' &&
       session.user.username === username; // Compare usernames instead of IDs
+
+      if (isOwner && !session) {
+        return {
+          redirect: {
+            destination: '/login',
+            permanent: false,
+          },
+        };
+      }
 
     // -- RECORD A PROFILE VIEW if the visitor is NOT the owner.
     if (!isOwner) {
@@ -166,29 +176,20 @@ export async function getServerSideProps(context) {
       const likesCount = Number(totalLikes[0]?.cnt) ?? 0;
 
       // (E) Total Favourites
-      const totalFavourites = await prisma.$queryRaw`
-        SELECT (
-          (SELECT COUNT(*) 
-           FROM favourites f
-           JOIN photographs p2 ON p2.id = f.photograph_id
-           WHERE p2.photographer_id = ${photographerId}
-          )
-          +
-          (SELECT COUNT(*)
+      const totalAlbumFavourites = await prisma.$queryRaw`
+       SELECT COUNT(*) AS cnt
            FROM favourites f
            JOIN albums a2 ON a2.id = f.album_id
            WHERE a2.photographer_id = ${photographerId}
-          )
-        ) AS cnt
       `;
-      const favouritesCount = Number(totalFavourites[0]?.cnt) ?? 0;
+      const favouritesCount = Number(totalAlbumFavourites[0]?.cnt) ?? 0;
 
       snapshot = {
         totalProfileViews: profileViewsCount,
         totalAlbumViews: albumViewsCount,
         totalPhotoViews: photoViewsCount,
         totalLikes: likesCount,
-        totalFavourites: favouritesCount,
+        totalAlbumFavourites: favouritesCount,
       };
 
       // -----------------------------

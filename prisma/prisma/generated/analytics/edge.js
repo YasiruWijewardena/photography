@@ -179,6 +179,7 @@ const config = {
     "analyticsDb"
   ],
   "activeProvider": "mysql",
+  "postinstall": false,
   "inlineDatasources": {
     "analyticsDb": {
       "url": {

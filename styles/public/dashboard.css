@@ -39,14 +39,16 @@
   
   .snapshot-card h3 {
     margin: 0;
-    font-size: 1.1rem;
-    color: #666;
+    font-size: 18px;
+    color: #8b8b8b;
+    font-weight: 500;
   }
   
   .snapshot-card p {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-top: 0.5rem;
+    font-family: "Parkinsans", serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 10px;
   }
   
   .chart-container {
