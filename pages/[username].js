@@ -28,7 +28,7 @@ export default function PhotographerPage({ photographerData, isOwner, snapshot, 
       photographerUsername={photographerData.username}
     >
       {isOwner ? (
-        <Dashboard snapshot={snapshot} chartData={chartData} albumChartData={albumChartData} firstname={photographerData.firstname}/>
+        <Dashboard snapshot={snapshot} chartData={chartData} albumChartData={albumChartData} firstname={photographerData.firstname} username={photographerData.username}/>
       ) : (
         <PublicProfile photographerData={photographerData} />
       )}

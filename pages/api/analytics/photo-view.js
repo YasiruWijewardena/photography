@@ -1,3 +1,6 @@
+// /pages/api/analytics/photo-view.js
+
+import { getOrSetAnonymousId } from '../../../lib/anonymousId'; 
 import analyticsDb from '../../../lib/analyticsPrisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
@@ -9,27 +12,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parse request
+    // Parse the request body
     const { photoId } = req.body;
     if (!photoId) {
       return res.status(400).json({ error: 'Missing photoId' });
     }
 
-    // Check if user is logged in
+    // Retrieve the session
     const session = await getServerSession(req, res, authOptions);
-
-
     const userId = session?.user?.id || null;
     let anonymousId = null;
 
-    if(!userId){
-        const cookies = parse(req.headers.cookie || '');
-        anonymousId = cookies.anonymousId || null;
+    if (!userId) {
+      // Call getOrSetAnonymousId to ensure the anonymousId cookie is set
+      anonymousId = getOrSetAnonymousId(req, res);
     }
 
-    
-
-    // Insert the record
+    // Insert the view event into the analytics database
     await analyticsDb.photoViewEvent.create({
       data: {
         userId,

@@ -76,9 +76,6 @@ export default async function handler(req, res) {
       `);
     }
 
-    // Debugging: Log the query results
-    console.log('Album Views Query Result:', query);
-
     // Prepare the data for the chart
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -115,6 +112,5 @@ async function getAlbumIds(photographerId) {
     where: { photographer_id: photographerId }, // Ensure this matches your Prisma schema
     select: { id: true },
   });
-  console.log('Album IDs:', albums.map(album => album.id)); // Debugging
   return albums.map(album => album.id);
 }
