@@ -125,6 +125,16 @@
   }
 
 /* Common Table Styles */
+
+.analytics-placeholder {
+  font-family: 'Poppins';
+  font-weight: 500;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px 10px;
+  color: #8b8b8b;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

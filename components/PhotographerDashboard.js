@@ -177,6 +177,49 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
     );
   }
 
+  // Function to generate chart options with y-axis configuration
+  const getChartOptions = (title, maxValue) => {
+    // Determine step size based on maxValue to avoid clutter
+    let stepSize = 1;
+    if (maxValue > 1000) {
+      stepSize = Math.ceil(maxValue / 10);
+    } else if (maxValue > 100) {
+      stepSize = Math.ceil(maxValue / 10);
+    }
+
+    return {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        title: {
+          display: false,
+        },
+      },
+      scales: {
+        x: { 
+          display: true,
+          title: {
+            display: false,
+          },
+        },
+        y: {
+          beginAtZero: true, // Start y-axis at 0
+          ticks: {
+            stepSize: stepSize, // Dynamic step size
+            callback: function(value) {
+              if (Number.isInteger(value)) {
+                return value;
+              }
+              return null; // Skip labels that are not whole numbers
+            },
+          },
+        },
+      },
+    };
+  };
+
   return (
     <div className="photographer-dashboard-page">
       <h1>Dashboard</h1>
@@ -217,14 +260,22 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
           <div className="chart-controls dashboard-filters-container">
             <label>
               Views Type
-              <select value={photoViewsType} onChange={(e) => setPhotoViewsType(e.target.value)} className="custom-select" >
+              <select 
+                value={photoViewsType} 
+                onChange={(e) => setPhotoViewsType(e.target.value)} 
+                className="custom-select"
+              >
                 <option value="total">Total Views</option>
                 <option value="unique">Unique Views</option>
               </select>
             </label>
             <label>
               Date Range
-              <select value={photoDateRange} onChange={(e) => setPhotoDateRange(Number(e.target.value))} className="custom-select" >
+              <select 
+                value={photoDateRange} 
+                onChange={(e) => setPhotoDateRange(Number(e.target.value))} 
+                className="custom-select"
+              >
                 <option value={7}>Last 7 Days</option>
                 <option value={30}>Last 30 Days</option>
                 <option value={90}>Last 90 Days</option>
@@ -245,18 +296,10 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
                 },
               ],
             }}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  display: false,
-                },
-              },
-              scales: {
-                x: { display: true },
-                y: { display: true },
-              },
-            }}
+            options={getChartOptions(
+              photoViewsType === 'total' ? 'Total Photo Views Over Time' : 'Unique Photo Views Over Time',
+              Math.max(...photoChart.values)
+            )}
           />
         </div>
 
@@ -268,14 +311,22 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
           <div className="chart-controls dashboard-filters-container">
             <label>
               Views Type
-              <select value={albumViewsType} onChange={(e) => setAlbumViewsType(e.target.value)} className="custom-select" >
+              <select 
+                value={albumViewsType} 
+                onChange={(e) => setAlbumViewsType(e.target.value)} 
+                className="custom-select"
+              >
                 <option value="total">Total Views</option>
                 <option value="unique">Unique Views</option>
               </select>
             </label>
             <label>
               Date Range
-              <select value={albumDateRange} onChange={(e) => setAlbumDateRange(Number(e.target.value))} className="custom-select" >
+              <select 
+                value={albumDateRange} 
+                onChange={(e) => setAlbumDateRange(Number(e.target.value))} 
+                className="custom-select"
+              >
                 <option value={7}>Last 7 Days</option>
                 <option value={30}>Last 30 Days</option>
                 <option value={90}>Last 90 Days</option>
@@ -296,18 +347,10 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
                 },
               ],
             }}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  display: false,
-                },
-              },
-              scales: {
-                x: { display: true },
-                y: { display: true },
-              },
-            }}
+            options={getChartOptions(
+              albumViewsType === 'total' ? 'Total Album Views Over Time' : 'Unique Album Views Over Time',
+              Math.max(...albumChart.values)
+            )}
           />
         </div>
       </div>
@@ -322,14 +365,22 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
         <div className="top-albums-filters dashboard-filters-container">
           <label>
             Views Type
-            <select value={topAlbumsViewsType} onChange={(e) => setTopAlbumsViewsType(e.target.value)} className="custom-select" >
+            <select 
+              value={topAlbumsViewsType} 
+              onChange={(e) => setTopAlbumsViewsType(e.target.value)} 
+              className="custom-select"
+            >
               <option value="total">Total Views</option>
               <option value="unique">Unique Views</option>
             </select>
           </label>
           <label>
             Date Range
-            <select value={topAlbumsDateRange} onChange={(e) => setTopAlbumsDateRange(e.target.value)} className="custom-select" >
+            <select 
+              value={topAlbumsDateRange} 
+              onChange={(e) => setTopAlbumsDateRange(e.target.value)} 
+              className="custom-select"
+            >
               <option value="7">Last 7 Days</option>
               <option value="30">Last 30 Days</option>
               <option value="90">Last 90 Days</option>
@@ -361,7 +412,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
                   <td>{album.viewCount}</td>
                   <td>
                     <Link href={`/${username.toLowerCase()}/albums/${album.slug}`} passHref target="_blank" rel="noopener noreferrer">
-                      View Album
+                     View Album
                     </Link>
                   </td>
                 </tr>
@@ -372,28 +423,36 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
 
         {/* No Albums with Views */}
         {!topAlbumsLoading && !topAlbumsError && topAlbums.length === 0 && (
-          <p>No albums with views found for the selected filters.</p>
+          <p className='analytics-placeholder'>No albums with views found for the selected filters.</p>
         )}
       </div>
 
       {/* Top Photos Section */}
       <div className="top-photos-section">
         <h2>
-          {topPhotos.length > 10 ? 'Top 5 Most Viewed Photos' : 'Your Photos Ranked by Views'}
+          {topPhotos.length > 10 ? 'Top 10 Most Viewed Photos' : 'Your Photos Ranked by Views'}
         </h2>
 
         {/* Dropdowns for Top Photos Filters */}
         <div className="top-photos-filters dashboard-filters-container">
           <label>
             Views Type
-            <select value={topPhotosViewsType} onChange={(e) => setTopPhotosViewsType(e.target.value)} className="custom-select" >
+            <select 
+              value={topPhotosViewsType} 
+              onChange={(e) => setTopPhotosViewsType(e.target.value)} 
+              className="custom-select"
+            >
               <option value="total">Total Views</option>
               <option value="unique">Unique Views</option>
             </select>
           </label>
           <label>
             Date Range
-            <select value={topPhotosDateRange} onChange={(e) => setTopPhotosDateRange(e.target.value)} className="custom-select" >
+            <select 
+              value={topPhotosDateRange} 
+              onChange={(e) => setTopPhotosDateRange(e.target.value)} 
+              className="custom-select"
+            >
               <option value="7">Last 7 Days</option>
               <option value="30">Last 30 Days</option>
               <option value="90">Last 90 Days</option>
@@ -445,7 +504,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
 
         {/* No Photos with Views */}
         {!topPhotosLoading && !topPhotosError && topPhotos.length === 0 && (
-          <p>No photos with views found for the selected filters.</p>
+          <p className='analytics-placeholder'>No photos with views found for the selected filters.</p>
         )}
       </div>
 
@@ -459,7 +518,11 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
         <div className="top-liked-photos-filters dashboard-filters-container">
           <label>
             Date Range
-            <select value={topLikedPhotosDateRange} onChange={(e) => setTopLikedPhotosDateRange(e.target.value)} className="custom-select" >
+            <select 
+              value={topLikedPhotosDateRange} 
+              onChange={(e) => setTopLikedPhotosDateRange(e.target.value)} 
+              className="custom-select"
+            >
               <option value="all">All Time</option>
               <option value="7">Last 7 Days</option>
               <option value="30">Last 30 Days</option>
@@ -511,7 +574,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
 
         {/* No Photos with Likes */}
         {!topLikedPhotosLoading && !topLikedPhotosError && topLikedPhotos.length === 0 && (
-          <p>No photos with likes found for the selected filters.</p>
+          <p className='analytics-placeholder'>No photos with likes found for the selected filters.</p>
         )}
       </div>
     </div>
