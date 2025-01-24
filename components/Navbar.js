@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   return (
     <nav className="navbar">
@@ -42,8 +45,16 @@ export default function Navbar() {
         
 
         <div className="navbar-auth">
-          {session ? (
-            session.user.role === 'customer' ? (
+          {status === 'loading' ? (
+            <span className="navbar-item">Loading...</span>
+          ) : session ? (
+            // Check for pending role or incomplete data
+            session.user.role === 'pending' ||
+            (session.user.role === 'photographer' && !session.user.photographer_id) ? (
+              <Link href="/signup" className="navbar-item">
+                Complete Your Signup, {session.user.firstname}
+              </Link>
+            ) : session.user.role === 'customer' ? (
               <Link href={`/customer/${session.user.username}`} className="navbar-item">
                 Hello, {session.user.firstname}
               </Link>
