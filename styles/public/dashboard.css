@@ -1,0 +1,255 @@
+.photographer-dashboard-page h1 {
+    text-align: center;
+    font-size: 40px;
+    margin-top: 50px;
+    font-weight: 500;
+}
+
+.photographer-dashboard-page .desc {
+    text-align: center;
+    font-family: 'Poppins';
+    color: #8b8b8b;
+}
+
+.photographer-dashboard-page {
+    padding: 2rem;
+  }
+  
+  .desc {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+  }
+  
+  .snapshot-cards-container {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 50px;
+    margin-top: 80px;
+  }
+  
+  .snapshot-card {
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .snapshot-card h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #8b8b8b;
+    font-weight: 500;
+  }
+  
+  .snapshot-card p {
+    font-family: "Parkinsans", serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 10px;
+  }
+  
+  .chart-container {
+    column-gap: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .album-chart-container,
+  .photo-chart-container {
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+  }
+  
+  .chart-container h2 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #000000;
+    text-align: center;
+  }
+
+  /* top albums */
+  .top-liked-photos-section,
+  .top-photos-section,
+  .top-albums-section {
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+    margin-top: 50px;
+  }
+
+  .top-liked-photos-section h2,
+  .top-photos-section h2,
+  .top-albums-section h2 {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .top-liked-photos-table,
+  .top-photos-table,
+  .top-albums-table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .top-liked-photos-table thead tr th,
+  .top-photos-table thead tr th,
+  .top-albums-table thead tr th {
+    text-align: left;
+    font-family: 'Poppins';
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.7em;
+    text-transform: capitalize;
+  }
+
+  .top-liked-photos-table thead tr,
+  .top-photos-table thead tr,
+  .top-albums-table thead tr{
+    border-bottom: 1px solid #d1d1d1;
+  }
+
+  .top-liked-photos-table tbody tr td,
+  .top-photos-table tbody tr td,
+  .top-albums-table tbody tr td {
+    padding-top: 20px;
+    padding-bottom: 10px;
+    font-family: "Parkinsans", serif;
+    font-size: 20px;
+  }
+
+/* Common Table Styles */
+
+.analytics-placeholder {
+  font-family: 'Poppins';
+  font-weight: 500;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px 10px;
+  color: #8b8b8b;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+}
+
+th {
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+}
+
+tbody tr:nth-child(even) {
+  /* background-color: #f9f9f9; */
+}
+
+tbody tr {
+  background-color: #f1f1f100;
+  transition: all 0.3s;
+}
+
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.top-albums-table th:nth-child(1),
+.top-photos-table th:nth-child(1),
+.top-liked-photos-table th:nth-child(1) {
+  width: 30%;
+}
+
+.top-albums-table th:nth-child(2),
+.top-photos-table th:nth-child(2),
+.top-liked-photos-table th:nth-child(2) {
+  width: 20%;
+}
+
+.top-albums-table th:nth-child(3),
+.top-photos-table th:nth-child(3),
+.top-liked-photos-table th:nth-child(3) {
+  width: 20%;
+}
+
+.top-albums-table th:nth-child(4),
+.top-photos-table th:nth-child(4),
+.top-liked-photos-table th:nth-child(4) {
+  width: 30%;
+}
+
+
+
+/* Style the select element */
+
+.dashboard-filters-container {
+  display: flex;
+  column-gap: 10px;
+  margin-bottom: 10px;
+}
+
+.custom-select {
+  appearance: none; 
+  -webkit-appearance: none;
+  -moz-appearance: none; 
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px 40px 5px 15px; 
+  margin-left: 10px;
+  font-size: 14px;
+  color: #333;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 10 7"><path fill="%23333" d="M0 0l5 5 5-5z"/></svg>'); /* Inline SVG for the custom arrow */
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 10px 7px;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Hover and focus states */
+.custom-select:hover {
+  border-color: #888;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #555;
+  box-shadow: 0 0 5px rgba(85, 85, 85, 0.5);
+}
+
+/* Optional: Adjust select width if necessary */
+.custom-select {
+  width: 200px; /* Adjust as needed */
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 768px) {
+  th, td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .photo-thumbnail {
+    width: 80px;
+    height: 80px;
+  }
+
+  .custom-select {
+    padding: 8px 35px 8px 12px;
+    font-size: 14px;
+    background-position: right 10px center;
+    background-size: 8px 5px;
+    width: 150px; /* Adjust as needed */
+  }
+}

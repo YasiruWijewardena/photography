@@ -54,6 +54,10 @@ export default function PhotoModal({
   const modalRef = useRef(null); // Ref for the modal element
   const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
 
+  const viewedRef = useRef({});
+
+
+
   // Determine the source of images
   let sourceImages = images;
   if (albumId !== null) {
@@ -239,6 +243,44 @@ export default function PhotoModal({
     setIsLoginModalOpen(false);
   };
 
+  //handle view log
+  useEffect(() => {
+    // On modal open, log the initial photo if not already logged
+    if (isOpen && images[startIndex]) {
+      const photo = images[startIndex];
+      if (!viewedRef.current[photo.id]) {
+        viewedRef.current[photo.id] = true;
+        recordPhotoView(photo.id);
+      }
+    }
+  }, [isOpen, startIndex, images]);
+
+  // Called whenever the gallery slides to a new index
+  const handleSlide = (newIndex) => {
+    setCurrentIndex(newIndex);
+    const photo = images[newIndex];
+    if (!photo) return;
+
+    // If we haven't tracked this photo yet, track it now
+    if (!viewedRef.current[photo.id]) {
+      viewedRef.current[photo.id] = true;
+      recordPhotoView(photo.id);
+    }
+  };
+
+  // Example function that calls your API route
+  const recordPhotoView = async (photoId) => {
+    try {
+      await fetch('/api/analytics/photo-view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoId }),
+      });
+    } catch (err) {
+      console.error('Failed to track photo view:', err);
+    }
+  };
+
   // Memoize galleryItems to prevent unnecessary re-renders
   const galleryItems = useMemo(() => {
     if (isSinglePhoto && photo) {
@@ -349,7 +391,7 @@ export default function PhotoModal({
                 showPlayButton={false}
                 showFullscreenButton={false}
                 showNav={galleryItems.length > 1} // Conditionally show navigation
-                onSlide={(current) => setCurrentIndex(current)}
+                onSlide={handleSlide}
                 renderItem={(item) => (
                   <div className={`slider-layout ${isFullscreen ? 'fullscreen' : ''}`}>
                     <div className="slider-image-container">

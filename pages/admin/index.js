@@ -36,6 +36,7 @@ export default function AdminLogin() {
     });
 
     if (res?.error) {
+      console.log(res?.error);
       setError('Invalid email or password');
       setLoading(false);
     } else {
