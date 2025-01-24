@@ -154,16 +154,10 @@ import { CustomPrismaAdapter } from '../../../lib/customPrismaAdapter';
 import bcrypt from 'bcrypt';
 import prisma from '../../../lib/prisma';
 
-/**
- * NextAuth Configuration Options
- */
 export const authOptions = {
-  // Use a custom Prisma adapter to integrate with your Prisma schema
   adapter: CustomPrismaAdapter(prisma),
 
-  // Define authentication providers
   providers: [
-    // Credentials Provider for email/password authentication
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -175,15 +169,9 @@ export const authOptions = {
           placeholder: 'optional - e.g. "admin"',
         },
       },
-      /**
-       * Authorize user credentials
-       * @param {Object} credentials - User credentials
-       * @returns {Object|null} - User object if valid, else null
-       */
       async authorize(credentials) {
         const { email, password, loginType } = credentials;
 
-        // Fetch user from the database
         const user = await prisma.user.findUnique({
           where: { email },
           include: {
@@ -193,26 +181,21 @@ export const authOptions = {
           },
         });
 
-        // If user doesn't exist or doesn't have a password (e.g., OAuth user), reject
         if (!user || !user.password) {
           return null;
         }
 
-        // Compare hashed passwords
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
           return null;
         }
 
-        // If loginType is specified (e.g., admin), verify user's role
         if (loginType === 'admin' && user.role !== 'admin') {
           return null; // Not an admin in the DB, reject
         }
 
-        // Include photographer_id if the user is a photographer
         const photographer_id = user.Photographer ? user.Photographer.photo_id : null;
 
-        // Return user object with necessary fields
         return {
           id: user.id,
           email: user.email,
@@ -226,7 +209,6 @@ export const authOptions = {
       },
     }),
 
-    // Google Provider for OAuth authentication
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -235,11 +217,6 @@ export const authOptions = {
           scope: 'openid email profile',
         },
       },
-      /**
-       * Map OAuth profile to user object
-       * @param {Object} profile - Google profile
-       * @returns {Object} - Mapped user object
-       */
       async profile(profile) {
         return {
           id: profile.sub,
@@ -250,18 +227,9 @@ export const authOptions = {
         };
       },
     }),
-    // Add other providers if needed
   ],
 
-  // Define callback functions
   callbacks: {
-    /**
-     * JWT Callback
-     * - Adds user information to the JWT token
-     * - Fetches latest user data from DB if user object is not present
-     * @param {Object} params - Callback parameters
-     * @returns {Object} - Updated token
-     */
     async jwt({ token, user }) {
       if (user) {
         // Initial sign-in, add user info to token
@@ -289,17 +257,18 @@ export const authOptions = {
           token.username = dbUser.username;
           token.photographer_id = dbUser.Photographer ? dbUser.Photographer.photo_id : null;
           token.admin_level = dbUser.Admin?.admin_level || null;
+          
+          // Include profile_picture if user is a photographer
+          if (dbUser.Photographer && dbUser.Photographer.profile_picture) {
+            token.profile_picture = dbUser.Photographer.profile_picture;
+          } else {
+            token.profile_picture = null;
+          }
         }
       }
       return token;
     },
 
-    /**
-     * Session Callback
-     * - Exposes user information to the session object
-     * @param {Object} params - Callback parameters
-     * @returns {Object} - Updated session
-     */
     async session({ session, token }) {
       if (token) {
         session.user = {
@@ -311,20 +280,14 @@ export const authOptions = {
           role: token.role,
           photographer_id: token.photographer_id,
           admin_level: token.admin_level,
+          profile_picture: token.profile_picture, // Add profile_picture to session
         };
       }
       return session;
     },
 
-    /**
-     * Sign-In Callback
-     * - Allows users to sign in via OAuth providers
-     * @param {Object} params - Callback parameters
-     * @returns {boolean} - Whether sign-in should be allowed
-     */
     async signIn({ user, account }) {
       if (account.provider === 'google') {
-        // Check if user already exists
         const existingUser = await prisma.user.findUnique({ where: { email: user.email } });
         if (existingUser) {
           return true; // Allow sign-in
@@ -336,13 +299,7 @@ export const authOptions = {
     },
   },
 
-  // Define event handlers
   events: {
-    /**
-     * CreateUser Event
-     * - Sets the 'pending' role for new users created via OAuth
-     * @param {Object} params - Event parameters
-     */
     async createUser({ user }) {
       if (!user.role || user.role === 'pending') {
         await prisma.user.update({
@@ -353,22 +310,18 @@ export const authOptions = {
     },
   },
 
-  // Define custom pages
   pages: {
     signIn: '/login',
-    error: '/auth/error', // Error code passed in query string as ?error=
+    error: '/auth/error',
   },
 
-  // Configure session handling
   session: {
-    strategy: 'jwt', // Use JWT strategy
+    strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
-  // Define secret for signing JWTs
   secret: process.env.NEXTAUTH_SECRET,
 
-  // Enable debug mode for development
   debug: true,
 };
 

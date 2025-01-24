@@ -293,29 +293,7 @@
     border-radius: 10px;
     margin-bottom: 15px;
   }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 600px) {
-    .photoSection {
-      padding: 1rem;
-    }
-  
-    .photoSection h2 {
-      font-size: 1.5rem;
-    }
-  
-    .photoSection-photoCard {
-      margin-bottom: 10px;
-    }
-  
-    .photoSection-photoInfo h4 {
-      font-size: 1rem;
-    }
-  
-    .photoSection-photoInfo p {
-      font-size: 0.8rem;
-    }
-  }
+
 
   .photoSection .icon {
     color: #000;
@@ -414,6 +392,42 @@
 
   .roles-submit {
     margin-top: 30px;
+  }
+
+  /* home */
+  .home-hero-sec .home-hero-title {
+    font-size: 36px;
+  }
+
+  .home-hero-sec {
+    padding-bottom: 50px;
+  }
+
+  /* photosection */
+  .photoSection {
+    padding: 1rem;
+  }
+
+  .photoSection h2 {
+    font-size: 1.5rem;
+  }
+
+  .photoSection-photoCard {
+    margin-bottom: 10px;
+  }
+
+  .photoSection-photoInfo h4 {
+    font-size: 1rem;
+  }
+
+  .photoSection-photoInfo p {
+    font-size: 0.8rem;
+  }
+
+  /* photocard */
+  .photoCard-overlay {
+    opacity: 1;
+    visibility: visible;
   }
 
 }
