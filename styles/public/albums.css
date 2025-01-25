@@ -9,13 +9,16 @@
 .albums-page .albums-filter-options {
     width: 100%;
     display: flex;
-    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: 100px;
 }
 
 .albums-page .album-search-bar {
     max-width: 500px;
     width: 100%;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 .albums-page .album-search-bar input {
@@ -122,4 +125,60 @@
 
 .album-favourite-container button svg {
     font-size: 30px!important;
+}
+
+
+/* responsive */
+@media screen and (max-width: 1200px) {
+    .album-slider .swiper-wrapper {
+        height: 300px;
+    }
+
+    .album-detail-container {
+        grid-template-columns: 1fr 2fr 0.5fr;
+    }
+}
+
+@media screen and (max-width: 980px) {
+    .album-detail-container {
+        grid-template-columns: 1fr;
+        padding-top: 15px;
+        padding-left: 20px;
+        padding-bottom: 20px;
+        padding-right: 20px;
+    }
+    .album-actions-container {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .photographer-pro-pic {
+        width: 50px;
+        height: 50px;
+    }
+
+    .photographer-detail-container {
+        margin-bottom: 10px;
+
+    }
+}
+
+
+@media screen and (max-width: 768px) {
+    .albums-page .albums-page-title {
+        font-size: 36px;
+    }
+
+    .albums-page .albums-filter-options {
+        width: 90%;
+        margin: auto;
+    }
+
+    .albums-page .album-search-bar {
+        width: 90%;
+    }
+
+    .album-detail-container .album-link {
+        font-size: 12px;
+    }
 }

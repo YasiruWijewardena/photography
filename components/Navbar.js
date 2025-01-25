@@ -124,7 +124,7 @@ export default function Navbar() {
                 <span className='navbar-profil-text'>Hello, {session.user.firstname}</span>
               </Link>
             ) : session.user.role === 'photographer' ? (
-              <Link href={`/photographer/dashboard`} className="navbar-item flex items-center">
+              <Link href={`/${session.user.username}`} className="navbar-item flex items-center">
                 {/* Display profile picture if available */}
                 {session.user.profile_picture ? (
                   <Image

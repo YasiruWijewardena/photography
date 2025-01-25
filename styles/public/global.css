@@ -17,3 +17,9 @@ a {
 body {
     margin: 0;
 }
+
+.infinite-scroll-end-msg {
+    font-family: 'Poppins';
+    color: #555;
+    text-align: center;
+}

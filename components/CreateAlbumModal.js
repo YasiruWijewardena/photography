@@ -13,6 +13,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [descError, setDescError] = useState('');
+  const MAX_DESCRIPTION_LENGTH = 255;
 
   useEffect(() => {
     if (isOpen) {
@@ -20,6 +22,12 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
         .get('/api/categories')
         .then((response) => setCategories(response.data.categories))
         .catch((error) => console.error('Error fetching categories:', error));
+    }else {
+      setTitle('');
+      setDescription('');
+      setDescError('');
+      setFiles([]);
+      setSelectedCategory('');
     }
   }, [isOpen]);
 
@@ -33,6 +41,15 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
     },
   });
 
+  const handleDescriptionChange = (value) => {
+    setDescription(value);
+    if (value.length > MAX_DESCRIPTION_LENGTH) {
+      setDescError(`Description too long! Max is ${MAX_DESCRIPTION_LENGTH} characters.`);
+    } else {
+      setDescError('');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -41,6 +58,11 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
     }
     if (!selectedCategory) {
       alert('Please select a category.');
+      return;
+    }
+    if (descError) {
+      // If there's an error, do not submit
+      alert('Please fix the description length before submitting.');
       return;
     }
 
@@ -134,10 +156,20 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
           <textarea
             id="album-description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => handleDescriptionChange(e.target.value)}
             placeholder="Enter album description"
             aria-label="Album Description"
           />
+          {/* Character Counter */}
+          <div className="char-counter">
+            {description.length} / {MAX_DESCRIPTION_LENGTH}
+          </div>
+          {/* Error message if too long */}
+          {descError && (
+            <p className="error-message" style={{ color: 'red' }}>
+              {descError}
+            </p>
+          )}
         </div>
         <div className="form-group">
           <label htmlFor="album-category">Category:</label>

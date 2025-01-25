@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../api/auth/[...nextauth]'; // Adjust path as necessary
+import { authOptions } from '../../api/auth/[...nextauth]'; 
 import PhotographerLayout from '../../../components/PhotographerLayout';
-import PhotoSection from '../../../components/PhotoSection'; // Reuse the same component
+import PhotoSection from '../../../components/PhotoSection';
 import prisma from '../../../lib/prisma';
 import axios from 'axios';
 
@@ -29,7 +29,7 @@ export default function AlbumPage({
   const router = useRouter();
   const { data: session } = useSession();
 
-  // Initialize to prevent undefined references
+  // Basic album state
   const [currentAlbum, setCurrentAlbum] = useState(album || { photographs: [] });
 
   // Edit mode states
@@ -37,9 +37,13 @@ export default function AlbumPage({
   const [editedTitle, setEditedTitle] = useState(currentAlbum.title || '');
   const [editedDescription, setEditedDescription] = useState(currentAlbum.description || '');
 
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
+  // 1) Our maximum length
+  const MAX_DESCRIPTION_LENGTH = 255;
+  // 2) An error message if the user goes beyond the limit
+  const [descriptionError, setDescriptionError] = useState('');
 
-  // Modals
+  // For selecting / deleting photos, etc.
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
   const [isAddPhotosModalOpen, setIsAddPhotosModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [availableAlbums, setAvailableAlbums] = useState([]);
@@ -53,38 +57,46 @@ export default function AlbumPage({
     setIsEditMode(false);
     setEditedTitle(album?.title || '');
     setEditedDescription(album?.description || '');
+    setDescriptionError('');
   }, [album]);
 
-  // Toggle album favourite (bookmark icon)
+  // -----------------------------------
+  // Handling Title / Description
+  // -----------------------------------
+  const handleDescriptionChange = (value) => {
+    setEditedDescription(value);
+
+    if (value.length > MAX_DESCRIPTION_LENGTH) {
+      setDescriptionError(`Description too long! Max is ${MAX_DESCRIPTION_LENGTH} characters.`);
+    } else {
+      setDescriptionError('');
+    }
+  };
+
+  // Toggle album favourite
   const handleToggleAlbumFavourite = async () => {
     if (!session) {
       alert('Please log in to favourite albums!');
       return;
     }
-  
+
     // 1) Optimistic UI update
     setCurrentAlbum((prev) => ({
       ...prev,
       isFavourited: !prev.isFavourited,
     }));
-  
+
     // 2) Decide POST or DELETE
     const method = currentAlbum.isFavourited ? 'DELETE' : 'POST';
-  
     try {
-      // Use photographerUsername (the album owner’s username) instead of session.user.username
       const res = await fetch(
         `/api/users/${photographerUsername}/albums/${currentAlbum.slug}/favourite`,
         { method }
       );
-  
-      if (!res.ok) {
-        throw new Error('Request failed');
-      }
-      // If successful, do nothing extra.
+      if (!res.ok) throw new Error('Request failed');
     } catch (error) {
       console.error('Error toggling favourite:', error);
-      // 3) Roll back the toggle if the request fails
+      // Roll back
       setCurrentAlbum((prev) => ({
         ...prev,
         isFavourited: !prev.isFavourited,
@@ -92,9 +104,7 @@ export default function AlbumPage({
     }
   };
 
-  // ------------------------------
-  // Photo Selection
-  // ------------------------------
+  // Photo selection for editing
   const toggleSelectPhoto = (photoId) => {
     setSelectedPhotoIds((prev) =>
       prev.includes(photoId) ? prev.filter((pid) => pid !== photoId) : [...prev, photoId]
@@ -105,16 +115,13 @@ export default function AlbumPage({
     setIsEditMode(false);
     setEditedTitle(currentAlbum.title || '');
     setEditedDescription(currentAlbum.description || '');
+    setDescriptionError('');
   };
 
-  // ------------------------------
-  // Deleting Photos
-  // ------------------------------
+  // Deleting photos
   const handleDeletePhotos = async () => {
     if (selectedPhotoIds.length === 0) return;
-    const confirmDelete = confirm(
-      'Are you sure you want to permanently delete the selected photos?'
-    );
+    const confirmDelete = confirm('Are you sure you want to delete the selected photos?');
     if (!confirmDelete) return;
 
     try {
@@ -133,14 +140,12 @@ export default function AlbumPage({
     }
   };
 
-  // ------------------------------
-  // Assigning (Moving) Photos
-  // ------------------------------
+  // Assigning photos
   const fetchAvailableAlbums = async () => {
     setLoadingAvailableAlbums(true);
     try {
       const res = await axios.get('/api/albums', {
-        params: { excludeId: currentAlbum.id }, // Pass excludeId
+        params: { excludeId: currentAlbum.id },
       });
       setAvailableAlbums(res.data.albums || []);
     } catch (error) {
@@ -186,10 +191,13 @@ export default function AlbumPage({
     }
   };
 
-  // ------------------------------
-  // Album Edit & Delete
-  // ------------------------------
+  // Save Album changes (title/description)
   const handleSaveAlbumChanges = async () => {
+    // If there's an error or user typed too many chars, block
+    if (descriptionError) {
+      alert('Please fix the description length before saving.');
+      return;
+    }
     try {
       const response = await axios.put(`/api/albums/${currentAlbum.slug}`, {
         title: editedTitle,
@@ -200,7 +208,7 @@ export default function AlbumPage({
         ...prev,
         title: response.data.album.title,
         description: response.data.album.description,
-        slug: response.data.album.slug, // Update slug if title changed
+        slug: response.data.album.slug, 
       }));
       setIsEditMode(false);
     } catch (error) {
@@ -209,10 +217,9 @@ export default function AlbumPage({
     }
   };
 
+  // Delete entire album
   const handleDeleteAlbum = async () => {
-    const confirmDelete = confirm(
-      'Are you sure you want to delete this album and all its photos?'
-    );
+    const confirmDelete = confirm('Are you sure you want to delete this album and all its photos?');
     if (!confirmDelete) return;
 
     try {
@@ -225,24 +232,16 @@ export default function AlbumPage({
     }
   };
 
-  // ------------------------------
-  // Handle photos added
-  // ------------------------------
+  // Photos added callback
   const handlePhotosAdded = () => {
-    // Simple approach; reload to see newly added photos
+    // reload to see newly added photos
     router.reload();
   };
 
-  // ------------------------------
-  // Early Return if Not Found
-  // ------------------------------
   if (!album) {
     return <p>Error: Album not found</p>;
   }
 
-  // ------------------------------
-  // Rendering
-  // ------------------------------
   return (
     <div className="album-page">
       {/* Album Title & Description */}
@@ -262,7 +261,6 @@ export default function AlbumPage({
             {currentAlbum.isFavourited ? <Bookmark /> : <BookmarkBorder />}
           </IconButton>
 
-          {/* Edit button for owner */}
           {isOwner && (
             <div className="modal-actions">
               <button
@@ -286,12 +284,26 @@ export default function AlbumPage({
               aria-label="Edit Album Title"
             />
           </h1>
-          <textarea
-            value={editedDescription}
-            onChange={(e) => setEditedDescription(e.target.value)}
-            className="album-desc-edit"
-            aria-label="Edit Album Description"
-          />
+          <div className="edit-description-wrapper">
+            <textarea
+              value={editedDescription}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              className="album-desc-edit"
+              aria-label="Edit Album Description"
+            />
+
+            {/* Character Counter */}
+            <div className="char-counter">
+              {editedDescription.length} / {MAX_DESCRIPTION_LENGTH}
+            </div>
+            {/* Error message if too long */}
+            {descriptionError && (
+              <p className="error-message" style={{ color: 'red' }}>
+                {descriptionError}
+              </p>
+            )}
+          </div>
+
           <div className="modal-actions">
             <button onClick={handleSaveAlbumChanges} className="primary-button">
               Save Changes
@@ -373,7 +385,6 @@ AlbumPage.propTypes = {
   photographerUsername: PropTypes.string.isRequired,
 };
 
-// Wrap page with PhotographerLayout
 AlbumPage.getLayout = function getLayout(page) {
   const { album, allAlbums, photographerId, isOwner, photographerUsername } = page.props;
   return (
@@ -387,8 +398,7 @@ AlbumPage.getLayout = function getLayout(page) {
       {page}
     </PhotographerLayout>
   );
-};
-
+};  
 // ------------------------------
 // getServerSideProps
 // ------------------------------

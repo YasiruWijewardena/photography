@@ -1,0 +1,36 @@
+footer {
+    margin-top: 50px;
+    border-top: 1px solid #a2a2a2;
+    padding: 20px;
+}
+
+.footer-items-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.footer-items-container div {
+    display: flex;
+    column-gap: 10px;
+}
+
+.footer-items-container a {
+    font-family: 'Poppins';
+    font-size: 16px;
+    color: #000;
+    
+}
+
+.copyrights {
+    font-family: "Parkinsans", serif;
+    color: #555;
+    text-align: center;
+}
+
+@media screen and (max-width: 768px) {
+    .footer-items-container {
+       flex-direction: column;
+       align-items: center;
+       row-gap: 20px;
+    }
+}

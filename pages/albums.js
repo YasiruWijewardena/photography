@@ -18,6 +18,7 @@ import { Favorite, FavoriteBorder, Bookmark, BookmarkBorder } from '@mui/icons-m
 import LoginPromptModal from '../components/LoginPromptModal';
 import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import Footer from '../components/Footer';
 
 const albumVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -194,7 +195,7 @@ export default function AlbumsPage() {
           next={fetchMoreAlbums}
           hasMore={hasMore}
           loader={<p className="loader">Loading more albums...</p>}
-          endMessage={<p className="end-message">No more albums to show.</p>}
+          endMessage={<p className='infinite-scroll-end-msg'>Thats all folks</p>}
           scrollThreshold={0.9} // Fetch next batch when 90% scrolled
           style={{ overflow: 'visible' }} // Keep normal page scroller
         >
@@ -285,11 +286,26 @@ export default function AlbumsPage() {
                       {/* Image Slider */}
                       {album.photographs.length > 0 && (
                         <Swiper
-                          spaceBetween={10}
+                          spaceBetween={5}
                           slidesPerView={4}
                           navigation
                           pagination={{ clickable: true }}
                           className='album-slider'
+                          breakpoints={{
+                            0: {
+                              slidesPerView: 1.2,
+                            },
+                            500: {
+                              slidesPerView: 2,
+                            },
+                            768: {
+                              slidesPerView: 3,
+                            },
+                            980: {
+                              slidesPerView: 4,
+                            },
+                          }}
+                   
                         >
                           {album.photographs.map((photo, index) => (
                             <SwiperSlide key={photo.id}>
@@ -343,6 +359,7 @@ export default function AlbumsPage() {
           onRequestClose={() => setIsLoginModalOpen(false)}
         />
       </div>
+      <Footer />
     </PublicLayout>
   );
 }

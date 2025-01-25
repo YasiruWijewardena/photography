@@ -62,7 +62,7 @@ export default function PhotoSection({
   // The masonry breakpoints
   const breakpointColumnsObj = {
     default: 4,
-    1100: 3,
+    1400: 3,
     700: 2,
     500: 1,
   };
@@ -213,7 +213,7 @@ export default function PhotoSection({
         next={fetchPhotos}
         hasMore={hasMore}
         loader={<h4>Loading...</h4>}
-        endMessage={<p className='infinite-scroll-end-msg'>No more photos to show.</p>}
+        endMessage={<p className='infinite-scroll-end-msg'>Thats all folks</p>}
       >
         <Masonry
           breakpointCols={breakpointColumnsObj}
