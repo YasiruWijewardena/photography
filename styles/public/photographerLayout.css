@@ -664,8 +664,9 @@ width: fit-content;
 }
 
 .fullscreen-toggle-button{
-  left: -50px
+  left: 0px
 }
+
 .gallery-close-button-container {
   right: -50px;
 }
@@ -824,7 +825,7 @@ width: fit-content;
 
 /* public profile */
 
-.photographer-info {
+.public-profile .photographer-info {
   margin-top: 100px;
   margin-bottom: 100px;
   display: flex;

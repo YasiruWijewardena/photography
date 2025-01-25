@@ -246,6 +246,38 @@ body.ReactModal__Body--open {
   overflow: hidden;
 }
 
+.custom-photo-modal-content.fake-fullscreen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0; padding: 0;
+  z-index: 9999;
+  background: #000; /* if desired */
+  /* Hide any corners or borders */
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.fullscreen-image-container {
+  width: 100vw;
+  height: 100vh;
+}
+
+.fullscreen-image-container img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Also prevent background scrolling while fake-fullscreen is active */
+body.fake-fullscreen-mode {
+  overflow: hidden;
+}
+
 /* The overlay (dark background) */
 .custom-photo-modal-overlay {
   position: fixed;
@@ -290,6 +322,7 @@ body.ReactModal__Body--open {
   height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 /* Fullscreen mode */
@@ -301,20 +334,20 @@ body.ReactModal__Body--open {
 
 /* Top bar: Fullscreen & Close buttons */
 .top-controls-container {
-  /* position: absolute;
-  top: 10px;
-  right: 10px; */
+  position: absolute;
   display: flex;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 0px;
   gap: 10px;
   z-index: 9999;
+  width: 100%;
+  top: 0px;
 }
 
 .fullscreen-toggle-button,
-.modal-close-button {
-  background: rgba(0,0,0,0.5);
-  color: #fff;
+.photomodal-close-button {
+  background-color: rgba(0,0,0,0.5)!important;
+  color: #fff!important;
   border: none;
   border-radius: 50%;
   padding: 8px;
@@ -322,9 +355,17 @@ body.ReactModal__Body--open {
   transition: background 0.3s;
 }
 
+.fullscreen-toggle-button svg{
+  transform: scaleX(-1);
+}
+
 .fullscreen-toggle-button:hover,
-.modal-close-button:hover {
+.photomodal-close-buttonn:hover { 
   background: rgba(0,0,0,0.7);
+}
+
+.fake-fullscreen .top-controls-container {
+  justify-content: space-between!important;
 }
 
 /* Entire layout for the image and metadata */
@@ -399,7 +440,7 @@ body.ReactModal__Body--open {
 
 /* The left / right nav arrows */
 .nav-arrow {
-  background: #fff;
+  background-color: #fff!important;
   color: #000;
   border-radius: 50%;
   width: 40px;
@@ -460,6 +501,10 @@ body.ReactModal__Body--open {
 
   .modal-content-layout {
     justify-content: flex-end; 
+  }
+
+  .top-controls-container {
+    top: 50px;
   }
 
   .image-container {

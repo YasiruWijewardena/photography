@@ -518,12 +518,12 @@ import { usePhotos } from '../context/PhotoContext';
 import LoginPromptModal from './LoginPromptModal';
 import '../styles/public/photoModal.css';
 
+// For a11y
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#__next');
 }
 
-// Framer Motion variants for sliding in/out
-// We'll re-use these for photographer-info & action-buttons only
+/** Framer Motion variants for the normal photo info animation (non-fullscreen). */
 const slideVariants = {
   enter: (direction) => ({
     x: direction > 0 ? 300 : -300,
@@ -534,17 +534,13 @@ const slideVariants = {
     x: 0,
     opacity: 1,
     scale: 1,
-    transition: {
-      duration: 0.3
-    }
+    transition: { duration: 0.3 }
   },
   exit: (direction) => ({
     x: direction < 0 ? 300 : -300,
     opacity: 0,
     scale: 0.95,
-    transition: {
-      duration: 0.3
-    }
+    transition: { duration: 0.3 }
   })
 };
 
@@ -561,49 +557,52 @@ export default function PhotoModal({
   const { toggleLike, toggleFavourite, albums } = usePhotos();
   const { data: session, status } = useSession();
 
+  // Refs
   const modalRef = useRef(null);
-  const viewedRef = useRef({});
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const viewedRef = useRef({}); // track photo views
 
-  // We store a page index and direction so we can animate slides
+  // Photo navigation
   const [page, setPage] = useState(startIndex);
   const [direction, setDirection] = useState(0);
 
-  // Determine source images
+  // Fullscreen states
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFakeFullscreen, setIsFakeFullscreen] = useState(false);
+  const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
+
+  // Hide controls after inactivity
+  const [showControls, setShowControls] = useState(true);
+
+  // If user tries to like/favourite but not logged in
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  // Gather images
   let sourceImages = images;
   if (albumId !== null) {
     const album = albums.find((a) => a.id === albumId);
-    if (album) {
-      sourceImages = album.photographs;
-    }
+    if (album) sourceImages = album.photographs;
   }
   const isSinglePhoto = !!photo;
+  const currentPhoto = isSinglePhoto ? photo : sourceImages[page] || null;
 
-  // Current photo object
-  const currentPhoto = isSinglePhoto ? photo : sourceImages[page];
-
-  // On open, set the page to startIndex
+  // On modal open, set page
   useEffect(() => {
     setPage(startIndex);
   }, [startIndex]);
 
-  // Check fullscreen support
+  // Check Fullscreen API support
   useEffect(() => {
-    if (modalRef.current) {
-      const supports = !!(
-        modalRef.current.requestFullscreen ||
-        modalRef.current.webkitRequestFullscreen ||
-        modalRef.current.mozRequestFullScreen ||
-        modalRef.current.msRequestFullscreen
-      );
-      setIsFullscreenSupported(supports);
-    }
+    if (!modalRef.current) return;
+    const supports = !!(
+      modalRef.current.requestFullscreen ||
+      modalRef.current.webkitRequestFullscreen ||
+      modalRef.current.mozRequestFullScreen ||
+      modalRef.current.msRequestFullscreen
+    );
+    setIsFullscreenSupported(supports);
   }, [isOpen]);
 
-  // Listen for fullscreen changes
+  // Listen for actual fullscreen exit
   useEffect(() => {
     const handleFsChange = () => {
       if (
@@ -628,7 +627,7 @@ export default function PhotoModal({
     };
   }, []);
 
-  // Hide controls after inactivity
+  // Hide controls after 3s inactivity
   useEffect(() => {
     let timeoutId;
     const handleMouseMove = () => {
@@ -649,42 +648,75 @@ export default function PhotoModal({
     };
   }, [isOpen]);
 
-  // Track initial photo view
+  // Lock body scroll if "fake" fullscreen
   useEffect(() => {
-    if (!isOpen) return;
-    const initialPhoto = isSinglePhoto ? photo : sourceImages[startIndex];
-    if (initialPhoto && !viewedRef.current[initialPhoto.id]) {
-      viewedRef.current[initialPhoto.id] = true;
-      recordPhotoView(initialPhoto.id);
-    }
-  }, [isOpen, startIndex, isSinglePhoto, photo, sourceImages]);
-
-  // Toggle fullscreen
-  const handleToggleFullscreen = () => {
-    if (!modalRef.current) return;
-    if (!isFullscreen) {
-      // enter
-      if (modalRef.current.requestFullscreen) {
-        modalRef.current.requestFullscreen();
-      } else if (modalRef.current.webkitRequestFullscreen) {
-        modalRef.current.webkitRequestFullscreen();
-      } else if (modalRef.current.mozRequestFullScreen) {
-        modalRef.current.mozRequestFullScreen();
-      } else if (modalRef.current.msRequestFullscreen) {
-        modalRef.current.msRequestFullscreen();
-      }
-      setIsFullscreen(true);
+    if (isFakeFullscreen) {
+      document.body.classList.add('fake-fullscreen-mode');
     } else {
-      // exit
+      document.body.classList.remove('fake-fullscreen-mode');
+    }
+  }, [isFakeFullscreen]);
+
+  // Track the initial photo’s view
+  useEffect(() => {
+    if (!isOpen || !currentPhoto) return;
+    if (!viewedRef.current[currentPhoto.id]) {
+      viewedRef.current[currentPhoto.id] = true;
+      recordPhotoView(currentPhoto.id);
+    }
+  }, [isOpen, currentPhoto]);
+
+  /** 
+   * Toggle real FS if supported, otherwise fallback to fake 
+   */
+  const handleToggleFullscreen = () => {
+    if (isFullscreenSupported) {
+      if (!isFullscreen) {
+        // Enter real
+        if (!modalRef.current) return;
+        if (modalRef.current.requestFullscreen) modalRef.current.requestFullscreen();
+        else if (modalRef.current.webkitRequestFullscreen) modalRef.current.webkitRequestFullscreen();
+        else if (modalRef.current.mozRequestFullScreen) modalRef.current.mozRequestFullScreen();
+        else if (modalRef.current.msRequestFullscreen) modalRef.current.msRequestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        // Exit real
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+        setIsFullscreen(false);
+      }
+    } else {
+      setIsFakeFullscreen((prev) => !prev);
+    }
+  };
+
+  /** 
+   * Close modal but also exit any (real or fake) fullscreen 
+   * so body scrolling is restored. 
+   */
+  const handleCloseModal = () => {
+    // If we are in real fullscreen, explicitly exit
+    if (isFullscreen) {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
       else if (document.msExitFullscreen) document.msExitFullscreen();
       setIsFullscreen(false);
     }
+    // If we are in fake fullscreen, turn it off
+    if (isFakeFullscreen) {
+      setIsFakeFullscreen(false);
+    }
+    // Remove the body class if still there
+    document.body.classList.remove('fake-fullscreen-mode');
+    
+    // Now call the parent onRequestClose to actually close
+    onRequestClose();
   };
 
-  // Track photo view
+  // Record photo
   const recordPhotoView = async (photoId) => {
     try {
       await fetch('/api/analytics/photo-view', {
@@ -699,43 +731,40 @@ export default function PhotoModal({
 
   // Next / Prev
   const handleNext = () => {
-    if (isSinglePhoto || !sourceImages.length) return;
+    if (!currentPhoto || isSinglePhoto || !sourceImages.length) return;
     if (page < sourceImages.length - 1) {
       const newPage = page + 1;
       setDirection(1);
       setPage(newPage);
-      const p = sourceImages[newPage];
-      if (!viewedRef.current[p.id]) {
-        viewedRef.current[p.id] = true;
-        recordPhotoView(p.id);
+      const nextP = sourceImages[newPage];
+      if (nextP && !viewedRef.current[nextP.id]) {
+        viewedRef.current[nextP.id] = true;
+        recordPhotoView(nextP.id);
       }
     }
   };
 
   const handlePrev = () => {
-    if (isSinglePhoto || !sourceImages.length) return;
+    if (!currentPhoto || isSinglePhoto || !sourceImages.length) return;
     if (page > 0) {
       const newPage = page - 1;
       setDirection(-1);
       setPage(newPage);
-      const p = sourceImages[newPage];
-      if (!viewedRef.current[p.id]) {
-        viewedRef.current[p.id] = true;
-        recordPhotoView(p.id);
+      const prevP = sourceImages[newPage];
+      if (prevP && !viewedRef.current[prevP.id]) {
+        viewedRef.current[prevP.id] = true;
+        recordPhotoView(prevP.id);
       }
     }
   };
 
-  // Drag (swipe) end
-  const handleDragEnd = (event, info) => {
+  // Swipe gesture
+  const handleDragEnd = (e, info) => {
     const offsetX = info.offset.x;
     const velocityX = info.velocity.x;
-    // Arbitrary "swipe" threshold
     if (offsetX < -100 || velocityX < -500) {
-      // swiped left => next
       handleNext();
     } else if (offsetX > 100 || velocityX > 500) {
-      // swiped right => prev
       handlePrev();
     }
   };
@@ -765,8 +794,15 @@ export default function PhotoModal({
 
   const closeLoginModal = () => setIsLoginModalOpen(false);
 
-  // If no current photo
-  if (!currentPhoto) return null;
+  // If the modal is closed or no photo
+  if (!currentPhoto || !isOpen) return null;
+
+  // Additional classes for real/fake fullscreen
+  const modalClasses = [
+    'custom-photo-modal-content',
+    isFullscreen ? 'fullscreen' : '',
+    isFakeFullscreen ? 'fake-fullscreen' : ''
+  ].join(' ');
 
   return (
     <AnimatePresence>
@@ -774,8 +810,8 @@ export default function PhotoModal({
         <>
           <Modal
             isOpen={isOpen}
-            onRequestClose={onRequestClose}
-            className={`custom-photo-modal-content ${isFullscreen ? 'fullscreen' : ''}`}
+            onRequestClose={handleCloseModal}
+            className={modalClasses}
             overlayClassName="custom-photo-modal-overlay"
             closeTimeoutMS={300}
             shouldCloseOnOverlayClick={true}
@@ -785,44 +821,59 @@ export default function PhotoModal({
                 padding: 0,
                 border: 'none',
                 background: 'none',
-                inset: 0,
+                inset: 0
               },
               overlay: {
-                backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                zIndex: 1000,
-              },
+                backgroundColor: 'rgba(0, 0, 0)',
+                zIndex: 1000
+              }
             }}
           >
             <motion.div
               ref={modalRef}
-              className={`custom-photo-modal ${isFullscreen ? 'fullscreen' : ''}`}
+              className="custom-photo-modal"
               initial="hidden"
               animate="visible"
               exit="exit"
               transition={{ duration: 0.3 }}
             >
-              {/* Top-right controls */}
+              {/* 
+                -- TOP CONTROLS (Fullscreen toggle, Close) 
+                Always show them (with hide after 3s inactivity).
+              */}
               <AnimatePresence>
-                {showControls && isFullscreenSupported && (
+                {showControls && (
                   <motion.div
                     className="top-controls-container"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
+                    {/* Fullscreen / exit fullscreen button */}
                     <IconButton
                       onClick={handleToggleFullscreen}
                       className="fullscreen-toggle-button"
                       aria-label={
-                        isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'
+                        isFullscreenSupported
+                          ? (isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen')
+                          : (isFakeFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen')
                       }
                     >
-                      {isFullscreen ? <CloseFullscreenRounded /> : <OpenInFullRounded />}
+                      {isFullscreenSupported ? (
+                        isFullscreen
+                          ? <CloseFullscreenRounded />
+                          : <OpenInFullRounded />
+                      ) : (
+                        isFakeFullscreen
+                          ? <CloseFullscreenRounded />
+                          : <OpenInFullRounded />
+                      )}
                     </IconButton>
 
+                    {/* Close (always) - calls handleCloseModal */}
                     <IconButton
-                      onClick={onRequestClose}
-                      className="modal-close-button"
+                      onClick={handleCloseModal}
+                      className="photomodal-close-button"
                       aria-label="Close"
                     >
                       <CloseRounded />
@@ -830,38 +881,74 @@ export default function PhotoModal({
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div 
-                className="outside-click-wrapper"
-                
-              >
-              <div className="modal-content-layout" >
-                <div className="image-and-metadata-container">
-                  {/* IMAGE with AnimatePresence */}
-                  <AnimatePresence custom={direction} mode="popLayout">
-                    <motion.div
-                      key={currentPhoto.id + '-image'}
-                      className="image-container"
-                      variants={slideVariants}
-                      custom={direction}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      drag="x"
-                      dragConstraints={{ left: 0, right: 0 }}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <img
-                        src={currentPhoto.image_url}
-                        alt={currentPhoto.title || 'Photo'}
-                        className="main-photo"
-                      />
-                    </motion.div>
-                  </AnimatePresence>
 
-                  {/* Hide metadata in fullscreen */}
-                  {!isFullscreen && (
+              {/* 
+                -- FULLSCREEN MODE => Only show image + arrows 
+                (metadata hidden)
+              */}
+              {(isFullscreen || isFakeFullscreen) ? (
+                <motion.div
+                  key={currentPhoto.id + '-fullscreen'}
+                  className="fullscreen-image-container"
+                >
+                  <motion.img
+                    key={currentPhoto.id + '-fullscreen-img'}
+                    src={currentPhoto.image_url}
+                    alt={currentPhoto.title || 'Photo'}
+                    className="fullscreen-image"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={handleDragEnd}
+                  />
+
+                  {/* Navigation Arrows in fullscreen */}
+                  {(!isSinglePhoto && sourceImages.length > 1) && (
+                    <>
+                      <IconButton
+                        onClick={handlePrev}
+                        className="nav-arrow left-arrow"
+                        disabled={page === 0}
+                      >
+                        <ArrowBackIosNew />
+                      </IconButton>
+
+                      <IconButton
+                        onClick={handleNext}
+                        className="nav-arrow right-arrow"
+                        disabled={page === sourceImages.length - 1}
+                      >
+                        <ArrowForwardIos />
+                      </IconButton>
+                    </>
+                  )}
+                </motion.div>
+              ) : (
+                /* -- NORMAL MODE => show image, metadata panel, arrows */
+                <div className="modal-content-layout">
+                  <div className="image-and-metadata-container">
+                    <AnimatePresence custom={direction} mode="popLayout">
+                      <motion.div
+                        key={currentPhoto.id + '-image'}
+                        className="image-container"
+                        variants={slideVariants}
+                        custom={direction}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <img
+                          src={currentPhoto.image_url}
+                          alt={currentPhoto.title || 'Photo'}
+                          className="main-photo"
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* Arrows + metadata panel */}
                     <div className="metadata-and-arrows">
-                      {/* Left arrow (no animation) */}
                       {(!isSinglePhoto && sourceImages.length > 1) && (
                         <IconButton
                           onClick={handlePrev}
@@ -872,91 +959,91 @@ export default function PhotoModal({
                         </IconButton>
                       )}
 
-                      {/* Metadata panel (static container) */}
                       <div className="metadata-panel">
-                        <div className='metadata-panel-inner'>
-                        {/* Animate only .photographer-info and .action-buttons */}
-                        <AnimatePresence custom={direction} mode="popLayout">
-                          {currentPhoto.photographer && (
+                        <div className="metadata-panel-inner">
+                          <AnimatePresence custom={direction} mode="popLayout">
+                            {currentPhoto.photographer && (
+                              <motion.div
+                                key={currentPhoto.id + '-photographer'}
+                                className="photographer-info"
+                                variants={slideVariants}
+                                custom={direction}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                              >
+                                <Image
+                                  src={
+                                    currentPhoto.photographer.profile_picture ||
+                                    '/default-profile.png'
+                                  }
+                                  alt={
+                                    currentPhoto.photographer.name || 'Unknown'
+                                  }
+                                  width={50}
+                                  height={50}
+                                  className="photographer-profile-picture"
+                                />
+                                <Link
+                                  href={`/${currentPhoto.photographer.username || ''}`}
+                                  className="photographer-name-link"
+                                >
+                                  {currentPhoto.photographer.name ||
+                                    'Unknown Photographer'}
+                                </Link>
+                              </motion.div>
+                            )}
+
                             <motion.div
-                              key={currentPhoto.id + '-photographer'}
-                              className="photographer-info"
+                              key={currentPhoto.id + '-actions'}
+                              className="action-buttons"
                               variants={slideVariants}
                               custom={direction}
                               initial="enter"
                               animate="center"
                               exit="exit"
                             >
-                              <Image
-                                src={
-                                  currentPhoto.photographer.profile_picture ||
-                                  '/default-profile.png'
-                                }
-                                alt={`${currentPhoto.photographer.name || 'Unknown'} profile`}
-                                width={50}
-                                height={50}
-                                className="photographer-profile-picture"
-                              />
-                              <Link
-                                href={`/${currentPhoto.photographer.username || ''}`}
-                                className="photographer-name-link"
-                              >
-                                {currentPhoto.photographer.name ||
-                                  'Unknown Photographer'}
-                              </Link>
-                            </motion.div>
-                          )}
-
-                          <motion.div
-                            key={currentPhoto.id + '-actions'}
-                            className="action-buttons"
-                            variants={slideVariants}
-                            custom={direction}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                          >
-                            <IconButton
-                              onClick={handleLike}
-                              aria-label={
-                                currentPhoto.isLiked ? 'Unlike photo' : 'Like photo'
-                              }
-                            >
-                              {currentPhoto.isLiked ? (
-                                <Favorite color="error" />
-                              ) : (
-                                <FavoriteBorder />
-                              )}
-                            </IconButton>
-
-                            <span className="like-count">
-                              {currentPhoto.likes_count || 0}
-                            </span>
-
-                            {/* Hide favourite if user is the photographer */}
-                            {session?.user?.username !==
-                              currentPhoto.photographer?.username && (
                               <IconButton
-                                onClick={handleFavourite}
+                                onClick={handleLike}
                                 aria-label={
-                                  currentPhoto.isFavourited
-                                    ? 'Remove from favourites'
-                                    : 'Add to favourites'
+                                  currentPhoto.isLiked
+                                    ? 'Unlike photo'
+                                    : 'Like photo'
                                 }
                               >
-                                {currentPhoto.isFavourited ? (
-                                  <Bookmark color="primary" />
+                                {currentPhoto.isLiked ? (
+                                  <Favorite color="error" />
                                 ) : (
-                                  <BookmarkBorder />
+                                  <FavoriteBorder />
                                 )}
                               </IconButton>
-                            )}
-                          </motion.div>
-                        </AnimatePresence>
+
+                              <span className="like-count">
+                                {currentPhoto.likes_count || 0}
+                              </span>
+
+                              {session?.user?.username !==
+                                currentPhoto.photographer?.username && (
+                                <IconButton
+                                  onClick={handleFavourite}
+                                  aria-label={
+                                    currentPhoto.isFavourited
+                                      ? 'Remove from favourites'
+                                      : 'Add to favourites'
+                                  }
+                                >
+                                  {currentPhoto.isFavourited ? (
+                                    <Bookmark color="primary" />
+                                  ) : (
+                                    <BookmarkBorder />
+                                  )}
+                                </IconButton>
+                              )}
+                            </motion.div>
+                          </AnimatePresence>
                         </div>
                       </div>
 
-                      {/* Right arrow (no animation) */}
                       {(!isSinglePhoto && sourceImages.length > 1) && (
                         <IconButton
                           onClick={handleNext}
@@ -967,14 +1054,13 @@ export default function PhotoModal({
                         </IconButton>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-              </div>
+              )}
             </motion.div>
           </Modal>
 
-          {/* Login Prompt if not authenticated */}
+          {/* If user tries to like/fav but not logged in */}
           <LoginPromptModal
             isOpen={isLoginModalOpen}
             onRequestClose={closeLoginModal}
