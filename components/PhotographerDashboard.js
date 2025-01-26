@@ -390,7 +390,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
         </div>
 
         {/* Loading and Error States */}
-        {topAlbumsLoading && <p>Loading top albums...</p>}
+        {topAlbumsLoading && <p className='dashboard-loading'>Calculating</p>}
         {topAlbumsError && <p className="error">{topAlbumsError}</p>}
 
         {/* Top Albums List/Table */}
@@ -462,7 +462,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
         </div>
 
         {/* Loading and Error States */}
-        {topPhotosLoading && <p>Loading top photos...</p>}
+        {topPhotosLoading && <p className='dashboard-loading'>Calculating</p>}
         {topPhotosError && <p className="error">{topPhotosError}</p>}
 
         {/* Top Photos List/Table */}
@@ -532,7 +532,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
         </div>
 
         {/* Loading and Error States */}
-        {topLikedPhotosLoading && <p>Loading top liked photos...</p>}
+        {topLikedPhotosLoading && <p className='dashboard-loading'>Calculating</p>}
         {topLikedPhotosError && <p className="error">{topLikedPhotosError}</p>}
 
         {/* Top Liked Photos List/Table */}

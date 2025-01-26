@@ -184,6 +184,20 @@ export default function FavouritedAlbums({ username }) {
                       navigation
                       pagination={{ clickable: true }}
                       className="album-slider"
+                      breakpoints={{
+                        0: {
+                          slidesPerView: 1.2,
+                        },
+                        500: {
+                          slidesPerView: 2,
+                        },
+                        768: {
+                          slidesPerView: 3,
+                        },
+                        980: {
+                          slidesPerView: 4,
+                        },
+                      }}
                     >
                       {album.photographs.map((photo, index) => (
                         <SwiperSlide key={photo.id}>

@@ -1,13 +1,18 @@
+body.customer-layout-body {
+  overflow: hidden;
+}
+
 .customer-layout {
-    display: grid;
+    display: flex;
     height: 100vh;
-    grid-template-columns: 0.15fr 1fr;
+    overflow: hidden;
   }
 
   .customer-main-content {
     flex-grow: 1;
-    padding: 20px;
+    padding: 50px 20px;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .fav-page-title {
@@ -135,6 +140,52 @@
   display: none;
 }
 
+.mobile-hamburger-btn.hide {
+  transform: translateX(-100%);
+}
+
+
+.mobile-hamburger-btn {
+  display: none; /* default hidden on large screens */
+  position: fixed;
+  top: 60px; 
+  left: 0px;
+  background: #fff;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  z-index: 2000; /* above content but below sidebar if 'open'? tweak as needed */
+  font-size: 1.6em;
+  padding: 8px;
+  border-radius: 0 50% 50% 0;
+  width: fit-content;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(0); /* default visible */
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; 
+  right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2500; /* just below the sidebar (which might be 3000) */
+}
+
+.sidebar-close-button {
+  display: none; /* hidden on desktop */
+  background: none;
+  border: none;
+  font-size: 1.4em;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  color: #444;
+  z-index: 10;
+}
+
 
 /* masonry grid */
 .fav-photoSection-myMasonryGrid {
@@ -154,4 +205,93 @@
   font-family: 'Poppins';
   font-size: 20px;
   text-align: center;
+}
+
+@media screen and (max-width: 1100px) {
+
+  .customer-layout {
+    flex-direction: column; 
+  }
+
+  .customer-sidebar-container {
+    position: fixed;
+    top: 0;
+    left: -100%; 
+    width: 70%;
+    max-width: 300px;
+    height: 100%;
+    z-index: 3000; 
+    background-color: #fff;
+    transition: left 0.3s ease; 
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    overflow-y: auto;
+  }
+
+  .customer-sidebar-container.open {
+    left: 0; 
+  }
+
+  .customer-content-container {
+    padding-left: 20px;
+    padding-bottom: 150px;
+    height: calc(100vh - 60px); 
+    margin-top: 50px; 
+  }
+
+  .mobile-hamburger-btn {
+    display: flex;
+  }
+  .sidebar-close-button {
+    display: inline-block;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; 
+    right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2500; 
+  }
+
+  .sidebar-container {
+    padding-left: 20px;
+    padding-top: 30px;
+  }
+
+  .sidebar-container ul {
+    justify-content: flex-start;
+    margin-top: 40px;
+  }
+
+  .sidebar-container ul li {
+    padding: 20px 20px 20px 0px;
+    text-align: left;
+  }
+
+}
+
+@media screen and (max-width: 768px) {
+  .customer-main-content {
+    padding: 50px 0px;
+  }
+
+  .fav-photoSection-myMasonryGrid {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.fav-photoSection-myMasonryGridColumn {
+  padding-left: 0;
+}
+
+  .fav-page-title {
+    font-size: 36px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px!important;
+}
+
 }

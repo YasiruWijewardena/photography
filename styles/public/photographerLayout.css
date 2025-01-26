@@ -19,7 +19,7 @@ body.photographer-layout {
   flex: 1;
   overflow-Y: auto;
   overflow-X: hidden;
-  padding-left: 50px;
+  /* padding-left: 50px; */
   padding-bottom: 150px;
 }
 
@@ -207,6 +207,7 @@ text-align: left;
   margin-top: 50px;
   text-align: center;
   font-size: 40px;
+  font-weight: 500;
 }
 
 .albums-filter-options {
@@ -218,6 +219,7 @@ text-align: left;
 .albums-filter-options .album-search-bar {
   max-width: 500px;
   width: 100%;
+  display: flex;
 }
 
 .albums-filter-options .album-search-bar input{
@@ -282,7 +284,7 @@ text-align: left;
 }
 
 .album-page .photoSection {
-  padding: 50px 20px 20px 0px;
+  padding: 50px 0px 20px 0px;
 }
 
 
@@ -884,8 +886,9 @@ text-align: left;
   margin-top: 100px;
   margin-bottom: 100px;
   display: flex;
-  align-items: center;
+  flex-direction: row;
   column-gap: 50px;
+  align-items: center;
 }
 
 .contact-info-container {
@@ -911,9 +914,12 @@ text-align: left;
 }
 
 .photographer-albums .albums-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 20px;
+  width: 90%;
 }
+
 .album-card {
   text-decoration: none;
   color: inherit;
@@ -922,14 +928,27 @@ text-align: left;
   overflow: hidden;
   transition: box-shadow 0.3s;
 }
+
+.photographer-albums .albums-grid .album-card img {
+  width: 100%;
+}
+
 .album-card:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
+
 .album-cover {
   object-fit: cover;
 }
+
 .album-card h4 {
   padding: 10px;
+}
+
+@media screen and (max-width: 1400px) {
+  .photographer-albums .albums-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media screen and (max-width: 1100px) {
@@ -938,6 +957,8 @@ text-align: left;
     padding-top: 50px;
     padding-left: 0px;
     padding-right: 0px;
+    width: 90%;
+    margin: auto;
 }
 
   .mobile-hamburger-btn {
@@ -999,6 +1020,53 @@ text-align: left;
   .sidebar-container ul li {
     padding: 20px 20px 20px 0px;
     text-align: left;
+  }
+
+}
+
+@media screen and (max-width: 768px) {
+
+  .photographer-content-container {
+    padding-left: 0px;
+}
+
+  .public-profile .photographer-info {
+    margin-top: 50px;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    column-gap: 50px;
+    align-items: center;
+  }
+
+  .contact-info-container {
+    justify-content: center;
+    column-gap: 20px;
+  }
+
+  .public-profile .photographer-info .info-container h2 {
+    text-align: center;
+    margin-top: 20px;
+
+  }
+
+  .public-profile .photographer-info .info-container p {
+    text-align: center;
+    font-family: 'Poppins';
+    font-size: 16px;
+  }
+
+  .album-card {
+    width: 100%;
+  }
+
+  .photographer-albums .albums-grid {
+    grid-template-columns: 1fr;
+    margin: auto;
+  }
+
+  .albums-filter-options .album-search-bar {
+    width: 90%;
   }
 
 }

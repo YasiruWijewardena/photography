@@ -158,11 +158,6 @@ export default function PhotographerLayout({
   return (
     <PublicLayout>
       <div className="photographer-page">
-        {/* 
-          The hamburger. 
-          We'll add a dynamic class if scrollDir === 'down' to hide it. 
-          Also a high z-index and position: fixed to float on top.
-        */}
         <button
           className={`mobile-hamburger-btn ${scrollDir === 'down' ? 'hide' : ''}`}
           onClick={openSidebar}

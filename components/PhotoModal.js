@@ -825,7 +825,7 @@ export default function PhotoModal({
               },
               overlay: {
                 backgroundColor: 'rgba(0, 0, 0)',
-                zIndex: 1000
+                zIndex: 3000
               }
             }}
           >
