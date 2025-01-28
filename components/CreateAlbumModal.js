@@ -5,6 +5,7 @@ import Modal from 'react-modal';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import PropTypes from 'prop-types';
+import { toast } from 'react-hot-toast'; // Import toast from react-hot-toast
 
 export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, photographerUsername }) {
   const [title, setTitle] = useState('');
@@ -13,13 +14,25 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [descError, setDescError] = useState('');
+  const MAX_DESCRIPTION_LENGTH = 255;
 
   useEffect(() => {
     if (isOpen) {
       axios
         .get('/api/categories')
         .then((response) => setCategories(response.data.categories))
-        .catch((error) => console.error('Error fetching categories:', error));
+        .catch((error) => {
+          console.error('Error fetching categories:', error);
+          toast.error('Failed to load categories. Please try again later.');
+        });
+    } else {
+      // Reset form fields when modal is closed
+      setTitle('');
+      setDescription('');
+      setDescError('');
+      setFiles([]);
+      setSelectedCategory('');
     }
   }, [isOpen]);
 
@@ -33,14 +46,30 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
     },
   });
 
+  const handleDescriptionChange = (value) => {
+    setDescription(value);
+    if (value.length > MAX_DESCRIPTION_LENGTH) {
+      setDescError(`Description too long! Max is ${MAX_DESCRIPTION_LENGTH} characters.`);
+    } else {
+      setDescError('');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validation Checks with Toast Notifications
     if (!title.trim()) {
-      alert('Please provide a title for the album.');
+      toast.error('Please provide a title for the album.');
       return;
     }
     if (!selectedCategory) {
-      alert('Please select a category.');
+      toast.error('Please select a category.');
+      return;
+    }
+    if (descError) {
+      // If there's an error, do not submit
+      toast.error('Please fix the description length before submitting.');
       return;
     }
 
@@ -74,15 +103,16 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
       // 3) Notify parent about the newly created album
       onAlbumCreated(newAlbum);
 
-      // 4) Reset form, close modal
+      // 4) Reset form, close modal, and notify success
       setTitle('');
       setDescription('');
       setFiles([]);
       setSelectedCategory('');
+      toast.success('Album created successfully!');
       onClose();
     } catch (error) {
       console.error('Error creating album:', error);
-      alert('Failed to create album. Please try again.');
+      toast.error('Failed to create album. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,6 +121,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
   const handleRemoveFile = (file) => {
     setFiles(files.filter((f) => f !== file));
     URL.revokeObjectURL(file.preview);
+    toast.success(`Removed ${file.name}`);
   };
 
   return (
@@ -125,7 +156,6 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            placeholder="Enter album title"
             aria-required="true"
           />
         </div>
@@ -134,10 +164,20 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated, phot
           <textarea
             id="album-description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter album description"
+            onChange={(e) => handleDescriptionChange(e.target.value)}
             aria-label="Album Description"
           />
+
+          {/* Character Counter */}
+          <div className="char-counter">
+            {description.length} / {MAX_DESCRIPTION_LENGTH}
+          </div>
+          {/* Error message if too long */}
+          {descError && (
+            <p className="error-message" style={{ color: 'red' }}>
+              {descError}
+            </p>
+          )}
         </div>
         <div className="form-group">
           <label htmlFor="album-category">Category:</label>

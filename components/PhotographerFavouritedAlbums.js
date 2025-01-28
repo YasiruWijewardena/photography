@@ -185,11 +185,25 @@ export default function PhotographerFavouritedAlbums({ username }) {
                   {album.photographs.length > 0 && (
                     <div className="swiper-container">
                       <Swiper
-                        spaceBetween={10}
+                        spaceBetween={5}
                         slidesPerView={4}
                         navigation
                         pagination={{ clickable: true }}
                         className="album-slider"
+                        breakpoints={{
+                          0: {
+                            slidesPerView: 1.2,
+                          },
+                          500: {
+                            slidesPerView: 2,
+                          },
+                          768: {
+                            slidesPerView: 3,
+                          },
+                          980: {
+                            slidesPerView: 4,
+                          },
+                        }}
                       >
                         {album.photographs.map((photo, index) => (
                           <SwiperSlide key={photo.id}>

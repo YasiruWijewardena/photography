@@ -3,16 +3,20 @@
 import { getSession } from 'next-auth/react';
 import CustomerLayout from '../../../components/CustomerLayout';
 import FavouritedAlbums from '../../../components/FavouritedAlbums';
+import Navbar from '../../../components/Navbar';
 import PropTypes from 'prop-types';
 import '../../../styles/public/albums.css';
 
+
 export default function CustomerProfile({ username, firstname }) {
   return (
+
     <CustomerLayout username={username}>
       <div>
         <h1>Hello {firstname}</h1>
       </div>
     </CustomerLayout>
+    
   );
 }
 

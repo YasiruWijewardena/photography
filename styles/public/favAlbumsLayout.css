@@ -130,3 +130,68 @@
     font-size: 20px;
     text-align: center;
 }
+
+@media screen and (max-width: 1220px) and (min-width: 1100px) {
+    .album-detail-container .album-link {
+        font-size: 12px;
+    
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .album-slider .swiper-wrapper {
+        height: 300px;
+    }
+
+    .album-detail-container {
+        grid-template-columns: 1fr 2fr 0.5fr;
+    }
+}
+
+@media screen and (max-width: 980px) {
+    .album-detail-container {
+        grid-template-columns: 1fr;
+        padding-top: 15px;
+        padding-left: 20px;
+        padding-bottom: 20px;
+        padding-right: 20px;
+    }
+    .album-actions-container {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .photographer-pro-pic {
+        width: 50px;
+        height: 50px;
+    }
+
+    .photographer-detail-container {
+        margin-bottom: 10px;
+
+    }
+}
+
+
+@media screen and (max-width: 768px) {
+    .albums-page .albums-page-title {
+        font-size: 36px;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 50px!important;
+    }
+
+    .albums-page .albums-filter-options {
+        width: 90%;
+        margin: auto;
+    }
+
+    .albums-page .album-search-bar {
+        width: 90%;
+    }
+
+    .album-detail-container .album-link {
+        font-size: 12px;
+    }
+}

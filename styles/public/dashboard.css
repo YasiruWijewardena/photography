@@ -27,6 +27,8 @@
     gap: 1rem;
     margin-bottom: 50px;
     margin-top: 80px;
+    padding: 10px;
+    overflow-y: auto;
   }
   
   .snapshot-card {
@@ -126,6 +128,7 @@
 
 /* Common Table Styles */
 
+.dashboard-loading,
 .analytics-placeholder {
   font-family: 'Poppins';
   font-weight: 500;
@@ -188,6 +191,12 @@ tbody tr:hover {
   width: 30%;
 }
 
+.photographer-dashboard-page table a {
+  color: #000000;
+  font-size: 16px;
+  text-align: center;
+
+}
 
 
 /* Style the select element */
@@ -234,7 +243,50 @@ tbody tr:hover {
 }
 
 /* Responsive Adjustments */
+
+@media screen and (max-width: 1300px) {
+  .chart-container {
+    row-gap: 24px;
+    grid-template-columns: 1fr;
+  }
+}
+
 @media screen and (max-width: 768px) {
+
+  .photographer-dashboard-page {
+    padding: 20px;
+}
+
+  .top-liked-photos-table thead tr th,
+  .top-photos-table thead tr th,
+  .top-albums-table thead tr th {
+    font-size: 14px;
+  }
+
+  .top-liked-photos-table tbody tr td,
+  .top-photos-table tbody tr td,
+  .top-albums-table tbody tr td {
+    font-size: 16px;
+  }
+
+  .dashboard-filters-container {
+    flex-direction: column;
+    row-gap: 10px;
+  }
+ 
+  .dashboard-filters-container label {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    text-align: center;
+    align-items: center;
+  }
+
+
+.custom-select {
+  margin-left: 0px;
+
+}
+
   th, td {
     padding: 8px 10px;
     font-size: 14px;
@@ -251,5 +303,17 @@ tbody tr:hover {
     background-position: right 10px center;
     background-size: 8px 5px;
     width: 150px; /* Adjust as needed */
+  }
+
+  .photographer-dashboard-page table a {
+    font-size: 12px;
+  
+  }
+  
+}
+
+@media screen and (max-width: 500px) {
+  .chart-container {
+    display: none;
   }
 }

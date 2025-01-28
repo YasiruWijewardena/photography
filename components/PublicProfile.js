@@ -61,7 +61,7 @@ export default function PublicProfile({ photographerData }) {
           </div>
         )} */}
       </div>
-      <div className='contact-info-container'>
+      {/* <div className='contact-info-container'>
           <div>
               <LanguageRoundedIcon className='icon'/>
               <a href={photographerData.website} target="_blank" rel="noopener noreferrer">
@@ -88,7 +88,7 @@ export default function PublicProfile({ photographerData }) {
                 {photographerData.mobile_num}
               </a>
             </div>
-        </div>
+        </div> */}
       {/* Albums */}
       <div className="photographer-albums">
         <div className="albums-grid">

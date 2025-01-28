@@ -19,7 +19,7 @@ body.photographer-layout {
   flex: 1;
   overflow-Y: auto;
   overflow-X: hidden;
-  padding-left: 50px;
+  /* padding-left: 50px; */
   padding-bottom: 150px;
 }
 
@@ -44,6 +44,7 @@ body.photographer-layout {
   height: 100vh;
   text-align: center;
   padding-left: 40px;
+  padding-top: 50px;
 }
 
 .sidebar-container ul {
@@ -58,9 +59,8 @@ body.photographer-layout {
 }
 
 .sidebar-container ul li {
-  padding: 20px;
+  padding: 20px 20px 20px 20px;
   text-align: left;
-
 }
 
 .sidebar-container .sidebar-link-home,
@@ -98,6 +98,7 @@ width: fit-content;
   margin-top: 20px;
   margin-bottom: 20px;
   cursor: pointer;
+  color: #000;
 }
 
 .sidebar-container .create-album-btn {
@@ -118,6 +119,53 @@ width: fit-content;
   column-gap: 8px;
 }
 
+.mobile-hamburger-btn.hide {
+  transform: translateX(-100%);
+}
+
+
+.mobile-hamburger-btn {
+  display: none; /* default hidden on large screens */
+  position: fixed;
+  top: 60px; 
+  left: 0px;
+  background: #fff;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  z-index: 2000; /* above content but below sidebar if 'open'? tweak as needed */
+  font-size: 1.6em;
+  padding: 8px;
+  border-radius: 0 50% 50% 0;
+  width: fit-content;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(0); /* default visible */
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; 
+  right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2500; /* just below the sidebar (which might be 3000) */
+}
+
+.sidebar-close-button {
+  display: none; /* hidden on desktop */
+  background: none;
+  border: none;
+  font-size: 1.4em;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  color: #444;
+  z-index: 10;
+}
+
+
 /* sub sidebar */
 .sub-item:before {
   content: '';
@@ -133,6 +181,10 @@ width: fit-content;
 
 .sub-item.active::before {
   width: 20px;
+}
+
+.albumsidebar-search-bar {
+text-align: left;
 }
 
 .albumsidebar-search-bar input {
@@ -155,6 +207,7 @@ width: fit-content;
   margin-top: 50px;
   text-align: center;
   font-size: 40px;
+  font-weight: 500;
 }
 
 .albums-filter-options {
@@ -166,6 +219,7 @@ width: fit-content;
 .albums-filter-options .album-search-bar {
   max-width: 500px;
   width: 100%;
+  display: flex;
 }
 
 .albums-filter-options .album-search-bar input{
@@ -183,12 +237,13 @@ width: fit-content;
 
 /* album-page */
 .album-page {
-  padding-top: 50px;
+  padding-top: 70px;
   padding-left: 50px;
   padding-right: 20px;
 }
 
 .album-page input.album-title-edit {
+  font-family: "Parkinsans", serif;
   font-size: 50px;
   outline: none;
   border-bottom:1px solid #777777;
@@ -202,6 +257,7 @@ width: fit-content;
 
 }
 .album-page textarea.album-desc-edit {
+  font-family: "Parkinsans", serif;
   outline: none;
   border-bottom:1px solid #777777;
   border-top: 0px ;
@@ -229,6 +285,10 @@ width: fit-content;
   display: none;
 }
 
+.album-page .photoSection {
+  padding: 50px 0px 20px 0px;
+}
+
 
 /* Modal Actions */
 .modal-actions,
@@ -238,6 +298,7 @@ width: fit-content;
   gap: 10px;
   margin-top: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .modal-actions button,
@@ -339,7 +400,7 @@ width: fit-content;
 .modal-close-button {
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 0px;
   background: transparent;
   border: none;
   font-size: 1.5em;
@@ -363,6 +424,7 @@ width: fit-content;
 .modal-content textarea,
 .assign-modal input[type="file"],
 .assign-modal select {
+  font-family: "Parkinsans", serif;
   width: 100%;
   padding: 8px;
   margin-top: 10px;
@@ -652,7 +714,6 @@ width: fit-content;
   border-radius: 50%;
   cursor: pointer;
   background: none;
-  position: absolute;
 }
 
 .carousel-modal.fullscreen .fullscreen-toggle-button {
@@ -664,8 +725,9 @@ width: fit-content;
 }
 
 .fullscreen-toggle-button{
-  left: -50px
+  left: 0px
 }
+
 .gallery-close-button-container {
   right: -50px;
 }
@@ -816,20 +878,21 @@ width: fit-content;
 
   .fullscreen-toggle-button,
   .modal-close-button {
-    top: 10px;
-    left: 10px; /* Adjust positioning for smaller screens if needed */
+    top: 5px;
+    right: 0px; /* Adjust positioning for smaller screens if needed */
   }
 }
 
 
 /* public profile */
 
-.photographer-info {
+.public-profile .photographer-info {
   margin-top: 100px;
   margin-bottom: 100px;
   display: flex;
-  align-items: center;
+  flex-direction: row;
   column-gap: 50px;
+  align-items: center;
 }
 
 .contact-info-container {
@@ -855,9 +918,12 @@ width: fit-content;
 }
 
 .photographer-albums .albums-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 20px;
+  width: 90%;
 }
+
 .album-card {
   text-decoration: none;
   color: inherit;
@@ -866,13 +932,331 @@ width: fit-content;
   overflow: hidden;
   transition: box-shadow 0.3s;
 }
+
+.photographer-albums .albums-grid .album-card img {
+  width: 100%;
+}
+
 .album-card:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
+
 .album-cover {
   object-fit: cover;
 }
+
 .album-card h4 {
   padding: 10px;
 }
 
+
+/* settings */
+
+.settings-page {
+  display: flex;
+}
+
+.settings-content {
+  flex: 1;
+  padding: 70px 20px;
+}
+
+.settings-content h1 {
+  font-weight: 500;
+  text-align: center;
+}
+
+.profile-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.profile-picture {
+  margin-bottom: 20px;
+}
+
+.profile-picture img {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.placeholder-picture {
+  width: 150px;
+  height: 150px;
+  background-color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.profile-details {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.profile-details-inner {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr;
+}
+
+.profile-details-label {
+  font-family: "Parkinsans", serif;
+  font-weight: 500;
+}
+
+.profile-detail-val {
+  font-family: "poppins", serif;
+}
+
+.profile-details p {
+  margin: 5px 0;
+}
+
+.delete-button,
+.edit-button,
+.submit-button,
+.cancel-button,
+.logout-button {
+  font-family: "poppins", serif;
+  padding: 10px 20px;
+  margin: 10px 5px 0 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 20px;
+}
+
+.edit-button {
+  font-family: "poppins", serif;
+  background-color: #000000;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+  margin-top: 20px;
+}
+
+.submit-button {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.delete-button,
+.cancel-button {
+  background-color: #e53e3e;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+}
+
+.logout-btn-container {
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.logout-button {
+  background-color: #000000;
+  color: #ffffff;
+  margin-top: 20px;
+}
+
+.logout-button:hover {
+  background-color: #718096;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  width: 100%;
+  margin: 20px auto;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="file"],
+.form-group textarea {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+}
+
+.image-preview {
+  margin-top: 10px;
+}
+
+.image-preview img{
+  object-fit: cover;
+}
+
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.change-profile-section {
+  display: flex;
+  gap: 10px;
+}
+
+@media screen and (max-width: 1400px) {
+  .photographer-albums .albums-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media screen and (max-width: 1100px) {
+
+  .album-page {
+    padding-top: 50px;
+    padding-left: 0px;
+    padding-right: 0px;
+    width: 90%;
+    margin: auto;
+}
+
+  .mobile-hamburger-btn {
+    display: flex;
+  }
+
+  .photographer-page {
+    flex-direction: column; 
+  }
+
+  .photographer-sidebar-container {
+    position: fixed;
+    top: 0;
+    left: -100%; 
+    width: 70%;
+    max-width: 300px;
+    height: 100%;
+    z-index: 3000; 
+    background-color: #fff;
+    transition: left 0.3s ease; 
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    overflow-y: auto;
+  }
+
+  .photographer-sidebar-container.open {
+    left: 0; 
+  }
+
+  .photographer-content-container {
+    padding-left: 20px;
+    padding-bottom: 150px;
+    height: calc(100vh - 60px); 
+    margin-top: 50px; 
+  }
+
+  .sidebar-close-button {
+    display: inline-block;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; 
+    right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2500; 
+  }
+
+  .sidebar-container {
+    padding-left: 20px;
+    padding-top: 30px;
+  }
+
+  .sidebar-container ul {
+    justify-content: flex-start;
+    margin-top: 40px;
+  }
+
+  .sidebar-container ul li {
+    padding: 20px 20px 20px 0px;
+    text-align: left;
+  }
+
+}
+
+@media screen and (max-width: 768px) {
+
+  .photographer-content-container {
+    padding-left: 0px;
+}
+
+  .public-profile .photographer-info {
+    margin-top: 50px;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    column-gap: 50px;
+    align-items: center;
+  }
+
+  .contact-info-container {
+    justify-content: center;
+    column-gap: 20px;
+  }
+
+  .public-profile .photographer-info .info-container h2 {
+    text-align: center;
+    margin-top: 20px;
+
+  }
+
+  .public-profile .photographer-info .info-container p {
+    text-align: center;
+    font-family: 'Poppins';
+    font-size: 16px;
+  }
+
+  .album-card {
+    width: 100%;
+  }
+
+  .photographer-albums .albums-grid {
+    grid-template-columns: 1fr;
+    margin: auto;
+  }
+
+  .albums-filter-options .album-search-bar {
+    width: 90%;
+  }
+
+  .modal-titles {
+    font-size: 26px;
+  }
+
+  .modal-content, .assign-modal {
+    padding: 20px 20px 20px 20px;
+}
+
+}

@@ -1,4 +1,4 @@
-.ReactModal__Body--open .carousel-modal-overlay {
+/* .ReactModal__Body--open .carousel-modal-overlay {
     opacity: 1;
   }
   
@@ -20,7 +20,7 @@
   .carousel-modal-content {
     width: 80vw;
     height: 80vh;
-    outline: none; /* remove default modal focus ring */
+    outline: none; 
     transition: width 300ms, height 300ms;
   }
   
@@ -34,7 +34,6 @@
     position: relative;
     width: 100%;
     height: 100%;
-    /* overflow: hidden; no scrolling for the entire container */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -52,23 +51,18 @@
     height: 100%;
   }
   
-  /* The main layout for each slide: image on the left, metadata on the right */
   .slider-layout {
     width: 100%;
     height: 100%;
-    display: flex; /* side by side */
-    flex-direction: row;
+    display: grid; 
   }
   
-  /* The image area takes up the majority of the width */
   .slider-image-container {
-    flex: 2;
     display: flex;
     justify-content: center;
     overflow: hidden;
   }
   
-  /* The actual image is fully contained, no scrolling required */
   .carousel-image {
     width: 100%;
     height: 100%;
@@ -76,19 +70,19 @@
     display: block;
   }
   
-  /* The metadata panel is on the right side, can scroll if it’s tall */
   .slider-metadata-panel {
-    flex: 0.7;
     background: #fff;
     overflow-y: auto;
     padding: 20px;
     box-sizing: border-box;
     height: fit-content;
-    border-radius: 0 20px 20px 0;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     margin: auto;
+    max-width: 600px;
+    width: 100%;
   }
   
   .slider-metadata-panel ul {
@@ -157,16 +151,6 @@
    cursor: pointer;
   }
   
-  /* .gallery-btn-container {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    z-index: 1001; 
-    opacity: 0.8; 
-  } */
-  
   .fullscreen-toggle-button,
   .gallery-close-button-container {
     border: none;
@@ -208,7 +192,6 @@
     
   }
   
-  /* Ensure the carousel modal covers the entire screen in fullscreen */
   .carousel-modal-content.fullscreen {
     width: 100vw;
     height: 100vh;
@@ -222,7 +205,6 @@
     padding: 0;
   }
   
-  /* Hide controls when not active */
   .gallery-btn-container {
     transition: opacity 0.3s ease-in-out;
   }
@@ -230,8 +212,7 @@
   .gallery-btn-container.hidden {
     opacity: 0;
   }
-  
-  /* Smooth transition for control visibility */
+
   .gallery-btn-container {
     opacity: 1;
   }
@@ -254,4 +235,306 @@
     font-family: "Parkinsans", serif;
     color: black;
     cursor: pointer;
+  } */
+
+  /* styles/public/photoModal.css */
+
+/* Existing Styles */
+
+/* Prevent background scrolling when modal is open */
+body.ReactModal__Body--open {
+  overflow: hidden;
+}
+
+.custom-photo-modal-content.fake-fullscreen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0; padding: 0;
+  z-index: 9999;
+  background: #000; /* if desired */
+  /* Hide any corners or borders */
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.fullscreen-image-container {
+  width: 100vw;
+  height: 100vh;
+}
+
+.fullscreen-image-container img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Also prevent background scrolling while fake-fullscreen is active */
+body.fake-fullscreen-mode {
+  overflow: hidden;
+}
+
+/* The overlay (dark background) */
+.custom-photo-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+  z-index: 1000;
+}
+
+/* Fade in overlay */
+.ReactModal__Body--open .custom-photo-modal-overlay {
+  opacity: 1;
+}
+
+/* The content container (80vw x 80vh by default) */
+.custom-photo-modal-content {
+  width: 100vw;
+  height: 75vh;
+  outline: none;
+  transition: width 300ms, height 300ms;
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-photo-modal-content.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+}
+
+/* The motion container */
+.custom-photo-modal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Fullscreen mode */
+.custom-photo-modal.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+}
+
+/* Top bar: Fullscreen & Close buttons */
+.top-controls-container {
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0px;
+  gap: 10px;
+  z-index: 9999;
+  width: 100%;
+  top: 0px;
+}
+
+.fullscreen-toggle-button,
+.photomodal-close-button {
+  background-color: rgba(0,0,0,0.5)!important;
+  color: #fff!important;
+  border: none;
+  border-radius: 50%;
+  padding: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.fullscreen-toggle-button svg{
+  transform: scaleX(-1);
+}
+
+.fullscreen-toggle-button:hover,
+.photomodal-close-buttonn:hover { 
+  background: rgba(0,0,0,0.7);
+}
+
+.fake-fullscreen .top-controls-container {
+  justify-content: space-between!important;
+}
+
+/* Entire layout for the image and metadata */
+.modal-content-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  justify-content: center; /* stack at the top */
+  position: relative;
+}
+
+/* The image is near the top, centered */
+.image-container {
+  width: 80%;      
+  height: 60vh;    
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto 10px;
+}
+
+.main-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.custom-photo-modal.fullscreen .image-container {
+  width: 100%;      
+  height: 100vh;  
+}
+
+/* The bottom portion: metadata plus left/right arrows */
+.metadata-and-arrows {
+  margin-top: auto; /* push it to the bottom */
+  margin-bottom: 20px; /* space from bottom */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  position: relative;
+  width: 100%;
+}
+
+/* The metadata is centered horizontally between the arrows */
+.metadata-panel {
+  background: #fff;
+  padding: 15px 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 600px;
+  width: 600px;
+  overflow: hidden;
+}
+
+.metadata-panel-inner {
+  width: fit-content;
+  overflow: hidden;
+}
+
+.outside-click-wrapper{
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* The left / right nav arrows */
+.nav-arrow {
+  background-color: #fff!important;
+  color: #000;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  transition: 0.2s;
+}
+
+.nav-arrow:hover {
+  background: #ddd;
+}
+
+
+/* Photographer / profile info */
+.photographer-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.photographer-profile-picture {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.photographer-name-link {
+  color: #000;
+  text-decoration: none;
+  margin-top: 5px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* The Like, Fav row */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.like-count {
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+@media screen and (max-width: 768px) { 
+  .metadata-panel {
+    max-width: 600px;
+    width: 100%;
+    padding: 5px 20px;
   }
+
+  .outside-click-wrapper{
+    justify-content: flex-end; 
+  }
+
+  .modal-content-layout {
+    justify-content: flex-end; 
+  }
+
+  .top-controls-container {
+    top: 50px;
+  }
+
+  .image-container {
+    width: 95%;      
+    height: 50vh;    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto 10px;
+  }
+
+  .photographer-name-link {
+    margin-top: 5px;
+    font-size: 14px;
+  }
+
+  .like-count {
+    min-width: 14px;
+  }
+  /* nav button */
+
+  .nav-arrow.left-arrow,
+  .nav-arrow.right-arrow {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-arrow.left-arrow svg,
+  .nav-arrow.right-arrow svg {
+    font-size: 14px;
+  } 
+
+}

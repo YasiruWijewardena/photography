@@ -36,6 +36,11 @@ export default async function handler(req, res) {
             mobile_num: true,
             subscription_id: true,
             profile_picture: true,
+            Subscription: { 
+              select: {
+                name: true, 
+              },
+            },
           },
         },
       },

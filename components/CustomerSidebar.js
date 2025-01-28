@@ -26,9 +26,9 @@ export default function CustomerSidebar({ username }) {
   return (
     <div className="sidebar-container customer-sidebar">
       {/* Top button */}
-      <button type="button" onClick={() => router.back()} className="back-button">
+      {/* <button type="button" onClick={() => router.back()} className="back-button">
         Back
-      </button>
+      </button> */}
 
       <ul>
         <li className={`sub-item ${asPath === `/customer/${username}` ? 'active' : ''}`}>
