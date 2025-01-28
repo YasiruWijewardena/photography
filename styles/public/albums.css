@@ -4,6 +4,9 @@
     text-align: center;
     font-weight: 500;
     font-size: 64px;
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .albums-page .albums-filter-options {

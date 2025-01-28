@@ -175,7 +175,7 @@ export default function AlbumsPage() {
   return (
     <PublicLayout>
       <div className='albums-page'>
-        <h1 className='albums-page-title'>Discover Albums</h1>
+        <h1 className='albums-page-title'>Discover Iconic Albums</h1>
 
         {/* Search Bar */}
         <div className='albums-filter-options'>

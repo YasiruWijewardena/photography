@@ -16,6 +16,7 @@ export default function Navbar() {
   // State to control Navbar visibility
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [hasShadow, setHasShadow] = useState(false);
 
   // Throttle function to limit the rate at which a function can fire.
   const throttle = (func, delay) => {
@@ -42,6 +43,12 @@ export default function Navbar() {
         setShowNavbar(true);
       }
 
+      if (currentScrollY > 0) {
+        setHasShadow(true);
+      } else {
+        setHasShadow(false);
+      }
+
       setLastScrollY(currentScrollY);
     }, 200); // Adjust the delay as needed
 
@@ -53,7 +60,8 @@ export default function Navbar() {
   }, [lastScrollY]);
 
   return (
-    <nav className={`navbar ${showNavbar ? 'navbar-visible' : 'navbar-hidden'}`}>
+    <nav
+    className={`navbar ${showNavbar ? 'navbar-visible' : 'navbar-hidden'} ${hasShadow ? 'navbar-shadow' : ''}`}>
       <div className="navbar-container">
         <div className='navbar-left'>
           {/* Logo */}
