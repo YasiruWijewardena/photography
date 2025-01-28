@@ -18,6 +18,8 @@ import { IconButton } from '@mui/material';
 import PropTypes from 'prop-types';
 import analyticsDb from '../../../lib/analyticsPrisma'; 
 import { getOrSetAnonymousId } from '../../../lib/anonymousId';
+import { toast } from 'react-hot-toast';
+import { useConfirm } from '../../../context/ConfirmContext'; // Import useConfirm
 
 export default function AlbumPage({
   album,
@@ -28,6 +30,7 @@ export default function AlbumPage({
 }) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { confirm } = useConfirm(); // Use the confirm function from context
 
   // Basic album state
   const [currentAlbum, setCurrentAlbum] = useState(album || { photographs: [] });
@@ -76,7 +79,7 @@ export default function AlbumPage({
   // Toggle album favourite
   const handleToggleAlbumFavourite = async () => {
     if (!session) {
-      alert('Please log in to favourite albums!');
+      toast.error('Please log in to favourite albums!'); // Replaced alert with toast
       return;
     }
 
@@ -101,6 +104,7 @@ export default function AlbumPage({
         ...prev,
         isFavourited: !prev.isFavourited,
       }));
+      toast.error('Failed to toggle favourite status.'); // Optional: Notify user of failure
     }
   };
 
@@ -121,14 +125,15 @@ export default function AlbumPage({
   // Deleting photos
   const handleDeletePhotos = async () => {
     if (selectedPhotoIds.length === 0) return;
-    const confirmDelete = confirm('Are you sure you want to delete the selected photos?');
+
+    const confirmDelete = await confirm('Are you sure you want to delete the selected photos?');
     if (!confirmDelete) return;
 
     try {
       await axios.delete('/api/photographs', {
         data: { photoIds: selectedPhotoIds },
       });
-      alert('Selected photos deleted successfully.');
+      toast.success('Selected photos deleted successfully.'); // Replaced alert with toast
       setCurrentAlbum((prev) => ({
         ...prev,
         photographs: prev.photographs.filter((p) => !selectedPhotoIds.includes(p.id)),
@@ -136,7 +141,7 @@ export default function AlbumPage({
       setSelectedPhotoIds([]);
     } catch (error) {
       console.error('Error deleting photos:', error);
-      alert('Failed to delete photos.');
+      toast.error('Failed to delete photos.'); // Replaced alert with toast
     }
   };
 
@@ -150,7 +155,7 @@ export default function AlbumPage({
       setAvailableAlbums(res.data.albums || []);
     } catch (error) {
       console.error('Error fetching available albums:', error);
-      alert('Failed to fetch available albums.');
+      toast.error('Failed to fetch available albums.'); // Replaced alert with toast
     } finally {
       setLoadingAvailableAlbums(false);
     }
@@ -164,7 +169,7 @@ export default function AlbumPage({
 
   const handleConfirmAssignment = async () => {
     if (!selectedTargetAlbum) {
-      alert('Please select an album to assign the photos to.');
+      toast.error('Please select an album to assign the photos to.'); // Replaced alert with toast
       return;
     }
     const targetAlbumId = selectedTargetAlbum.id;
@@ -175,7 +180,7 @@ export default function AlbumPage({
         photoIds: selectedPhotoIds,
         targetAlbumId,
       });
-      alert('Selected photos moved successfully.');
+     
       setCurrentAlbum((prev) => ({
         ...prev,
         photographs: prev.photographs.filter((p) => !selectedPhotoIds.includes(p.id)),
@@ -183,9 +188,10 @@ export default function AlbumPage({
       setSelectedPhotoIds([]);
       setIsAssignModalOpen(false);
       setSelectedTargetAlbum(null);
+      toast.success('Photos moved successfully.'); // Optional: Notify user of success
     } catch (error) {
       console.error('Error assigning photos:', error);
-      alert('Failed to assign photos.');
+      toast.error('Failed to assign photos.'); // Replaced alert with toast
     } finally {
       setAssigning(false);
     }
@@ -195,7 +201,7 @@ export default function AlbumPage({
   const handleSaveAlbumChanges = async () => {
     // If there's an error or user typed too many chars, block
     if (descriptionError) {
-      alert('Please fix the description length before saving.');
+      toast.error('Please fix the description length before saving.'); // Replaced alert with toast
       return;
     }
     try {
@@ -203,7 +209,7 @@ export default function AlbumPage({
         title: editedTitle,
         description: editedDescription,
       });
-      alert('Album updated successfully.');
+      toast.success('Album updated successfully.'); // Replaced alert with toast
       setCurrentAlbum((prev) => ({
         ...prev,
         title: response.data.album.title,
@@ -213,27 +219,28 @@ export default function AlbumPage({
       setIsEditMode(false);
     } catch (error) {
       console.error('Error updating album:', error);
-      alert('Failed to update album.');
+      toast.error('Failed to update album.'); // Replaced alert with toast
     }
   };
 
   // Delete entire album
   const handleDeleteAlbum = async () => {
-    const confirmDelete = confirm('Are you sure you want to delete this album and all its photos?');
+    const confirmDelete = await confirm('Are you sure you want to delete this album and all its photos?');
     if (!confirmDelete) return;
 
     try {
       await axios.delete(`/api/albums/${currentAlbum.slug}`);
-      alert('Album deleted successfully.');
+      toast.success('Album deleted successfully.'); // Replaced alert with toast
       router.push(`/${photographerUsername}/albums`);
     } catch (error) {
       console.error('Error deleting album:', error);
-      alert('Failed to delete album.');
+      toast.error('Failed to delete album.'); // Replaced alert with toast
     }
   };
 
   // Photos added callback
   const handlePhotosAdded = () => {
+    toast.success('Photos added successfully.'); // Optional: Notify user
     // reload to see newly added photos
     router.reload();
   };
@@ -565,7 +572,7 @@ export async function getServerSideProps(context) {
     orderBy: { created_at: 'asc' },
   });
 
-  //log view
+  // Log view
   if (!isOwner) {
     await analyticsDb.albumViewEvent.create({
       data: {

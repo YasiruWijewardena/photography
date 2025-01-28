@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Modal from 'react-modal';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 export default function AddPhotosModal({ isOpen, onRequestClose, albumId, onPhotosAdded }) {
   const [files, setFiles] = useState([]);
@@ -20,7 +21,7 @@ export default function AddPhotosModal({ isOpen, onRequestClose, albumId, onPhot
 
   const handleUpload = async () => {
     if (files.length === 0) {
-      alert('No files selected');
+      toast.error('No files selected');
       return;
     }
 
@@ -34,14 +35,13 @@ export default function AddPhotosModal({ isOpen, onRequestClose, albumId, onPhot
           'Content-Type': 'multipart/form-data',
         },
       });
-      alert('Photos uploaded successfully.');
       onPhotosAdded();
       // Reset files
       setFiles([]);
       onRequestClose();
     } catch (error) {
       console.error('Error uploading photos:', error);
-      alert('Failed to upload photos.');
+      toast.error('Failed to upload photos.');
     }
   };
 

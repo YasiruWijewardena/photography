@@ -243,6 +243,7 @@ text-align: left;
 }
 
 .album-page input.album-title-edit {
+  font-family: "Parkinsans", serif;
   font-size: 50px;
   outline: none;
   border-bottom:1px solid #777777;
@@ -256,6 +257,7 @@ text-align: left;
 
 }
 .album-page textarea.album-desc-edit {
+  font-family: "Parkinsans", serif;
   outline: none;
   border-bottom:1px solid #777777;
   border-top: 0px ;
@@ -296,6 +298,7 @@ text-align: left;
   gap: 10px;
   margin-top: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .modal-actions button,
@@ -397,7 +400,7 @@ text-align: left;
 .modal-close-button {
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 0px;
   background: transparent;
   border: none;
   font-size: 1.5em;
@@ -421,6 +424,7 @@ text-align: left;
 .modal-content textarea,
 .assign-modal input[type="file"],
 .assign-modal select {
+  font-family: "Parkinsans", serif;
   width: 100%;
   padding: 8px;
   margin-top: 10px;
@@ -874,8 +878,8 @@ text-align: left;
 
   .fullscreen-toggle-button,
   .modal-close-button {
-    top: 10px;
-    left: 10px; /* Adjust positioning for smaller screens if needed */
+    top: 5px;
+    right: 0px; /* Adjust positioning for smaller screens if needed */
   }
 }
 
@@ -943,6 +947,184 @@ text-align: left;
 
 .album-card h4 {
   padding: 10px;
+}
+
+
+/* settings */
+
+.settings-page {
+  display: flex;
+}
+
+.settings-content {
+  flex: 1;
+  padding: 70px 20px;
+}
+
+.settings-content h1 {
+  font-weight: 500;
+  text-align: center;
+}
+
+.profile-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.profile-picture {
+  margin-bottom: 20px;
+}
+
+.profile-picture img {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.placeholder-picture {
+  width: 150px;
+  height: 150px;
+  background-color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.profile-details {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.profile-details-inner {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr;
+}
+
+.profile-details-label {
+  font-family: "Parkinsans", serif;
+  font-weight: 500;
+}
+
+.profile-detail-val {
+  font-family: "poppins", serif;
+}
+
+.profile-details p {
+  margin: 5px 0;
+}
+
+.delete-button,
+.edit-button,
+.submit-button,
+.cancel-button,
+.logout-button {
+  font-family: "poppins", serif;
+  padding: 10px 20px;
+  margin: 10px 5px 0 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 20px;
+}
+
+.edit-button {
+  font-family: "poppins", serif;
+  background-color: #000000;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+  margin-top: 20px;
+}
+
+.submit-button {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.delete-button,
+.cancel-button {
+  background-color: #e53e3e;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+}
+
+.logout-btn-container {
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.logout-button {
+  background-color: #000000;
+  color: #ffffff;
+  margin-top: 20px;
+}
+
+.logout-button:hover {
+  background-color: #718096;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  width: 100%;
+  margin: 20px auto;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="file"],
+.form-group textarea {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+}
+
+.image-preview {
+  margin-top: 10px;
+}
+
+.image-preview img{
+  object-fit: cover;
+}
+
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.change-profile-section {
+  display: flex;
+  gap: 10px;
 }
 
 @media screen and (max-width: 1400px) {
@@ -1068,5 +1250,13 @@ text-align: left;
   .albums-filter-options .album-search-bar {
     width: 90%;
   }
+
+  .modal-titles {
+    font-size: 26px;
+  }
+
+  .modal-content, .assign-modal {
+    padding: 20px 20px 20px 20px;
+}
 
 }
