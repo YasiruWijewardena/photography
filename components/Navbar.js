@@ -8,10 +8,14 @@ import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
 import Image from 'next/image'; // Import Next.js Image component
+import { useScrollContext } from '../context/ScrollContext'; // Import the ScrollContext
+import { throttle } from '../utils/throttle'; // Import the throttle utility
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const { scrollInfo } = useScrollContext(); 
 
   // State to control Navbar visibility
   const [showNavbar, setShowNavbar] = useState(true);
@@ -33,31 +37,29 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = throttle(() => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = scrollInfo.scrollY;
 
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down and scrolled more than 50px
-        setShowNavbar(false);
-      } else {
-        // Scrolling up
-        setShowNavbar(true);
+      const scrollingDown = currentScrollY > lastScrollY && currentScrollY > 50;
+      const shouldShowNavbar = !scrollingDown;
+      const shouldHaveShadow = currentScrollY > 0;
+
+      // Update showNavbar only if it has changed
+      if (shouldShowNavbar !== showNavbar) {
+        setShowNavbar(shouldShowNavbar);
       }
 
-      if (currentScrollY > 0) {
-        setHasShadow(true);
-      } else {
-        setHasShadow(false);
+      // Update hasShadow only if it has changed
+      if (shouldHaveShadow !== hasShadow) {
+        setHasShadow(shouldHaveShadow);
       }
 
       setLastScrollY(currentScrollY);
-    }, 200); // Adjust the delay as needed
+    }, 200); // Throttle limit in milliseconds
 
-    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check in case user is not at top
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [lastScrollY]);
+    // Since ScrollContext handles the scroll listener, no need to add another here
+  }, [scrollInfo.scrollY, lastScrollY, showNavbar, hasShadow]);
 
   return (
     <nav

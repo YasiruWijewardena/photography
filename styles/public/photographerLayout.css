@@ -127,7 +127,7 @@ width: fit-content;
 .mobile-hamburger-btn {
   display: none; /* default hidden on large screens */
   position: fixed;
-  top: 60px; 
+  top: 70px; 
   left: 0px;
   background: #fff;
   border: none;

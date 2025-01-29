@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react';
 import { PhotoProvider } from '../context/PhotoContext';
 import { Toaster } from 'react-hot-toast';
 import { ConfirmProvider } from '../context/ConfirmContext';
+import { ScrollProvider } from '../context/ScrollContext';
 
 export default function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const getLayout = Component.getLayout || ((page) => page);
@@ -13,6 +14,7 @@ export default function MyApp({ Component, pageProps: { session, ...pageProps } 
     <SessionProvider session={session}>
       <PhotoProvider>
         <ConfirmProvider>
+          <ScrollProvider>
           {getLayout(<Component {...pageProps} />)}
           <Toaster
             position="top-center"
@@ -44,6 +46,7 @@ export default function MyApp({ Component, pageProps: { session, ...pageProps } 
               // You can add similar blocks for 'loading', 'default', etc.
             }}
           />
+          </ScrollProvider>
         </ConfirmProvider>
       </PhotoProvider>
     </SessionProvider>

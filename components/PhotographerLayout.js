@@ -91,6 +91,9 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded'; // Close icon
 import '../styles/public/global.css';
 import '../styles/public/photographerLayout.css';
 
+import { useScrollContext } from '../context/ScrollContext'; // Import the ScrollContext
+import { throttle } from '../utils/throttle'; // Import the throttle utility
+
 export default function PhotographerLayout({
   children,
   isOwner,
@@ -106,6 +109,7 @@ export default function PhotographerLayout({
 
   // Track the scroll direction to hide/show hamburger
   const [scrollDir, setScrollDir] = useState('up'); // or 'down'
+  const [lastScrollTop, setLastScrollTop] = useState(0);
   const lastScrollY = useRef(0);
 
   // Decide which sidebar
@@ -124,32 +128,37 @@ export default function PhotographerLayout({
     };
   }, []);
 
+  const { throttledUpdateScroll } = useScrollContext(); 
   // Listen for scroll events to set scrollDir = 'down' or 'up'
   const contentRef = useRef(null);
 
   useEffect(() => {
     const scrollContainer = contentRef.current;
     const THRESHOLD = 20;
-  
+
     if (!scrollContainer) return;
-  
-    const handleScroll = () => {
-      const currentY = scrollContainer.scrollTop;
-      if (currentY - lastScrollY.current > THRESHOLD) {
+
+    const handleScroll = throttle(() => {
+      const currentScrollY = scrollContainer.scrollTop;
+
+      if (currentScrollY - lastScrollTop > THRESHOLD) {
         // scrolled down by > THRESHOLD
         setScrollDir('down');
-        lastScrollY.current = currentY;
-      } else if (lastScrollY.current - currentY > THRESHOLD) {
+        setLastScrollTop(currentScrollY);
+      } else if (lastScrollTop - currentScrollY > THRESHOLD) {
         // scrolled up by > THRESHOLD
         setScrollDir('up');
-        lastScrollY.current = currentY;
+        setLastScrollTop(currentScrollY);
       }
-      // If it's within +-5px, do nothing, ignore it
-    };
-  
+      // If it's within ±THRESHOLD, do nothing
+
+      // Update the ScrollContext with the current scroll position
+      throttledUpdateScroll(currentScrollY, 'div');
+    }, 200); // Throttle limit in milliseconds
+
     scrollContainer.addEventListener('scroll', handleScroll);
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollTop, throttledUpdateScroll]);
 
   // Sidebar open/close
   const openSidebar = () => setIsSidebarOpen(true);
