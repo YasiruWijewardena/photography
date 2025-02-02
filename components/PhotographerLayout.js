@@ -92,7 +92,6 @@ import '../styles/public/global.css';
 import '../styles/public/photographerLayout.css';
 
 import { useScrollContext } from '../context/ScrollContext'; // Import the ScrollContext
-import { throttle } from '../utils/throttle'; // Import the throttle utility
 
 export default function PhotographerLayout({
   children,
@@ -138,7 +137,7 @@ export default function PhotographerLayout({
 
     if (!scrollContainer) return;
 
-    const handleScroll = throttle(() => {
+    const handleScroll = () => {
       const currentScrollY = scrollContainer.scrollTop;
 
       if (currentScrollY - lastScrollTop > THRESHOLD) {
@@ -154,7 +153,7 @@ export default function PhotographerLayout({
 
       // Update the ScrollContext with the current scroll position
       throttledUpdateScroll(currentScrollY, 'div');
-    }, 200); // Throttle limit in milliseconds
+    }
 
     scrollContainer.addEventListener('scroll', handleScroll);
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
