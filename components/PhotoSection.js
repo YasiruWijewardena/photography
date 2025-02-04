@@ -11,6 +11,7 @@ import Filter from './Filter';
 import { Box, IconButton, Collapse } from '@mui/material';
 import FilterAltRoundedIcon from '@mui/icons-material/FilterAltRounded';
 import PropTypes from 'prop-types';
+import SkeletonPhotoCard from './SkeletonPhotoCard';
 
 /**
  * Props:
@@ -212,7 +213,17 @@ export default function PhotoSection({
         dataLength={photos.length}
         next={fetchPhotos}
         hasMore={hasMore}
-        loader={<h4>Loading...</h4>}
+        loader={
+          <Masonry
+          breakpointCols={breakpointColumnsObj}
+          className="photoSection-myMasonryGrid"
+          columnClassName="photoSection-myMasonryGridColumn"
+        >
+          {Array.from({ length: 20 }).map((_, index) => (
+            <SkeletonPhotoCard key={index} />
+          ))}
+        </Masonry>  
+        }
         endMessage={<p className='infinite-scroll-end-msg'>Thats all folks</p>}
       >
         <Masonry

@@ -19,6 +19,7 @@ import LoginPromptModal from '../components/LoginPromptModal';
 import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Footer from '../components/Footer';
+import SkeletonAlbumCard from '../components/SkeletonAlbumCard';
 
 const albumVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -194,14 +195,20 @@ export default function AlbumsPage() {
           dataLength={albums.length}
           next={fetchMoreAlbums}
           hasMore={hasMore}
-          loader={<p className="loader">Loading more albums...</p>}
+          loader={
+              <div>
+                {Array.from({ length: 20 }).map((_, index) => (
+                      <SkeletonAlbumCard key={index} />
+                ))}
+              </div>
+            }
           endMessage={<p className='infinite-scroll-end-msg'>Thats all folks</p>}
           scrollThreshold={0.9} // Fetch next batch when 90% scrolled
           style={{ overflow: 'visible' }} // Keep normal page scroller
         >
           <div className='public-albums-wrapper'>
             <AnimatePresence>
-              {albums.length > 0 ? (
+              {albums.length > 0 &&
                 albums.map((album) => {
                   // Determine if the current user is the owner of the album
                   const isOwner =
@@ -330,15 +337,7 @@ export default function AlbumsPage() {
                     </motion.div>
                   );
                 })
-              ) : (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  No albums available.
-                </motion.p>
-              )}
+              }
             </AnimatePresence>
           </div>
         </InfiniteScroll>
