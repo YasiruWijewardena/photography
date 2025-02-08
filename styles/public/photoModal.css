@@ -147,12 +147,13 @@ body.fake-fullscreen-mode {
 
 /* The image is near the top, centered */
 .image-container {
+  position: relative;
   width: 80%;      
   height: 60vh;    
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px auto 10px;
+  margin: 20px auto 0px;
 }
 
 .main-photo {
@@ -168,7 +169,7 @@ body.fake-fullscreen-mode {
 
 /* The bottom portion: metadata plus left/right arrows */
 .metadata-and-arrows {
-  margin-top: auto; /* push it to the bottom */
+  margin-top: 10px; /* push it to the bottom */
   margin-bottom: 20px; /* space from bottom */
   display: flex;
   align-items: center;

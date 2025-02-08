@@ -100,12 +100,15 @@ export default function PhotoCard({
                 {photo.isLiked ? <Favorite color="error" /> : <FavoriteBorder className='like-icon'/>}
               </IconButton>
               <span>{photo.likes_count}</span>
-              <IconButton
+              {!isOwner && (
+                <IconButton
                 onClick={handleFavourite}
                 aria-label={photo.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
               >
                 {photo.isFavourited ? <Bookmark color="primary" /> : <BookmarkBorder className='like-icon'/>}
               </IconButton>
+              )}
+              
             </div>
           </div>
         </div>
