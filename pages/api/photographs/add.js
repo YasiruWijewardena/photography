@@ -63,18 +63,17 @@ export default async function handler(req, res) {
 
     // Ensure 'images' is an array for multiple files
     const images = Array.isArray(files.images) ? files.images : [files.images].filter(Boolean);
-
     if (images.length === 0) {
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
     try {
-      // Process each image: extract metadata and generate thumbnail
+      // Process each image: extract metadata, generate a thumbnail if necessary, and create a DB record.
       const createPromises = images.map(async (image) => {
         const relativePath = `/uploads/photos/${path.basename(image.filepath)}`;
         const absolutePath = path.join(uploadDir, path.basename(image.filepath));
 
-        // Extract EXIF data
+        // Extract EXIF data from the image buffer.
         const buffer = await fs.readFile(absolutePath);
         let metadata = {};
         try {
@@ -90,20 +89,32 @@ export default async function handler(req, res) {
           console.warn('Failed to parse EXIF data:', exifError);
         }
 
-        // Generate Thumbnail
-        const thumbFilename = `thumb-${path.basename(image.filepath)}`;
-        const thumbPath = path.join(uploadDir, thumbFilename);
-        const thumbRelativePath = `/uploads/photos/${thumbFilename}`;
-
-        await sharp(absolutePath)
-          .resize({ width: 300 }) // Adjust thumbnail width as needed
-          .toFile(thumbPath);
-
-        // Get thumbnail dimensions
-        const thumbMetadata = await sharp(thumbPath).metadata();
-
-        // Get original image dimensions
+        // Get original image dimensions.
         const originalMetadata = await sharp(absolutePath).metadata();
+
+        let thumbnail_url, thumbnail_width, thumbnail_height;
+        // Check if the file size is greater than 3MB (3 * 1024 * 1024 bytes)
+        if (image.size > 2 * 1024 * 1024) {
+          // Generate a thumbnail:
+          // 1. Resize the image to a fixed width (300px) while maintaining aspect ratio.
+          // 2. Convert to JPEG with high quality (90%) to avoid excessive compression.
+          const thumbFilename = `thumb-${path.basename(image.filepath, path.extname(image.filepath))}.jpg`;
+          const thumbPath = path.join(uploadDir, thumbFilename);
+          await sharp(absolutePath)
+            .resize({ width: 300 })
+            .jpeg({ quality: 90 })
+            .toFile(thumbPath);
+
+          const thumbMetadata = await sharp(thumbPath).metadata();
+          thumbnail_url = `/uploads/photos/${thumbFilename}`;
+          thumbnail_width = thumbMetadata.width;
+          thumbnail_height = thumbMetadata.height;
+        } else {
+          // If the file is 3MB or smaller, use the original image as the thumbnail.
+          thumbnail_url = relativePath;
+          thumbnail_width = originalMetadata.width;
+          thumbnail_height = originalMetadata.height;
+        }
 
         return prisma.photograph.create({
           data: {
@@ -112,18 +123,17 @@ export default async function handler(req, res) {
             title: image.originalFilename || 'Untitled',
             description: fields.description || '', // Optional description
             image_url: relativePath,
-            thumbnail_url: thumbRelativePath,
             image_width: originalMetadata.width,
             image_height: originalMetadata.height,
-            thumbnail_width: thumbMetadata.width,
-            thumbnail_height: thumbMetadata.height,
+            thumbnail_url,
+            thumbnail_width,
+            thumbnail_height,
             ...metadata,
           },
         });
       });
 
       await Promise.all(createPromises);
-
       return res.status(200).json({ message: 'Photos added successfully' });
     } catch (dbError) {
       console.error('Database error:', dbError);

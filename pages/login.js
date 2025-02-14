@@ -5,6 +5,8 @@ import { useState, useEffect  } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import '../styles/public/home.css';
+import PublicLayout from '../components/PublicLayout';
+import '../styles/public/global.css';
 
 export default function Login() {
   const { data: session, status } = useSession();
@@ -14,6 +16,10 @@ export default function Login() {
     password: '',
   });
   const [error, setError] = useState('');
+  const errorMessages = {
+    CredentialsSignin: 'Invalid credentials. Please check your email and password.',
+  };
+  
 
   // Handle input changes
   const handleChange = (e) => {
@@ -33,7 +39,7 @@ export default function Login() {
     });
 
     if (res.error) {
-      setError(res.error);
+      setError(errorMessages[res.error] || 'An unexpected error occurred');
     } 
   };
 
@@ -58,60 +64,62 @@ export default function Login() {
   }, [session, status, router]);
 
   return (
-    <div className="login">
-      <h1>Login</h1>
+    <PublicLayout>
+      <div className="login">
+        <h1>Login</h1>
 
-      <button onClick={handleGoogleSignIn} className="google-button">
-        <img src="/google-logo.png" alt="Google Logo" className="google-logo" />
-        Sign in with Google
-      </button>
+        <button onClick={handleGoogleSignIn} className="google-button">
+          <img src="/google-logo.png" alt="Google Logo" className="google-logo" />
+          Sign in with Google
+        </button>
 
-      {/* Traditional Sign-In Form */}
-      <form onSubmit={handleSubmit} className="login-form">
-        {/* Google Sign-In Button */}
-      
+        {/* Traditional Sign-In Form */}
+        <form onSubmit={handleSubmit} className="login-form">
+          {/* Google Sign-In Button */}
+        
 
-      {/* Divider */}
-      <div className="divider">
-        <span>OR</span>
+        {/* Divider */}
+        <div className="divider">
+          <span>OR</span>
+        </div>
+          {error && <p className="error-message">{error}</p>}
+
+          {/* Email */}
+          <div className="login-input-container">
+            <label htmlFor="email">Email:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div className="login-input-container">
+            <label htmlFor="password">Password:</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Sign-In Button */}
+          <button type="submit" className="login-submit">Login</button>
+        </form>
+        <p>
+          Don't have an account?{' '}
+          <a href="/signup" className="signup-link">
+            Sign Up
+          </a>
+        </p>
       </div>
-        {error && <p className="error-message">{error}</p>}
-
-        {/* Email */}
-        <div className="login-input-container">
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Password */}
-        <div className="login-input-container">
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Sign-In Button */}
-        <button type="submit" className="login-submit">Login</button>
-      </form>
-      <p>
-        Don't have an account?{' '}
-        <a href="/signup" className="signup-link">
-          Sign Up
-        </a>
-      </p>
-    </div>
+    </PublicLayout>
   );
 }

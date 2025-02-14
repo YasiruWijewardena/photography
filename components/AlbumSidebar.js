@@ -38,6 +38,11 @@ export default function AlbumSidebar({
   // On ANY album route?
   const isOnAlbumRoutes = asPath.startsWith(`/${photographerUsername}/albums`);
 
+  // Update localAlbums when the albums prop changes
+  useEffect(() => {
+    setLocalAlbums(albums);
+  }, [albums]);
+
   // Filter
   const filteredAlbums = useMemo(() => {
     if (!searchQuery) return localAlbums;

@@ -8,3 +8,34 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+/* list */
+
+.photographers-list-container {
+    padding: 20px;
+}
+
+.photographer-wrapper {
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+    border-radius: 20px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding-top: 20px;
+    padding-left: 30px;
+    padding-bottom: 20px;
+    padding-right: 30px;
+    display: flex;
+    column-gap: 30px;
+    align-items: center;
+}
+
+.photographer-pro-pic {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.photographer-name {
+    font-weight: 500;
+    color: #000;
+    text-transform: capitalize;
+}

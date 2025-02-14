@@ -44,7 +44,7 @@ body.photographer-layout {
   height: 100vh;
   text-align: center;
   padding-left: 40px;
-  padding-top: 50px;
+  padding-top: 100px;
 }
 
 .sidebar-container ul {
@@ -237,7 +237,7 @@ text-align: left;
 
 /* album-page */
 .album-page {
-  padding-top: 70px;
+  padding-top: 100px;
   padding-left: 50px;
   padding-right: 20px;
 }

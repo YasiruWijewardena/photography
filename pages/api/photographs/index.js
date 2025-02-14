@@ -33,6 +33,17 @@ export default async function handler(req, res) {
       await safeUnlink(actualPath);
     }
 
+    for (const photo of photos) {
+      if (photo.thumbnail_url && photo.thumbnail_url !== photo.image_url) {
+        const actualPath = path.join(process.cwd(), 'public', photo.thumbnail_url);
+        await safeUnlink(actualPath);
+      }
+      
+    }
+
+
+    
+
     await prisma.photograph.deleteMany({
       where: {
         id: { in: photoIds },

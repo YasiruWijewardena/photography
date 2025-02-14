@@ -62,10 +62,9 @@ export default function PhotoSection({
 
   // The masonry breakpoints
   const breakpointColumnsObj = {
-    default: 4,
-    1400: 3,
-    700: 2,
-    500: 1,
+    default: 3,
+    1400: 2,
+    700: 1
   };
 
   /**
@@ -149,14 +148,31 @@ export default function PhotoSection({
 
   // If you pass initialPhotos from SSR, we can seed them into context
   // e.g. for an album page, the server might have fetched them
+  // useEffect(() => {
+  //   if (initialPhotos.length > 0) {
+  //     resetPhotos();
+  //     addPhotos(initialPhotos);
+  //     if (scope === 'album' || (scope === 'favourites' && type === 'photos')) {
+  //       setHasMore(false); // All photos are loaded via SSR
+  //     } else {
+  //       setHasMore(initialPhotos.length >= 20); // Assume more photos if initialPhotos reach the limit
+  //     }
+  //   }else{
+  //     resetPhotos();
+  //     setHasMore(false);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [initialPhotos, scope, type]);
+
   useEffect(() => {
-    if (initialPhotos.length > 0) {
+    // Only update context with initialPhotos for non-home scopes.
+    if (scope !== 'home') {
       resetPhotos();
       addPhotos(initialPhotos);
       if (scope === 'album' || (scope === 'favourites' && type === 'photos')) {
         setHasMore(false); // All photos are loaded via SSR
       } else {
-        setHasMore(initialPhotos.length >= 20); // Assume more photos if initialPhotos reach the limit
+        setHasMore(initialPhotos.length >= 20);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

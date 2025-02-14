@@ -199,6 +199,9 @@
   z-index: 0;
 }
 
+.error-message {
+  color: rgb(237, 95, 95);
+}
 
 /* Signup */
 /* Tabs Container */
@@ -238,7 +241,7 @@
 /* Home Page */
 
 .home-hero-sec {
-    padding-top: 100px;
+    padding-top: 150px;
     padding-bottom: 100px;
 }
 
