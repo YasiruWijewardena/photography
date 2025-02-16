@@ -100,7 +100,7 @@ export default function PhotoModal({
     const handleMouseMove = () => {
       setShowControls(true);
       if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => setShowControls(true), 3000);
+      timeoutId = setTimeout(() => setShowControls(false), 3000);
     };
     if (isOpen) {
       document.addEventListener('mousemove', handleMouseMove);

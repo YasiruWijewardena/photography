@@ -45,7 +45,11 @@ export async function getServerSideProps(context) {
       include: {
         Photographer: {
           include: {
-            Subscription: true,
+            subscriptions: {
+              where: { active: true },
+              include: { subscriptionPlan: { select: { id: true, name: true } } },
+              take: 1,
+            },
             albums: {
               include: {
                 photographs: { take: 1, select: { thumbnail_url: true } },
@@ -73,8 +77,8 @@ export async function getServerSideProps(context) {
       address: photographer.address,
       profile_picture: photographer.profile_picture,
       is_approved: photographer.is_approved,
-      subscription_id: photographer.subscription_id,
-      subscription_name: photographer.Subscription?.name || '',
+      subscription_id: photographer.subscriptions[0]?.subscriptionPlan?.id || null,
+      subscription_name: photographer.subscriptions[0]?.subscriptionPlan?.name || '',
       albums: photographer.albums.map((album) => ({
         id: album.id,
         slug: album.slug,

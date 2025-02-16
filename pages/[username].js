@@ -54,7 +54,11 @@ export async function getServerSideProps(context) {
       include: {
         Photographer: {
           include: {
-            Subscription: true,
+            subscriptions: {
+              where: { active: true },
+              include: { subscriptionPlan: { select: { name: true, id: true } } },
+              take: 1,
+            },
             albums: {
               include: {
                 photographs: { take: 1, select: { thumbnail_url: true } },
@@ -73,10 +77,10 @@ export async function getServerSideProps(context) {
     const photographerId = photographer.photo_id; 
 
     const formattedPhotographer = {
-      id: photographer.photo_id, // Photographer's unique ID
-      firstname:  user.firstname,
+      id: photographer.photo_id,
+      firstname: user.firstname,
       name: `${user.firstname} ${user.lastname}`,
-      username: user.username, // Ensure username is included
+      username: user.username,
       bio: photographer.bio,
       website: photographer.website,
       instagram: photographer.instagram,
@@ -84,8 +88,8 @@ export async function getServerSideProps(context) {
       address: photographer.address,
       profile_picture: photographer.profile_picture,
       is_approved: photographer.is_approved,
-      subscription_id: photographer.subscription_id,
-      subscription_name: photographer.Subscription?.name || '',
+      subscription_id: photographer.subscriptions[0]?.subscriptionPlan?.id || null,
+      subscription_name: photographer.subscriptions[0]?.subscriptionPlan?.name || '',
       albums: photographer.albums.map((album) => ({
         id: album.id,
         slug: album.slug,

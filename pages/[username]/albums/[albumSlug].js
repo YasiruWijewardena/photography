@@ -258,15 +258,17 @@ export default function AlbumPage({
           <p className="album-desc">{currentAlbum.description}</p>
 
           {/* Favourite (Bookmark) Icon */}
-          <IconButton
-            onClick={handleToggleAlbumFavourite}
-            aria-label={
-              currentAlbum.isFavourited ? 'Remove from favourites' : 'Add to favourites'
-            }
-            className="favourite-btn"
-          >
-            {currentAlbum.isFavourited ? <Bookmark /> : <BookmarkBorder />}
-          </IconButton>
+          {!isOwner && (
+            <IconButton
+              onClick={handleToggleAlbumFavourite}
+              aria-label={
+                currentAlbum.isFavourited ? 'Remove from favourites' : 'Add to favourites'
+              }
+              className="favourite-btn"
+            >
+              {currentAlbum.isFavourited ? <Bookmark /> : <BookmarkBorder />}
+            </IconButton>
+          )}
 
           {isOwner && (
             <div className="modal-actions">
@@ -432,7 +434,11 @@ export async function getServerSideProps(context) {
     include: {
       Photographer: {
         include: {
-          Subscription: true,
+          subscriptions: {
+            where: { active: true },
+            include: { subscriptionPlan: { select: { id: true, name: true } } },
+            take: 1,
+          },
           albums: {
             include: {
               photographs: { take: 1, select: { thumbnail_url: true } },

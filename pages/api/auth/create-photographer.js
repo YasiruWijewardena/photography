@@ -26,7 +26,7 @@ const handler = nextConnect({
 });
 
 handler.post(async (req, res) => {
-  const form = new IncomingForm(); // Updated this line
+  const form = new IncomingForm();
   form.uploadDir = path.join(process.cwd(), 'temp');
   form.keepExtensions = true;
 
@@ -50,21 +50,18 @@ handler.post(async (req, res) => {
       subscription_id,
     } = fields;
 
-    // Validate role
+    // Validate role and required fields
     if (role !== 'photographer') {
       return res.status(400).json({ error: 'Invalid role specified.' });
     }
 
-    // Validate required fields
     if (!firstname || !lastname || !email || !password || !bio || !mobile_num || !address || !subscription_id) {
-      // Remove uploaded file if validation fails
       if (files.profile_picture) {
         await fs.remove(files.profile_picture.filepath);
       }
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    // Validate email and password
     if (!validateEmail(email)) {
       if (files.profile_picture) {
         await fs.remove(files.profile_picture.filepath);
@@ -79,7 +76,6 @@ handler.post(async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
     }
 
-    // Validate mobile number
     if (!validateMobileNum(mobile_num)) {
       if (files.profile_picture) {
         await fs.remove(files.profile_picture.filepath);
@@ -124,14 +120,13 @@ handler.post(async (req, res) => {
         const finalPath = path.join(uploadDir, newFileName);
         await fs.move(file.filepath, finalPath, { overwrite: true });
 
-        // Generate the URL (assuming 'public' is served at root)
         profilePictureUrl = `/uploads/profile_pictures/${newFileName}`;
       }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user and photographer record
+      // Create user and associated photographer record (without subscription_id)
       const user = await prisma.user.create({
         data: {
           firstname,
@@ -149,16 +144,24 @@ handler.post(async (req, res) => {
               address,
               profile_picture: profilePictureUrl,
               is_approved: false,
-              subscription_id: parseInt(subscription_id, 10),
             },
           },
+        },
+      });
+
+      // Record the subscription in PhotographerSubscription table
+      await prisma.photographerSubscription.create({
+        data: {
+          photographerId: user.id,
+          subscriptionPlanId: parseInt(subscription_id, 10),
+          startDate: new Date(),
+          active: true,
         },
       });
 
       return res.status(201).json({ message: 'Photographer created successfully.', userId: user.id });
     } catch (error) {
       console.error('Error creating photographer:', error);
-      // Remove uploaded file in case of error
       if (files.profile_picture) {
         await fs.remove(files.profile_picture.filepath);
       }
