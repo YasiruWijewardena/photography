@@ -28,12 +28,10 @@ export default async function handler(req, res) {
 
   // Get user session
   const session = await getSession({ req });
-
   if (!session) {
     return res.status(401).json({ error: 'Unauthorized. Please log in.' });
   }
-
-  const userId = session.user.id; // Ensure user ID is present in session
+  const userId = session.user.id;
 
   try {
     // Parse the form data
@@ -64,16 +62,12 @@ export default async function handler(req, res) {
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(profilePic.mimetype)) {
-        // Remove the uploaded file
         await fs.remove(profilePic.filepath);
         return res.status(400).json({ error: 'Only JPEG, PNG, and GIF files are allowed.' });
       }
 
-      // Define the new file name
       const fileExt = path.extname(profilePic.originalFilename);
       const newFileName = `${userId}-${Date.now()}${fileExt}`;
-
-      // Move the file to the final directory
       profilePictureUrl = await moveFile(profilePic, uploadDir, newFileName);
 
       // Delete the old profile picture if it exists
@@ -81,12 +75,7 @@ export default async function handler(req, res) {
         where: { id: Number(userId) },
         select: { Photographer: { select: { profile_picture: true } } },
       });
-
-      if (
-        existingUser &&
-        existingUser.Photographer &&
-        existingUser.Photographer.profile_picture
-      ) {
+      if (existingUser?.Photographer?.profile_picture) {
         const oldFilePath = path.join(process.cwd(), 'public', existingUser.Photographer.profile_picture);
         if (await fs.pathExists(oldFilePath)) {
           await fs.remove(oldFilePath);
@@ -103,7 +92,7 @@ export default async function handler(req, res) {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    // Prepare data for Prisma update
+    // Prepare update data without subscription_id update on Photographer
     const updateData = {
       firstname,
       lastname,
@@ -113,14 +102,14 @@ export default async function handler(req, res) {
           website,
           instagram,
           mobile_num: mobile_num ? parseInt(mobile_num, 10) : undefined,
-          subscription_id: subscription_id ? parseInt(subscription_id, 10) : undefined,
+          // subscription_id is now handled separately
           ...(profilePictureUrl && { profile_picture: profilePictureUrl }),
         },
       },
       ...(hashedPassword && { password: hashedPassword }),
     };
 
-    // Update user and photographer data in the database
+    // Update user and photographer details
     const updatedUser = await prisma.user.update({
       where: { id: Number(userId) },
       data: updateData,
@@ -135,12 +124,34 @@ export default async function handler(req, res) {
             website: true,
             instagram: true,
             mobile_num: true,
-            subscription_id: true,
             profile_picture: true,
           },
         },
       },
     });
+
+    // Update (or create) the photographer's subscription record
+    if (subscription_id) {
+      const newSubId = parseInt(subscription_id, 10);
+      const existingSub = await prisma.photographerSubscription.findFirst({
+        where: { photographerId: Number(userId), active: true },
+      });
+      if (existingSub) {
+        await prisma.photographerSubscription.update({
+          where: { id: existingSub.id },
+          data: { subscriptionPlanId: newSubId },
+        });
+      } else {
+        await prisma.photographerSubscription.create({
+          data: {
+            photographerId: Number(userId),
+            subscriptionPlanId: newSubId,
+            startDate: new Date(),
+            active: true,
+          },
+        });
+      }
+    }
 
     return res.status(200).json({ message: 'Profile updated successfully.', user: updatedUser });
   } catch (error) {

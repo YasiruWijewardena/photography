@@ -31,11 +31,11 @@ model User {
   id              Int         @id @default(autoincrement())
   firstname       String      @db.VarChar(100)
   lastname        String      @db.VarChar(100)
-  username        String?      @unique @db.VarChar(100)
+  username        String?     @unique @db.VarChar(100)
   email           String      @unique @db.VarChar(100)
   emailVerified   DateTime?
-  password        String?      @db.VarChar(255)
-  image          String?  
+  password        String?     @db.VarChar(255)
+  image           String?
   role            Role
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
@@ -45,30 +45,29 @@ model User {
   Customer        Customer?   @relation("UserCustomer")
   Photographer    Photographer? @relation("UserPhotographer")
 
-  // New relation for Likes
+  // New relations for Likes and Favourites
   likes           Like[]      @relation("UserLikes")
-  favourites Favourite[]   @relation("UserFavourites")
+  favourites      Favourite[] @relation("UserFavourites")
 
   accounts        Account[]
   sessions        Session[]
 
-  @@map("users") // Maps this model to the 'users' table in MySQL
+  @@map("users")
 }
 
-
 model Admin {
-  admin_id      Int     @id
-  permissions   Json    @default("{}")
-  admin_level   AdminLevel @default(BASIC)
-  is_approved   Boolean       @default(false)
-  approved_by_admin_id Int?
+  admin_id              Int       @id
+  permissions           Json      @default("{}")
+  admin_level           AdminLevel @default(BASIC)
+  is_approved           Boolean   @default(false)
+  approved_by_admin_id  Int?
 
   // One-to-one relationship with User
-  User        User    @relation("UserAdmin", fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "admin_user_fk")
+  User                  User      @relation("UserAdmin", fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "admin_user_fk")
 
   // Self-referencing relation (Admin who approved this Admin)
-  ApprovedBy           Admin?          @relation("AdminToAdmin", fields: [approved_by_admin_id], references: [admin_id])
-  ApprovedAdmins       Admin[]         @relation("AdminToAdmin")
+  ApprovedBy            Admin?    @relation("AdminToAdmin", fields: [approved_by_admin_id], references: [admin_id])
+  ApprovedAdmins        Admin[]   @relation("AdminToAdmin")
 
   // Relation to Photographers this Admin has approved
   ApprovedPhotographers Photographer[] @relation("PhotographerApprovedBy")
@@ -77,39 +76,37 @@ model Admin {
 }
 
 model Customer {
-  cust_id    Int      @id
-  favourites Json?    @default("[]") // Stores favourites as a JSON array.
-  profile_image   String?      @db.VarChar(255)
+  cust_id       Int      @id
+  favourites    Json?    @default("[]") // Stores favourites as a JSON array.
+  profile_image String?  @db.VarChar(255)
 
   // One-to-one relationship with User
-  User       User     @relation("UserCustomer", fields: [cust_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "customer_user_fk")
+  User          User     @relation("UserCustomer", fields: [cust_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "customer_user_fk")
 
   // One-to-many relationships
-  reviews    Review[] @relation("CustomerReviews")
-  projects   Project[] @relation("CustomerProjects")
+  reviews       Review[] @relation("CustomerReviews")
+  projects      Project[] @relation("CustomerProjects")
 
   @@map("customers")
 }
 
 model Photographer {
-  photo_id         Int           @id
-  bio              String        @db.VarChar(255)
-  website          String        @db.VarChar(255)
-  instagram        String        @db.VarChar(255)
+  photo_id         Int      @id
+  bio              String   @db.VarChar(255)
+  website          String   @db.VarChar(255)
+  instagram        String   @db.VarChar(255)
   mobile_num       Int
-  is_approved      Boolean       @default(false) // Mapped from TINYINT(1) to Boolean
+  is_approved      Boolean  @default(false)
   approved_by_admin_id Int?
-  subscription_id  Int?
-  address                String           @db.VarChar(255) // New field for address
-  profile_picture        String           @db.VarChar(255) 
+  address          String   @db.VarChar(255)
+  profile_picture  String   @db.VarChar(255) 
 
   // One-to-one relationship with User
-  User             User          @relation("UserPhotographer", fields: [photo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "photographer_user_fk")
-  ApprovedBy           Admin?       @relation("PhotographerApprovedBy", fields: [approved_by_admin_id], references: [admin_id])
+  User             User     @relation("UserPhotographer", fields: [photo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "photographer_user_fk")
+  ApprovedBy       Admin?   @relation("PhotographerApprovedBy", fields: [approved_by_admin_id], references: [admin_id])
 
-
-  // Many-to-one relationship with Subscription
-  Subscription     Subscription? @relation("SubscriptionPhotographers", fields: [subscription_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  // New back-relation for subscriptions
+  subscriptions    PhotographerSubscription[] @relation("PhotographerSubscriptions")
 
   // One-to-many relationships
   albums           Album[]       @relation("PhotographerAlbums")
@@ -124,28 +121,23 @@ model Album {
   id              Int           @id @default(autoincrement())
   photographer_id Int
   title           String        @db.VarChar(45)
-  slug            String       @db.VarChar(255)
+  slug            String        @db.VarChar(255)
   description     String        @db.VarChar(255)
   category_id     Int
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
 
-  // Relations
   Photographer    Photographer  @relation("PhotographerAlbums", fields: [photographer_id], references: [photo_id], onDelete: Cascade, onUpdate: Restrict)
-  photographs     Photograph[]  @relation("AlbumPhotographs") // Renamed to 'photographs'
+  photographs     Photograph[]  @relation("AlbumPhotographs")
   Category        Category      @relation("CategoryAlbums", fields: [category_id], references: [id], onDelete: Restrict)
 
-  // Other relations...
   tags            Tag[]         @relation("AlbumTags")
   likes           Like[]        @relation("AlbumLikes")
   favourites      Favourite[]   @relation("AlbumFavourites")
 
   @@unique([slug, photographer_id], name: "slug_photographer_id")
-
   @@map("albums")
 }
-
-
 
 model Photograph {
   id              Int           @id @default(autoincrement())
@@ -153,12 +145,12 @@ model Photograph {
   title           String        @db.VarChar(255)
   description     String        @db.VarChar(255)
   image_url       String        @db.VarChar(255)
-  thumbnail_url   String        @db.VarChar(255) // New field for thumbnail
-  image_width      Int           // New field for original image width
-  image_height     Int           // New field for original image height
-  thumbnail_width  Int           // Existing field for thumbnail width
-  thumbnail_height Int           // Existing field for thumbnail height
-  cameraModel     String?       @db.VarChar(100) // New metadata fields
+  thumbnail_url   String        @db.VarChar(255)
+  image_width     Int
+  image_height    Int
+  thumbnail_width Int
+  thumbnail_height Int
+  cameraModel     String?       @db.VarChar(100)
   lens            String?       @db.VarChar(100)
   exposure        String?       @db.VarChar(50)
   focalLength     String?       @db.VarChar(50)
@@ -166,17 +158,14 @@ model Photograph {
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
   photographer_id Int        
-  random_float     Float         @default(0.0)   
+  random_float    Float         @default(0.0)
 
-  // Many-to-one relationship with Album
-  Album        Album         @relation("AlbumPhotographs", fields: [album_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
+  Album           Album         @relation("AlbumPhotographs", fields: [album_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Photographer    Photographer  @relation("PhotographerPhotographs", fields: [photographer_id], references: [photo_id], onDelete: Cascade, onUpdate: Cascade)
 
-  // One-to-many relationships with Like, Favourite, and Review
-  likes        Like[]        @relation("PhotographLikes")
-  favourites   Favourite[]   @relation("PhotographFavourites")
-  reviews      Review[]      @relation("PhotographReviews")
+  likes           Like[]        @relation("PhotographLikes")
+  favourites      Favourite[]   @relation("PhotographFavourites")
+  reviews         Review[]      @relation("PhotographReviews")
   tags            Tag[]         @relation("PhotographTags")
 
   @@map("photographs")
@@ -186,7 +175,6 @@ model Tag {
   id    Int    @id @default(autoincrement())
   name  String @unique @db.VarChar(45)
 
-  // Many-to-many relationships
   albums      Album[]       @relation("AlbumTags")
   photographs Photograph[]  @relation("PhotographTags")
 
@@ -203,12 +191,12 @@ model Category {
 }
 
 model Review {
-  id              Int          @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   customer_id     Int
   photographer_id Int
   photograph_id   Int?
   rating          Int
-  comment         String       @db.VarChar(255)
+  comment         String   @db.VarChar(255)
   project_id      Int
 
   Customer        Customer     @relation("CustomerReviews", fields: [customer_id], references: [cust_id], onDelete: Cascade, onUpdate: Cascade, map: "reviews_customer_fkey")
@@ -219,58 +207,89 @@ model Review {
   @@map("reviews")
 }
 
-model Subscription {
-  id        Int          @id @default(autoincrement())
-  name      String       @unique @db.VarChar(45)
-  description String
-  price     Decimal      @db.Decimal(10, 2)
-  features  Json?        @default("{}") // Stores subscription features as a JSON object.
+// New normalized subscription models
 
-  // One-to-many relationship with Photographer
-  photographers Photographer[] @relation("SubscriptionPhotographers")
+model SubscriptionPlan {
+  id               Int                      @id @default(autoincrement())
+  name             String                   @unique @db.VarChar(45)
+  description      String
+  price            Decimal                  @db.Decimal(10, 2)
+  planFeatures     SubscriptionPlanFeature[]
+  PhotographerSubscriptions PhotographerSubscription[]
 
-  @@map("subscriptions")
+  @@map("subscription_plans")
+}
+
+model SubscriptionFeature {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(45) // e.g., "maxAlbums", "maxPhotosPerAlbum", "dashboardAccess"
+  description String?
+  dataType    String?  // e.g., "number", "boolean", "string"
+  planFeatures SubscriptionPlanFeature[]
+
+  @@map("subscription_features")
+}
+
+model SubscriptionPlanFeature {
+  id                     Int     @id @default(autoincrement())
+  subscriptionPlanId     Int
+  subscriptionFeatureId  Int
+  value                  String  // Store the feature value as a string; convert as needed
+
+  subscriptionPlan       SubscriptionPlan    @relation(fields: [subscriptionPlanId], references: [id], onDelete: Cascade)
+  subscriptionFeature    SubscriptionFeature @relation(fields: [subscriptionFeatureId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionPlanId, subscriptionFeatureId])
+  @@map("subscription_plan_features")
+}
+
+model PhotographerSubscription {
+  id                   Int      @id @default(autoincrement())
+  photographerId       Int
+  subscriptionPlanId   Int
+  startDate            DateTime @default(now())
+  endDate              DateTime?
+  active               Boolean  @default(true)
+
+  Photographer         Photographer     @relation("PhotographerSubscriptions", fields: [photographerId], references: [photo_id], onDelete: Cascade)
+  subscriptionPlan     SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id], onDelete: Cascade)
+
+  @@map("photographer_subscriptions")
 }
 
 model Package {
-  id       Int        @id @default(autoincrement())
-  name     String     @unique @db.VarChar(100)
+  id       Int       @id @default(autoincrement())
+  name     String    @unique @db.VarChar(100)
   // Add other relevant fields for Package as needed
-
-  // One-to-many relationship with Project
-  projects Project[]  @relation("PackageProjects")
+  projects Project[] @relation("PackageProjects")
 
   @@map("packages")
 }
 
-
 model Favourite {
-  id             Int          @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   user_id        Int
   photograph_id  Int?
   album_id       Int?
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
-  // Relations
   User           User         @relation("UserFavourites", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Photograph     Photograph?  @relation("PhotographFavourites", fields: [photograph_id], references: [id], onDelete: Cascade)
   Album          Album?       @relation("AlbumFavourites", fields: [album_id], references: [id], onDelete: Cascade)
 
-  // Unique Constraints
   @@unique([user_id, photograph_id], name: "user_photo_unique")
   @@unique([user_id, album_id], name: "user_album_unique")
-
   @@map("favourites")
 }
 
 model Like {
-  id             Int          @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   user_id        Int
   photograph_id  Int
   album_id       Int?
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
   User           User         @relation("UserLikes", fields: [user_id], references: [id], onDelete: Cascade)
   Photograph     Photograph   @relation("PhotographLikes", fields: [photograph_id], references: [id], onDelete: Cascade)
@@ -278,45 +297,40 @@ model Like {
 
   @@unique([user_id, photograph_id], name: "user_photo_unique")
   @@unique([user_id, album_id], name: "user_album_unique")
-
   @@map("likes")
 }
 
-
 model Project {
-  id              Int          @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   photographer_id Int
   customer_id     Int
   package_id      Int
   status          ProjectStatus
-  created_at      DateTime     @default(now())
-  updated_at      DateTime     @updatedAt
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
 
-  // Many-to-one relationships
   Photographer    Photographer  @relation("PhotographerProjects", fields: [photographer_id], references: [photo_id], onDelete: Cascade, onUpdate: Cascade)
   Customer        Customer      @relation("CustomerProjects", fields: [customer_id], references: [cust_id], onDelete: Cascade, onUpdate: Cascade)
   Package         Package       @relation("PackageProjects", fields: [package_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  // One-to-many relationship with Review
   reviews         Review[]      @relation("ProjectReviews")
-
   @@map("projects")
 }
 
-// nextauth
+// nextauth models
 
 model Account {
-  id                 Int       @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   userId             Int
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String?   @db.Text
-  access_token       String?   @db.Text
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String?   @db.Text
+  id_token           String?  @db.Text
   session_state      String?
   oauth_token_secret String?
   oauth_token        String?
@@ -342,5 +356,3 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
-
-

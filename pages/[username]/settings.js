@@ -26,9 +26,12 @@ export default function Settings() {
   const [instagram, setInstagram] = useState('');
   const [mobileNum, setMobileNum] = useState('');
   const [subscriptionId, setSubscriptionId] = useState('');
-  const [subscriptionName, setSubscriptionName] = useState(''); // New state for subscription name
+  const [subscriptionName, setSubscriptionName] = useState('N/A');
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState(null);
+
+  // New state variables for available subscriptions (cards)
+  const [availableSubscriptions, setAvailableSubscriptions] = useState([]);
 
   // New state variables for PhotographerLayout props
   const [photographerUsername, setPhotographerUsername] = useState('');
@@ -42,7 +45,6 @@ export default function Settings() {
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Fetch current user profile on component mount
   useEffect(() => {
     if (status === 'authenticated') {
       fetchUserProfile();
@@ -50,6 +52,13 @@ export default function Settings() {
       signIn(); // Redirect to sign-in if not authenticated
     }
   }, [status]);
+
+  // When entering edit mode, fetch available subscriptions to display as cards.
+  useEffect(() => {
+    if (isEditMode) {
+      fetchAvailableSubscriptions();
+    }
+  }, [isEditMode]);
 
   const fetchUserProfile = async () => {
     try {
@@ -64,19 +73,30 @@ export default function Settings() {
       setWebsite(data.Photographer?.website || '');
       setInstagram(data.Photographer?.instagram || '');
       setMobileNum(data.Photographer?.mobile_num?.toString() || '');
-      setSubscriptionId(data.Photographer?.subscription_id?.toString() || '');
+      
+      // Safely extract subscription info if available
+      if (
+        data.Photographer?.subscriptions &&
+        Array.isArray(data.Photographer.subscriptions) &&
+        data.Photographer.subscriptions.length > 0 &&
+        data.Photographer.subscriptions[0].subscriptionPlan
+      ) {
+        setSubscriptionId(
+          data.Photographer.subscriptions[0].subscriptionPlan.id.toString()
+        );
+        setSubscriptionName(
+          data.Photographer.subscriptions[0].subscriptionPlan.name
+        );
+      } else {
+        setSubscriptionId('');
+        setSubscriptionName('N/A');
+      }
+      
       setProfilePicturePreview(data.Photographer?.profile_picture || null);
 
       // Set PhotographerLayout related props
       setPhotographerUsername(data.username || '');
       setPhotographerId(data.id || null);
-
-      // Set Subscription Name if available
-      if (data.Photographer?.Subscription) {
-        setSubscriptionName(data.Photographer.Subscription.name);
-      } else {
-        setSubscriptionName('N/A');
-      }
 
       // If you have albums data, set it here
       // setAlbums(data.albums || []);
@@ -88,6 +108,17 @@ export default function Settings() {
     }
   };
 
+  const fetchAvailableSubscriptions = async () => {
+    try {
+      const res = await axios.get('/api/subscriptions');
+      if (res.status === 200) {
+        setAvailableSubscriptions(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching subscriptions:', err);
+    }
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -96,12 +127,17 @@ export default function Settings() {
     }
   };
 
+  const handleSubscriptionSelect = (sub) => {
+    setSubscriptionId(sub.id.toString());
+    setSubscriptionName(sub.name);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     // Validate required fields
-    if (!firstname || !lastname || !session?.user?.email) { // Assuming email is required
+    if (!firstname || !lastname || !session?.user?.email) {
       setError('Full name and email are required.');
       return;
     }
@@ -121,13 +157,11 @@ export default function Settings() {
     try {
       setLoading(true);
       const response = await axios.post('/api/photographer/update-profile', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       toast.success('Profile updated successfully');
-      setIsEditMode(false); // Exit edit mode after successful update
-      fetchUserProfile(); // Refresh profile data
+      setIsEditMode(false);
+      fetchUserProfile();
     } catch (err) {
       console.error('Error updating profile:', err.response?.data || err.message);
       setError(err.response?.data?.error || 'Failed to update profile.');
@@ -137,15 +171,13 @@ export default function Settings() {
   };
 
   const handleDeleteProfile = async () => {
-    // Use the custom confirm dialog from ConfirmContext
     const isConfirmed = await confirm('Are you sure you want to delete your profile? This action cannot be undone.');
     if (!isConfirmed) return;
-
     try {
       setLoading(true);
       const response = await axios.delete('/api/photographer/delete-profile');
       toast.success(response.data.message);
-      signOut({ callbackUrl: '/' }); // Sign out the user and redirect to home
+      signOut({ callbackUrl: '/' });
     } catch (err) {
       console.error('Error deleting profile:', err.response?.data || err.message);
       setError(err.response?.data?.error || 'Failed to delete profile.');
@@ -155,12 +187,10 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/' }); 
+    signOut({ callbackUrl: '/' });
   };
 
   if (loading && !profilePicturePreview) return <p>Loading...</p>;
-
-  // Ensure that photographerUsername and photographerId are set before rendering
   if (!photographerUsername || !photographerId) return <p>Loading...</p>;
 
   return (
@@ -168,8 +198,8 @@ export default function Settings() {
       isOwner={true}
       photographerUsername={photographerUsername}
       photographerId={photographerId}
-      useAlbumSidebar={false} // Set to true if you want to use AlbumSidebar
-      albums={albums} // Pass albums if available
+      useAlbumSidebar={false}
+      albums={albums}
     >
       <div className="settings-page">
         <div className="settings-content">
@@ -192,49 +222,41 @@ export default function Settings() {
                 )}
               </div>
               <div className="profile-details">
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Firstname:</span> </p>
-                  <p className='profile-detail-val'>{firstname}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Firstname:</span></p>
+                  <p className="profile-detail-val">{firstname}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Lastname:</span> </p>
-                  <p className='profile-detail-val'>{lastname}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Lastname:</span></p>
+                  <p className="profile-detail-val">{lastname}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Email:</span> </p>
-                  <p className='profile-detail-val'>{session?.user?.email}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Email:</span></p>
+                  <p className="profile-detail-val">{session?.user?.email}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Bio:</span></p>
-                  <p className='profile-detail-val'>{bio || 'N/A'}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Bio:</span></p>
+                  <p className="profile-detail-val">{bio || 'N/A'}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Website:</span> </p>
-                  <p className='profile-detail-val'> {website || 'N/A'}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Website:</span></p>
+                  <p className="profile-detail-val">{website || 'N/A'}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Instagram:</span> </p>
-                  <p className='profile-detail-val'> {instagram || 'N/A'}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Instagram:</span></p>
+                  <p className="profile-detail-val">{instagram || 'N/A'}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Mobile Number:</span> </p>
-                  <p className='profile-detail-val'> {mobileNum || 'N/A'}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Mobile Number:</span></p>
+                  <p className="profile-detail-val">{mobileNum || 'N/A'}</p>
                 </div>
-                
-                <div className='profile-details-inner'>
-                  <p className='profile-details-label'><span>Subscription:</span></p>
-                  <p className='profile-detail-val'> {subscriptionName || 'N/A'}</p>
+                <div className="profile-details-inner">
+                  <p className="profile-details-label"><span>Subscription:</span></p>
+                  <p className="profile-detail-val">{subscriptionName || 'N/A'}</p>
                 </div>
-                
               </div>
               <button onClick={() => setIsEditMode(true)} className="edit-button">
-                <EditRoundedIcon/>
+                <EditRoundedIcon />
                 Edit Profile
               </button>
             </div>
@@ -250,7 +272,6 @@ export default function Settings() {
                   onChange={(e) => setFirstname(e.target.value)}
                   required
                 />
-
                 <label htmlFor="lastname">Lastname:</label>
                 <input
                   type="text"
@@ -261,8 +282,6 @@ export default function Settings() {
                   required
                 />
               </div>
-
-              {/* Email Field (Read-Only) */}
               <div className="form-group">
                 <label htmlFor="email">Email:</label>
                 <input
@@ -274,8 +293,6 @@ export default function Settings() {
                   disabled
                 />
               </div>
-
-              {/* Bio Field */}
               <div className="form-group">
                 <label htmlFor="bio">Bio:</label>
                 <textarea
@@ -286,8 +303,6 @@ export default function Settings() {
                   rows="4"
                 ></textarea>
               </div>
-
-              {/* Website Field */}
               <div className="form-group">
                 <label htmlFor="website">Website:</label>
                 <input
@@ -298,8 +313,6 @@ export default function Settings() {
                   onChange={(e) => setWebsite(e.target.value)}
                 />
               </div>
-
-              {/* Instagram Field */}
               <div className="form-group">
                 <label htmlFor="instagram">Instagram:</label>
                 <input
@@ -310,8 +323,6 @@ export default function Settings() {
                   onChange={(e) => setInstagram(e.target.value)}
                 />
               </div>
-
-              {/* Mobile Number Field */}
               <div className="form-group">
                 <label htmlFor="mobile_num">Mobile Number:</label>
                 <input
@@ -322,15 +333,45 @@ export default function Settings() {
                   onChange={(e) => setMobileNum(e.target.value)}
                 />
               </div>
-
-              {/* Subscription Field (Display Name Instead) */}
+              
+              {/* Subscription Options as Cards */}
               <div className="form-group">
-                <label htmlFor="subscription_id">Subscription:</label>
-                <p>{subscriptionName || 'N/A'}</p>
-                {/* 
-                  If you want to allow users to change their subscription, replace the above <p> with a <select> 
-                  and fetch available subscriptions from the backend.
-                */}
+                <label>Select Subscription:</label>
+                <div className="subscriptions-cards">
+                  {availableSubscriptions.length > 0 ? (
+                    availableSubscriptions.map((sub) => (
+                      <div
+                        key={sub.id}
+                        onClick={() => handleSubscriptionSelect(sub)}
+                        className={`subscription-card ${
+                          subscriptionId === sub.id.toString() ? 'selected' : ''
+                        }`}
+                        style={{
+                          border: '1px solid #ccc',
+                          borderRadius: '8px',
+                          padding: '16px',
+                          margin: '8px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <h3>{sub.name}</h3>
+                        <p>${sub.price}/month</p>
+                        <p>{sub.description}</p>
+                        {sub.planFeatures && sub.planFeatures.length > 0 && (
+                          <ul>
+                            {sub.planFeatures.map((pf, idx) => (
+                              <li key={idx}>
+                                {pf.subscriptionFeature.key}: {pf.value}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p>No subscriptions available.</p>
+                  )}
+                </div>
               </div>
 
               {/* Profile Picture Field */}
@@ -356,7 +397,6 @@ export default function Settings() {
                   </div>
                 )}
               </div>
-
               <div className="form-actions">
                 <div className="change-profile-section">
                   <button type="submit" disabled={loading} className="submit-button">
@@ -367,37 +407,32 @@ export default function Settings() {
                     onClick={() => {
                       setIsEditMode(false);
                       setError(null);
-                      fetchUserProfile(); // Reset changes
+                      fetchUserProfile();
                     }}
                     className="cancel-button"
                   >
                     Cancel
                   </button>
                 </div>
-                
-                {/* Delete Profile Option */}
-              <div className="delete-profile-section">
-                <button
-                  type="button"
-                  onClick={handleDeleteProfile}
-                  className="delete-button"
-                  disabled={loading}
-                >
-                  <DeleteForeverRoundedIcon />
-                  Delete Profile
-                </button>
+                <div className="delete-profile-section">
+                  <button
+                    type="button"
+                    onClick={handleDeleteProfile}
+                    className="delete-button"
+                    disabled={loading}
+                  >
+                    <DeleteForeverRoundedIcon />
+                    Delete Profile
+                  </button>
+                </div>
               </div>
-              </div>
-              
             </form>
           )}
-
-          <div className='logout-btn-container'>
+          <div className="logout-btn-container">
             <button onClick={handleLogout} className="logout-button">
               Logout
             </button>
           </div>
-          
         </div>
       </div>
     </PhotographerLayout>

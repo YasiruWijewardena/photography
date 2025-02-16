@@ -132,7 +132,11 @@ export async function getServerSideProps(context) {
     include: {
       Photographer: {
         include: {
-          Subscription: true,
+          subscriptions: {
+            where: { active: true },
+            include: { subscriptionPlan: { select: { id: true, name: true } } },
+            take: 1,
+          },
           albums: {
             include: {
               photographs: { take: 1, select: { thumbnail_url: true } },

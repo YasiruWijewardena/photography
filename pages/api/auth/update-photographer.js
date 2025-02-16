@@ -27,24 +27,22 @@ const handler = nextConnect({
 
 handler.post(async (req, res) => {
   const session = await getServerSession(req, res, authOptions);
-  console.log('Update-photographer session:', session); // Debugging line
+  console.log('Update-photographer session:', session);
 
   if (!session) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Define absolute paths
   const tempDir = path.join(process.cwd(), 'temp');
   const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profile_pictures');
 
-  // Ensure that temp and upload directories exist
   await fs.ensureDir(tempDir);
   await fs.ensureDir(uploadDir);
 
   const form = new IncomingForm({
     uploadDir: tempDir,
     keepExtensions: true,
-    multiples: false, // Ensure only single file per field
+    multiples: false,
   });
 
   let fields;
@@ -61,9 +59,6 @@ handler.post(async (req, res) => {
     fields = parsed.parsedFields;
     files = parsed.parsedFiles;
 
-    console.log('Parsed fields:', fields); // Debugging
-    console.log('Parsed files:', files); // Debugging
-
     // Extract single values from arrays
     const bio = Array.isArray(fields.bio) ? fields.bio[0] : fields.bio;
     const website = Array.isArray(fields.website) ? fields.website[0] : fields.website;
@@ -72,9 +67,7 @@ handler.post(async (req, res) => {
     const address = Array.isArray(fields.address) ? fields.address[0] : fields.address;
     const subscription_id = Array.isArray(fields.subscription_id) ? fields.subscription_id[0] : fields.subscription_id;
 
-    // Validate required fields
     if (!bio || !mobile_num || !address || !subscription_id) {
-      // Remove uploaded file if validation fails
       if (files.profile_picture) {
         const file = Array.isArray(files.profile_picture) ? files.profile_picture[0] : files.profile_picture;
         await fs.remove(file.filepath || file.path);
@@ -82,7 +75,6 @@ handler.post(async (req, res) => {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    // Validate mobile number
     if (!validateMobileNum(mobile_num)) {
       if (files.profile_picture) {
         const file = Array.isArray(files.profile_picture) ? files.profile_picture[0] : files.profile_picture;
@@ -91,8 +83,7 @@ handler.post(async (req, res) => {
       return res.status(400).json({ error: 'Invalid mobile number.' });
     }
 
-    // Validate subscription_id exists
-    const subscription = await prisma.subscription.findUnique({
+    const subscription = await prisma.subscriptionPlan.findUnique({
       where: { id: parseInt(subscription_id, 10) },
     });
 
@@ -104,14 +95,12 @@ handler.post(async (req, res) => {
       return res.status(400).json({ error: 'Selected subscription does not exist.' });
     }
 
-    // Fetch user from database
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { Photographer: true },
     });
 
     if (!user) {
-      // Remove uploaded file if user not found
       if (files.profile_picture) {
         const file = Array.isArray(files.profile_picture) ? files.profile_picture[0] : files.profile_picture;
         await fs.remove(file.filepath || file.path);
@@ -120,7 +109,6 @@ handler.post(async (req, res) => {
     }
 
     if (user.role !== 'photographer') {
-      // Remove uploaded file if user is not photographer
       if (files.profile_picture) {
         const file = Array.isArray(files.profile_picture) ? files.profile_picture[0] : files.profile_picture;
         await fs.remove(file.filepath || file.path);
@@ -128,11 +116,10 @@ handler.post(async (req, res) => {
       return res.status(400).json({ error: 'User is not a photographer.' });
     }
 
-    // Handle profile picture
     let profilePictureUrl = user.Photographer?.profile_picture || null;
     if (files.profile_picture) {
       const file = Array.isArray(files.profile_picture) ? files.profile_picture[0] : files.profile_picture;
-      console.log('Received file:', file); // Debugging
+      console.log('Received file:', file);
 
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.mimetype)) {
@@ -146,13 +133,12 @@ handler.post(async (req, res) => {
 
       await fs.move(file.filepath || file.path, finalPath, { overwrite: true });
 
-      // Generate the URL (assuming 'public' is served at root)
       profilePictureUrl = `/uploads/profile_pictures/${newFileName}`;
     }
 
-    // Upsert Photographer record
-    const updatedPhotographer = await prisma.photographer.upsert({
-      where: { photo_id: user.id }, // Using photo_id as per schema
+    // Update photographer details (without subscription_id change)
+    await prisma.photographer.upsert({
+      where: { photo_id: user.id },
       update: {
         bio,
         website: website || '',
@@ -160,7 +146,6 @@ handler.post(async (req, res) => {
         mobile_num: parseInt(mobile_num, 10),
         address,
         profile_picture: profilePictureUrl,
-        subscription_id: parseInt(subscription_id, 10),
       },
       create: {
         photo_id: user.id,
@@ -170,14 +155,32 @@ handler.post(async (req, res) => {
         mobile_num: parseInt(mobile_num, 10),
         address,
         profile_picture: profilePictureUrl,
-        subscription_id: parseInt(subscription_id, 10),
       },
     });
 
-    return res.status(200).json({ message: 'Photographer profile updated successfully.', photographer: updatedPhotographer });
+    // Update or create the photographer's subscription record.
+    const existingSub = await prisma.photographerSubscription.findFirst({
+      where: { photographerId: user.id, active: true },
+    });
+    if (existingSub) {
+      await prisma.photographerSubscription.update({
+        where: { id: existingSub.id },
+        data: { subscriptionPlanId: parseInt(subscription_id, 10) },
+      });
+    } else {
+      await prisma.photographerSubscription.create({
+        data: {
+          photographerId: user.id,
+          subscriptionPlanId: parseInt(subscription_id, 10),
+          startDate: new Date(),
+          active: true,
+        },
+      });
+    }
+
+    return res.status(200).json({ message: 'Photographer profile updated successfully.', photographer: user.Photographer });
   } catch (error) {
     console.error('Error updating photographer:', error);
-    // Remove uploaded file in case of error
     if (files && files.profile_picture) {
       const file = Array.isArray(files.profile_picture) ? files.profile_picture[0] : files.profile_picture;
       await fs.remove(file.filepath || file.path);

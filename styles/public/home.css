@@ -199,6 +199,47 @@
   z-index: 0;
 }
 
+.error-message {
+  color: rgb(237, 95, 95);
+}
+
+.subscription-card { 
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px;
+  cursor: pointer;
+  background-color: #00000000;
+}
+
+.subscription-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.subscription-card ul li {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 0.2fr;
+}
+
+.subscription-card.selected {
+  background-color: #000;
+  transition: all 0.3s ease-in-out;
+
+}
+
+.subscription-card h3,
+.subscription-card p,
+.subscription-card li {
+  font-family: "Parkinsans", serif;
+}
+
+
+.subscription-card.selected h3,
+.subscription-card.selected p,
+.subscription-card.selected li {
+  color: #fff;
+}
 
 /* Signup */
 /* Tabs Container */
@@ -238,7 +279,7 @@
 /* Home Page */
 
 .home-hero-sec {
-    padding-top: 100px;
+    padding-top: 150px;
     padding-bottom: 100px;
 }
 

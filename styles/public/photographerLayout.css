@@ -44,7 +44,7 @@ body.photographer-layout {
   height: 100vh;
   text-align: center;
   padding-left: 40px;
-  padding-top: 50px;
+  padding-top: 100px;
 }
 
 .sidebar-container ul {
@@ -127,7 +127,7 @@ width: fit-content;
 .mobile-hamburger-btn {
   display: none; /* default hidden on large screens */
   position: fixed;
-  top: 60px; 
+  top: 70px; 
   left: 0px;
   background: #fff;
   border: none;
@@ -237,7 +237,7 @@ text-align: left;
 
 /* album-page */
 .album-page {
-  padding-top: 70px;
+  padding-top: 100px;
   padding-left: 50px;
   padding-right: 20px;
 }
@@ -1125,6 +1125,44 @@ text-align: left;
 .change-profile-section {
   display: flex;
   gap: 10px;
+}
+
+.subscription-card { 
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px;
+  cursor: pointer;
+  background-color: #00000000;
+}
+
+.subscription-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.subscription-card ul li {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 0.2fr;
+}
+
+.subscription-card.selected {
+  background-color: #000;
+  transition: all 0.3s ease-in-out;
+
+}
+
+.subscription-card h3,
+.subscription-card p,
+.subscription-card li {
+  font-family: "Parkinsans", serif;
+}
+
+
+.subscription-card.selected h3,
+.subscription-card.selected p,
+.subscription-card.selected li {
+  color: #fff;
 }
 
 @media screen and (max-width: 1400px) {

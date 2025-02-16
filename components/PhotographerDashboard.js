@@ -410,11 +410,7 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
                   <td>{album.title}</td>
                   <td>{album.category}</td>
                   <td>{album.viewCount}</td>
-                  <td>
-                    <Link href={`/${username.toLowerCase()}/albums/${album.slug}`} passHref target="_blank" rel="noopener noreferrer">
-                     View Album
-                    </Link>
-                  </td>
+                  <td><Link href={`/${username.toLowerCase()}/albums/${album.slug}`} passHref target="_blank" rel="noopener noreferrer">View Album </Link></td>
                 </tr>
               ))}
             </tbody>
@@ -479,23 +475,10 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
             <tbody>
               {topPhotos.map(photo => (
                 <tr key={photo.id}>
-                  <td>
-                    {/* Using Next.js Image component for optimized image loading */}
-                    <Image 
-                      src={photo.thumbnailUrl} 
-                      alt={photo.title} 
-                      width={100} 
-                      height={100} 
-                      className="photo-thumbnail" 
-                    />
-                  </td>
-                  <td>{photo.category}</td> {/* Display Category */}
+                  <td><Image  src={photo.thumbnailUrl} alt={photo.title} width={100} height={100} className="photo-thumbnail" /></td>
+                  <td>{photo.category}</td> 
                   <td>{photo.viewCount}</td>
-                  <td>
-                    <Link href={`/${username.toLowerCase()}/albums/${photo.albumSlug}`} passHref target="_blank" rel="noopener noreferrer">
-                      View in Album
-                    </Link>
-                  </td>
+                  <td><Link href={`/${username.toLowerCase()}/albums/${photo.albumSlug}`} passHref target="_blank" rel="noopener noreferrer">View in Album</Link></td>
                 </tr>
               ))}
             </tbody>
@@ -549,23 +532,10 @@ export default function Dashboard({ snapshot, chartData, albumChartData, firstna
             <tbody>
               {topLikedPhotos.map(photo => (
                 <tr key={photo.id}>
-                  <td>
-                    {/* Using Next.js Image component for optimized image loading */}
-                    <Image 
-                      src={photo.thumbnailUrl} 
-                      alt={photo.title} 
-                      width={100} 
-                      height={100} 
-                      className="photo-thumbnail" 
-                    />
-                  </td>
+                  <td><Image src={photo.thumbnailUrl} alt={photo.title} width={100} height={100}  className="photo-thumbnail" /></td>
                   <td>{photo.category}</td>
                   <td>{photo.likeCount}</td>
-                  <td>
-                    <Link href={`/${username.toLowerCase()}/albums/${photo.albumSlug}`} passHref target="_blank" rel="noopener noreferrer">
-                      View in Album
-                    </Link>
-                  </td>
+                  <td><Link href={`/${username.toLowerCase()}/albums/${photo.albumSlug}`} passHref target="_blank" rel="noopener noreferrer">View in Album</Link></td>
                 </tr>
               ))}
             </tbody>

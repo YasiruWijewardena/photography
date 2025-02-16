@@ -8,56 +8,36 @@ import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
 import Image from 'next/image'; // Import Next.js Image component
+import { useScrollContext } from '../context/ScrollContext'; // Import the ScrollContext
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const { scrollInfo } = useScrollContext(); 
 
   // State to control Navbar visibility
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [hasShadow, setHasShadow] = useState(false);
 
-  // Throttle function to limit the rate at which a function can fire.
-  const throttle = (func, delay) => {
-    let lastCall = 0;
-    return (...args) => {
-      const now = new Date().getTime();
-      if (now - lastCall < delay) {
-        return;
-      }
-      lastCall = now;
-      return func(...args);
-    };
-  };
-
   useEffect(() => {
-    const handleScroll = throttle(() => {
-      const currentScrollY = window.scrollY;
+    const handleScroll = () => {
+      const currentScrollY = scrollInfo.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down and scrolled more than 50px
         setShowNavbar(false);
       } else {
-        // Scrolling up
         setShowNavbar(true);
       }
-
-      if (currentScrollY > 0) {
-        setHasShadow(true);
-      } else {
-        setHasShadow(false);
-      }
+    
+      setHasShadow(currentScrollY > 0);
 
       setLastScrollY(currentScrollY);
-    }, 200); // Adjust the delay as needed
+    }
 
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [lastScrollY]);
+    handleScroll(); 
+  }, [scrollInfo.scrollY]);
 
   return (
     <nav

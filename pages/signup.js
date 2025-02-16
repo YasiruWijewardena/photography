@@ -1,10 +1,10 @@
 // // pages/signup.js
 
 // import { useState, useEffect } from 'react';
-// import { signIn, signOut, useSession, getSession } from 'next-auth/react';
+// import { signIn, useSession } from 'next-auth/react';
 // import { useRouter } from 'next/router';
 // import axios from 'axios';
-// import ProgressBar from '../components/ProgressBar';
+// import ProgressBar from '../components/ProgressBar'; // Optional
 // import { validateEmail, validatePassword, validateMobileNum } from '../lib/validationUtils';
 // import '../styles/public/home.css';
 // import '../styles/public/global.css';
@@ -44,23 +44,23 @@
 //     fetchSubscriptions();
 //   }, []);
 
-//   // Handle redirection after Google OAuth sign-in
+//   // Determine if user is completing an incomplete signup
 //   useEffect(() => {
 //     if (status === 'loading') return;
-//     if (status === 'authenticated') {
-//       // If user is authenticated but has no role, proceed to role selection
-//       if (!session.user.role || session.user.role === 'pending') {
-//         setStep(2);
-//       } else {
-//         // User has role; redirect accordingly
-//         if (session.user.role === 'customer') {
-//           router.push('/login');
-//         } else if (session.user.role === 'photographer') {
-//           setStep(3);
-//         }else {
-//           router.push('/'); // Default redirect
-//         }
+
+//     if (status === 'authenticated' && session) {
+//       if (session.user.role === 'pending') {
+//         setStep(2); // Move to role assignment step
+//       } else if (session.user.role === 'photographer' && !session.user.photographer_id) {
+//         setStep(3); // Move to photographer details step
+//       } else if (session.user.role === 'photographer' && session.user.photographer_id) {
+//         // Redirect to photographer dashboard
+//         router.push('/');
+//       } else if (session.user.role === 'customer') {
+//         // Redirect to customer dashboard
+//         router.push('/customer/dashboard');
 //       }
+//       // Add more conditions if there are other incomplete states
 //     }
 //   }, [session, status, router]);
 
@@ -128,10 +128,8 @@
 
 //       if (res.status === 200) {
 //         if (role === 'customer') {
-//           // Sign out the user to clear the current session
-//           await signOut({ redirect: false });
-//           // Redirect to login page
-//           router.push('/login');
+//           // Reload the page to refresh the session and trigger useEffect
+//           router.reload();
 //         } else if (role === 'photographer') {
 //           // Proceed to photographer details
 //           setStep(3);
@@ -188,15 +186,13 @@
 //       });
 
 //       if (res.status === 200) {
-//          // Sign out the user to clear the current session
-//          await signOut({ redirect: false });
-//          // Redirect to login page
-//          router.push('/login');
+//         // Reload the page to refresh the session and trigger useEffect
+//         router.reload();
 //       }
 //     } catch (err) {
 //       console.error(err);
 //       setError(err.response?.data?.error || 'An error occurred during photographer signup.');
-//       setStep(1); // Reset to initial step
+//       setStep(2); // Optionally, reset to role assignment
 //     }
 //   };
 
@@ -224,168 +220,158 @@
 //           </div>
 
 //           <form onSubmit={handleTraditionalSubmit} className="signup-form">
-//           {error && <p className="error">{error}</p>}
+//             {error && <p className="error">{error}</p>}
 
-          
-
-//           <div className="signup-input-container">
-//             <label>First Name:</label>
-//             <input
-//               type="text"
-//               name="firstname"
-//               value={signupData.firstname}
-//               onChange={(e) => setSignupData({ ...signupData, firstname: e.target.value })}
-//               required
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Last Name:</label>
-//             <input
-//               type="text"
-//               name="lastname"
-//               value={signupData.lastname}
-//               onChange={(e) => setSignupData({ ...signupData, lastname: e.target.value })}
-//               required
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Email:</label>
-//             <input
-//               type="email"
-//               name="email"
-//               value={signupData.email}
-//               onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-//               required
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Password:</label>
-//             <input
-//               type="password"
-//               name="password"
-//               value={signupData.password}
-//               onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-//               required
-//               minLength={6}
-//             />
-//           </div>
-//           <button type="submit" className="signup-submit">Continue</button>
-          
-//         </form>
+//             <div className="signup-input-container">
+//               <label>First Name:</label>
+//               <input
+//                 type="text"
+//                 name="firstname"
+//                 value={signupData.firstname}
+//                 onChange={(e) => setSignupData({ ...signupData, firstname: e.target.value })}
+//                 required
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Last Name:</label>
+//               <input
+//                 type="text"
+//                 name="lastname"
+//                 value={signupData.lastname}
+//                 onChange={(e) => setSignupData({ ...signupData, lastname: e.target.value })}
+//                 required
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Email:</label>
+//               <input
+//                 type="email"
+//                 name="email"
+//                 value={signupData.email}
+//                 onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+//                 required
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Password:</label>
+//               <input
+//                 type="password"
+//                 name="password"
+//                 value={signupData.password}
+//                 onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+//                 required
+//                 minLength={6}
+//               />
+//             </div>
+//             <button type="submit" className="signup-submit">Continue</button>
+//           </form>
 //         </div>
-        
 //       )}
 
 //       {/* Step 2: Role Selection */}
 //       {step === 2 && (
 //         <div className="role-selection signup-container">
-//           <h2>Almost there </h2>
+//           <h2>Almost there</h2>
 //           {error && <p className="error">{error}</p>}
 //           <div className='roles-container'> 
 //             <div className='roles-inner'>
-//               <p>Sign up as a Customer to view stunning photography from best photographers</p>
+//               <p>Sign up as a Customer to view stunning photography from the best photographers.</p>
 //               <button onClick={() => handleRoleSelect('customer')} className="roles-submit">
 //                 Customer
 //               </button>
 //             </div>
 //             <div className='roles-inner'>
-//             <p>Sign up as a photographer to showcase your stunning portfolio</p>
+//               <p>Sign up as a Photographer to showcase your stunning portfolio.</p>
 //               <button onClick={() => handleRoleSelect('photographer')} className="roles-submit">
 //                 Photographer
 //               </button>
 //             </div>
-            
-            
 //           </div>
-          
 //         </div>
 //       )}
 
 //       {/* Step 3: Photographer Details Form */}
 //       {step === 3 && (
 //         <div className='photographer-details-form signup-container'>
-//         <h2>Final step </h2>
-//         <form onSubmit={handlePhotographerSubmit} className="signup-form">
-//           {error && <p className="error">{error}</p>}
-//           <div className="signup-input-container">
-//             <label>Bio:</label>
-//             <textarea
-//               name="bio"
-//               value={signupData.bio}
-//               onChange={(e) => setSignupData({ ...signupData, bio: e.target.value })}
-//               required
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Website:</label>
-//             <input
-//               type="url"
-//               name="website"
-//               value={signupData.website}
-//               onChange={(e) => setSignupData({ ...signupData, website: e.target.value })}
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Instagram:</label>
-//             <input
-//               type="text"
-//               name="instagram"
-//               value={signupData.instagram}
-//               onChange={(e) => setSignupData({ ...signupData, instagram: e.target.value })}
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Mobile Number:</label>
-//             <input
-//               type="tel"
-//               name="mobile_num"
-//               value={signupData.mobile_num}
-//               onChange={(e) => setSignupData({ ...signupData, mobile_num: e.target.value })}
-//               required
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Address:</label>
-//             <input
-//               type="text"
-//               name="address"
-//               value={signupData.address}
-//               onChange={(e) => setSignupData({ ...signupData, address: e.target.value })}
-//               required
-//             />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Profile Picture:</label>
-//             <input type="file" name="profile_picture" accept="image/*" onChange={handleFileChange} />
-//           </div>
-//           <div className="signup-input-container">
-//             <label>Subscription Plan:</label>
-//             <select
-//               name="subscription_id"
-//               value={signupData.subscription_id}
-//               onChange={(e) => setSignupData({ ...signupData, subscription_id: e.target.value })}
-//               required
-//             >
-//               <option value="">Select Subscription</option>
-//               {subscriptions.map((sub) => (
-//                 <option key={sub.id} value={sub.id}>
-//                   {sub.name} - ${sub.price}/month
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//           <button type="submit" className="signup-submit">Complete Signup</button>
-//         </form>
+//           <h2>Final Step</h2>
+//           <form onSubmit={handlePhotographerSubmit} className="signup-form">
+//             {error && <p className="error">{error}</p>}
+//             <div className="signup-input-container">
+//               <label>Bio:</label>
+//               <textarea
+//                 name="bio"
+//                 value={signupData.bio}
+//                 onChange={(e) => setSignupData({ ...signupData, bio: e.target.value })}
+//                 required
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Website:</label>
+//               <input
+//                 type="url"
+//                 name="website"
+//                 value={signupData.website}
+//                 onChange={(e) => setSignupData({ ...signupData, website: e.target.value })}
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Instagram:</label>
+//               <input
+//                 type="text"
+//                 name="instagram"
+//                 value={signupData.instagram}
+//                 onChange={(e) => setSignupData({ ...signupData, instagram: e.target.value })}
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Mobile Number:</label>
+//               <input
+//                 type="tel"
+//                 name="mobile_num"
+//                 value={signupData.mobile_num}
+//                 onChange={(e) => setSignupData({ ...signupData, mobile_num: e.target.value })}
+//                 required
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Address:</label>
+//               <input
+//                 type="text"
+//                 name="address"
+//                 value={signupData.address}
+//                 onChange={(e) => setSignupData({ ...signupData, address: e.target.value })}
+//                 required
+//               />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Profile Picture:</label>
+//               <input type="file" name="profile_picture" accept="image/*" onChange={handleFileChange} />
+//             </div>
+//             <div className="signup-input-container">
+//               <label>Subscription Plan:</label>
+//               <select
+//                 name="subscription_id"
+//                 value={signupData.subscription_id}
+//                 onChange={(e) => setSignupData({ ...signupData, subscription_id: e.target.value })}
+//                 required
+//               >
+//                 <option value="">Select Subscription</option>
+//                 {subscriptions.map((sub) => (
+//                   <option key={sub.id} value={sub.id}>
+//                     {sub.name} - ${sub.price}/month
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+//             <button type="submit" className="signup-submit">Complete Signup</button>
+//           </form>
 //         </div>
-        
 //       )}
 //     </div>
 //   );
 // };
 
 // export default Signup;
-
-// pages/signup.js
 
 import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
@@ -677,7 +663,7 @@ const Signup = () => {
         </div>
       )}
 
-      {/* Step 3: Photographer Details Form */}
+      {/* Step 3: Photographer Details Form with Subscription Cards */}
       {step === 3 && (
         <div className='photographer-details-form signup-container'>
           <h2>Final Step</h2>
@@ -732,24 +718,40 @@ const Signup = () => {
             </div>
             <div className="signup-input-container">
               <label>Profile Picture:</label>
-              <input type="file" name="profile_picture" accept="image/*" onChange={handleFileChange} />
+              <input type="file" name="profile_picture" accept="image/*" onChange={(e) => {
+                setSignupData({ ...signupData, profile_picture: e.target.files[0] });
+              }} />
             </div>
+
+            {/* Subscription Plan Selection using Cards */}
             <div className="signup-input-container">
-              <label>Subscription Plan:</label>
-              <select
-                name="subscription_id"
-                value={signupData.subscription_id}
-                onChange={(e) => setSignupData({ ...signupData, subscription_id: e.target.value })}
-                required
-              >
-                <option value="">Select Subscription</option>
-                {subscriptions.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name} - ${sub.price}/month
-                  </option>
-                ))}
-              </select>
+              <label>Select Subscription Plan:</label>
+              <div className="subscriptions-cards">
+                {subscriptions.length ? (
+                  subscriptions.map((sub) => (
+                    <div
+                      key={sub.id}
+                      className={`subscription-card ${signupData.subscription_id === sub.id.toString() ? 'selected' : ''}`}
+                      onClick={() => setSignupData({ ...signupData, subscription_id: sub.id.toString() })}
+                    >
+                      <h3>{sub.name}</h3>
+                      <p>LKR {sub.price}/month</p>
+                      <p>{sub.description}</p>
+                      {sub.planFeatures && sub.planFeatures.length > 0 && (
+                        <ul>
+                          {sub.planFeatures.map((pf, idx) => (
+                            <li key={idx}><span>{pf.subscriptionFeature.key} </span><span>{pf.subscriptionFeature.description} </span><span>{pf.value}</span> </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p>No subscription plans available.</p>
+                )}
+              </div>
             </div>
+
             <button type="submit" className="signup-submit">Complete Signup</button>
           </form>
         </div>

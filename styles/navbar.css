@@ -2,14 +2,14 @@
 
 .navbar {
   background-color: #fff;
-  padding: 10px 20px;
+  padding: 10px 0px 10px 20px;
   position: fixed; 
   top: 10px;
   left: 0;
   right: 0;
   z-index: 1000; 
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  width: 90%;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, width 0.3s ease-in-out;
+  width: 98%;
   margin: auto;
   border-radius: 20px;
   box-shadow: none;
@@ -31,6 +31,7 @@
 .navbar-shadow {
   box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
     rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  width: 90%;
 }
 
 .navbar-container {
@@ -102,6 +103,14 @@
 }
 
 @media screen and (max-width: 768px) {
+
+  .navbar {
+    width:90%;
+  }
+
+  .navbar-shadow {
+    width: 85%;
+  }
 
   .nav-bar-mobile-items {
     display: block;
