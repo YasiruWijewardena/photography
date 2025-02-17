@@ -2,7 +2,7 @@
 
 .navbar {
   background-color: #fff;
-  padding: 10px 0px 10px 20px;
+  padding: 10px 10px 10px 20px;
   position: fixed; 
   top: 10px;
   left: 0;
@@ -102,6 +102,104 @@
   display: none;
 }
 
+.navbar-button {
+  background-color: #000;
+  color: #fff!important;
+  padding: 5px;
+  border-radius: 10px;
+}
+
+.navbar-button:hover {
+  color: #fff;
+}
+
+.login-options {
+  display: flex;
+}
+
+.only-mobile {
+  display: none;
+}
+
+/* Add to styles/Navbar.css or your corresponding CSS file */
+
+.dropdown-menu {
+  position: fixed;
+  top: 70px; 
+  width: fit-content;
+  right: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+              rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  list-style: none;
+  padding: 10px;
+  z-index: 1100;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  column-gap: 10px;
+  padding: 8px 12px;
+  color: #555;
+  text-decoration: none;
+  font-size: 16px;
+  font-family: "Parkinsans", serif;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.login-options-mobile {
+  margin-top: 20px;
+}
+
+/* Animation Classes */
+.slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+.slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+.nav-bar-arrow-down {
+  transform: rotate(0deg);
+  transition: all 0.3s ease-in-out;
+}
+
+.nav-bar-arrow-up {
+  transform: rotate(180deg);
+  transition: all 0.3s ease-in-out;
+}
+
+
 @media screen and (max-width: 768px) {
 
   .navbar {
@@ -120,10 +218,6 @@
     display: none;
   }
 
-  .navbar-item-text {
-    display: none;
-  }
-
   .navbar-container {
     display: flex;
     align-items: center;
@@ -138,4 +232,33 @@
   .navbar-auth .navbar-item {
     margin: 0;
   }
+
+  .only-desktop {
+    display: none;
+  }
+
+  .only-mobile {
+    display: flex;
+    align-items: center;
+    column-gap: 20px;
+  }
+
+  .only-mobile-dropdown {
+    display: block;
+  }
+
+  .navbar-button {
+    width: fit-content;
+  }
+
+  .only-mobile .navbar-button {
+    opacity: 1;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .only-mobile .navbar-button-hidden {
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+  }
+
 }
