@@ -18,3 +18,18 @@
     margin-right: auto;
     color: #555;
 }
+
+.join-now-button-container {
+    display: flex;
+    justify-content: center;
+}
+
+.join-now-button {
+    background-color: black;
+    color: #fff;
+    font-family: "Parkinsans", serif;
+    font-size: 24px;
+    padding: 10px 30px;
+    border-radius: 20px;
+    margin: auto;
+}

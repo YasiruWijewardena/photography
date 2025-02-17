@@ -1,5 +1,4 @@
 // // pages/signup.js
-
 // import { useState, useEffect } from 'react';
 // import { signIn, useSession } from 'next-auth/react';
 // import { useRouter } from 'next/router';
@@ -290,7 +289,7 @@
 //         </div>
 //       )}
 
-//       {/* Step 3: Photographer Details Form */}
+//       {/* Step 3: Photographer Details Form with Subscription Cards */}
 //       {step === 3 && (
 //         <div className='photographer-details-form signup-container'>
 //           <h2>Final Step</h2>
@@ -345,24 +344,40 @@
 //             </div>
 //             <div className="signup-input-container">
 //               <label>Profile Picture:</label>
-//               <input type="file" name="profile_picture" accept="image/*" onChange={handleFileChange} />
+//               <input type="file" name="profile_picture" accept="image/*" onChange={(e) => {
+//                 setSignupData({ ...signupData, profile_picture: e.target.files[0] });
+//               }} />
 //             </div>
+
+//             {/* Subscription Plan Selection using Cards */}
 //             <div className="signup-input-container">
-//               <label>Subscription Plan:</label>
-//               <select
-//                 name="subscription_id"
-//                 value={signupData.subscription_id}
-//                 onChange={(e) => setSignupData({ ...signupData, subscription_id: e.target.value })}
-//                 required
-//               >
-//                 <option value="">Select Subscription</option>
-//                 {subscriptions.map((sub) => (
-//                   <option key={sub.id} value={sub.id}>
-//                     {sub.name} - ${sub.price}/month
-//                   </option>
-//                 ))}
-//               </select>
+//               <label>Select Subscription Plan:</label>
+//               <div className="subscriptions-cards">
+//                 {subscriptions.length ? (
+//                   subscriptions.map((sub) => (
+//                     <div
+//                       key={sub.id}
+//                       className={`subscription-card ${signupData.subscription_id === sub.id.toString() ? 'selected' : ''}`}
+//                       onClick={() => setSignupData({ ...signupData, subscription_id: sub.id.toString() })}
+//                     >
+//                       <h3>{sub.name}</h3>
+//                       <p>LKR {sub.price}/month</p>
+//                       <p>{sub.description}</p>
+//                       {sub.planFeatures && sub.planFeatures.length > 0 && (
+//                         <ul>
+//                           {sub.planFeatures.map((pf, idx) => (
+//                             <li key={idx}><span>{pf.subscriptionFeature.key} </span><span>{pf.subscriptionFeature.description} </span><span>{pf.value}</span> </li>
+//                           ))}
+//                         </ul>
+//                       )}
+//                     </div>
+//                   ))
+//                 ) : (
+//                   <p>No subscription plans available.</p>
+//                 )}
+//               </div>
 //             </div>
+
 //             <button type="submit" className="signup-submit">Complete Signup</button>
 //           </form>
 //         </div>
@@ -373,6 +388,7 @@
 
 // export default Signup;
 
+// pages/signup.js
 import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -402,6 +418,8 @@ const Signup = () => {
     subscription_id: '',
   });
   const [error, setError] = useState('');
+  // New state to ensure auto-assignment runs only once
+  const [autoAssigned, setAutoAssigned] = useState(false);
 
   // Fetch subscriptions from the API
   useEffect(() => {
@@ -433,9 +451,25 @@ const Signup = () => {
         // Redirect to customer dashboard
         router.push('/customer/dashboard');
       }
-      // Add more conditions if there are other incomplete states
     }
   }, [session, status, router]);
+
+  // New effect: if the URL contains ?role=photographer and the user is pending,
+  // auto assign the photographer role and move to step 3.
+  useEffect(() => {
+    if (
+      router.query.role === 'photographer' &&
+      status === 'authenticated' &&
+      session &&
+      session.user.role === 'pending' &&
+      !autoAssigned
+    ) {
+      // Call the role assignment API
+      handleRoleSelect('photographer');
+      setAutoAssigned(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query, status, session, autoAssigned]);
 
   // Handle traditional signup form submission
   const handleTraditionalSubmit = async (e) => {
@@ -475,7 +509,7 @@ const Signup = () => {
         if (signInRes.error) {
           setError(signInRes.error);
         } else {
-          // Proceed to role selection
+          // Proceed to role selection; the new effect will auto-assign if applicable.
           setStep(2);
         }
       }
@@ -641,7 +675,7 @@ const Signup = () => {
         </div>
       )}
 
-      {/* Step 2: Role Selection */}
+      {/* Step 2: Role Selection (This step will be auto-handled if ?role=photographer was passed) */}
       {step === 2 && (
         <div className="role-selection signup-container">
           <h2>Almost there</h2>
@@ -740,7 +774,11 @@ const Signup = () => {
                       {sub.planFeatures && sub.planFeatures.length > 0 && (
                         <ul>
                           {sub.planFeatures.map((pf, idx) => (
-                            <li key={idx}><span>{pf.subscriptionFeature.key} </span><span>{pf.subscriptionFeature.description} </span><span>{pf.value}</span> </li>
+                            <li key={idx}>
+                              <span>{pf.subscriptionFeature.key} </span>
+                              <span>{pf.subscriptionFeature.description} </span>
+                              <span>{pf.value}</span>
+                            </li>
                           ))}
                         </ul>
                       )}

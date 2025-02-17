@@ -28,7 +28,11 @@ export default async function handler(req, res) {
       include: {
         Photographer: {
           include: {
-            Subscription: true,
+            subscriptions: {
+              where: { active: true },
+              include: { subscriptionPlan: { select: { name: true, id: true } } },
+              take: 1,
+            },
           },
         },
         Customer: true,
