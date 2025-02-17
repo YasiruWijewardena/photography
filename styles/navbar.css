@@ -238,6 +238,12 @@
   }
 
   .only-mobile {
+    display: flex;
+    align-items: center;
+    column-gap: 20px;
+  }
+
+  .only-mobile-dropdown {
     display: block;
   }
 
@@ -245,5 +251,14 @@
     width: fit-content;
   }
 
+  .only-mobile .navbar-button {
+    opacity: 1;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .only-mobile .navbar-button-hidden {
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+  }
 
 }

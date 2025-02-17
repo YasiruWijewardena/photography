@@ -151,13 +151,23 @@ export default function Navbar() {
                   <Link href="/login" className="navbar-item">
                     Login
                   </Link>
-                  <Link href="/login" className="navbar-item navbar-button">
+                  <Link href="/join-as-a-photographer" className="navbar-item navbar-button">
                     Join as a Photographer
                   </Link>
                 </div>
 
                 {/* Mobile arrow for dropdown */}
                 <div className='only-mobile'>
+                  {!isDropdownVisible ? (
+                    <Link href="/join-as-a-photographer" className="navbar-item navbar-button">
+                      Join as a Photographer
+                    </Link>
+                  ): (
+                    <Link href="/join-as-a-photographer" className="navbar-item navbar-button navbar-button-hidden">
+                      Join as a Photographer
+                    </Link>
+                  )}
+                  
                   {!isDropdownVisible ? (
                     <KeyboardArrowDownIcon onClick={toggleDropdown} style={{ cursor: 'pointer' }} className='nav-bar-arrow-down'/>
                   ) : (
@@ -172,7 +182,7 @@ export default function Navbar() {
 
       {/* Mobile Dropdown Menu */}
       {isDropdownVisible && (
-        <div className={`dropdown-menu only-mobile ${dropdownAnimation}`}>
+        <div className={`dropdown-menu only-mobile-dropdown ${dropdownAnimation}`}>
           <Link href="/albums" className="dropdown-item" onClick={closeDropdown}>
             <CollectionsRoundedIcon className="icon" />
             <span className='navbar-item-text'>Albums</span>
@@ -191,7 +201,7 @@ export default function Navbar() {
           <Link href="/login" className="dropdown-item" onClick={closeDropdown}>
             Login
           </Link>
-          <Link href="/login" className="dropdown-item navbar-button" onClick={closeDropdown}>
+          <Link href="/join-as-a-photographer" className="dropdown-item navbar-button" onClick={closeDropdown}>
             Join as a Photographer
           </Link>
         </div>
