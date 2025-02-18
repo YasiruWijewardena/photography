@@ -927,18 +927,18 @@ text-align: left;
 .album-card {
   text-decoration: none;
   color: inherit;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
   overflow: hidden;
   transition: box-shadow 0.3s;
 }
 
 .photographer-albums .albums-grid .album-card img {
   width: 100%;
+  border-radius: 8px;
 }
 
-.album-card:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+.photographer-albums .albums-grid .album-card h4 {
+  text-align: center;
+  font-weight: 500;
 }
 
 .album-cover {

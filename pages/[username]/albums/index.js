@@ -76,7 +76,7 @@ export default function AlbumsList({
               src={album.cover_photo_url || '/default-album.png'}
               alt={album.title}
               width={300}
-              height={200}
+              height={300}
               className="album-cover"
             />
             <h4>{album.title}</h4>
