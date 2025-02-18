@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
@@ -19,29 +19,44 @@ export default function Navbar() {
 
   // State to control Navbar visibility
   const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  //const [lastScrollY, setLastScrollY] = useState(0);
   const [hasShadow, setHasShadow] = useState(false);
   
   // States to control mobile dropdown menu and animation
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [dropdownAnimation, setDropdownAnimation] = useState('');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = scrollInfo.scrollY;
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     const currentScrollY = scrollInfo.scrollY;
 
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowNavbar(false);
-      } else {
-        setShowNavbar(true);
-      }
+  //     if (currentScrollY > lastScrollY && currentScrollY > 50) {
+  //       setShowNavbar(false);
+  //     } else {
+  //       setShowNavbar(true);
+  //     }
     
-      setHasShadow(currentScrollY > 0);
-      setLastScrollY(currentScrollY);
-    };
+  //     setHasShadow(currentScrollY > 0);
+  //     setLastScrollY(currentScrollY);
+  //   };
 
-    handleScroll(); 
-  }, [scrollInfo.scrollY, lastScrollY]);
+  //   handleScroll(); 
+  // }, [scrollInfo.scrollY, lastScrollY]);
+
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const currentScrollY = scrollInfo.scrollY;
+    
+    if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+      setShowNavbar(false);
+    } else {
+      setShowNavbar(true);
+    }
+
+    setHasShadow(currentScrollY > 0);
+    lastScrollY.current = currentScrollY;
+  }, [scrollInfo.scrollY]);
 
   const openDropdown = () => {
     setIsDropdownVisible(true);
