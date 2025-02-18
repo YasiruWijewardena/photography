@@ -26,23 +26,6 @@ export default function Navbar() {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [dropdownAnimation, setDropdownAnimation] = useState('');
 
-  // useEffect(() => {
-  //   const handleScroll = () => {
-  //     const currentScrollY = scrollInfo.scrollY;
-
-  //     if (currentScrollY > lastScrollY && currentScrollY > 50) {
-  //       setShowNavbar(false);
-  //     } else {
-  //       setShowNavbar(true);
-  //     }
-    
-  //     setHasShadow(currentScrollY > 0);
-  //     setLastScrollY(currentScrollY);
-  //   };
-
-  //   handleScroll(); 
-  // }, [scrollInfo.scrollY, lastScrollY]);
-
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -131,6 +114,7 @@ export default function Navbar() {
                   <span className='navbar-profil-text'>Hello, {session.user.firstname}</span>
                 </Link>
               ) : session.user.role === 'photographer' ? (
+                <>
                 <Link href={`/${session.user.username}`} className="navbar-item flex items-center">
                   {session.user.profile_picture ? (
                     <>
@@ -142,13 +126,7 @@ export default function Navbar() {
                         className="nav-bar-profile-picture"
                       />
 
-                      <div className='only-mobile'>
-                      {!isDropdownVisible ? (
-                        <KeyboardArrowDownIcon onClick={toggleDropdown} style={{ cursor: 'pointer' }} className='nav-bar-arrow-down'/>
-                      ) : (
-                        <KeyboardArrowDownIcon onClick={toggleDropdown} style={{ cursor: 'pointer' }} className='nav-bar-arrow-up'/>
-                      )}
-                    </div>
+                      
                     </>
                    
 
@@ -157,6 +135,16 @@ export default function Navbar() {
                   )}
                   <span className='navbar-profil-text'>Hello, {session.user.firstname}</span>
                 </Link>
+
+                <div className='only-mobile'>
+                {!isDropdownVisible ? (
+                  <KeyboardArrowDownIcon onClick={toggleDropdown} style={{ cursor: 'pointer' }} className='nav-bar-arrow-down'/>
+                ) : (
+                  <KeyboardArrowDownIcon onClick={toggleDropdown} style={{ cursor: 'pointer' }} className='nav-bar-arrow-up'/>
+                )}
+                </div>
+                </>
+                
               ) : (
                 <span className="navbar-item">Hello, {session.user.firstname}</span>
               )
