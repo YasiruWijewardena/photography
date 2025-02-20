@@ -50,6 +50,7 @@
     "react-select": "^5.8.3",
     "react-swiper": "^0.1.5",
     "sharp": "^0.33.5",
+    "slugify": "^1.6.6",
     "swiper": "^11.2.0"
   },
   "devDependencies": {

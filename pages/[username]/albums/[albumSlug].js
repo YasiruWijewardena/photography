@@ -1,25 +1,25 @@
 // pages/[username]/albums/[albumSlug].js
-
-import { useState, useEffect } from 'react';
+import '../../../styles/public/albums.css';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../api/auth/[...nextauth]'; 
+import { authOptions } from '../../api/auth/[...nextauth]';
 import PhotographerLayout from '../../../components/PhotographerLayout';
-import PhotoSection from '../../../components/PhotoSection';
+import Timeline from '../../../components/Timeline';
 import prisma from '../../../lib/prisma';
 import axios from 'axios';
-
 import AddPhotosModal from '../../../components/AddPhotosModal';
 import AssignPhotosModal from '../../../components/AssignPhotosModal';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import { Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import PropTypes from 'prop-types';
-import analyticsDb from '../../../lib/analyticsPrisma'; 
+import analyticsDb from '../../../lib/analyticsPrisma';
 import { getOrSetAnonymousId } from '../../../lib/anonymousId';
 import { toast } from 'react-hot-toast';
-import { useConfirm } from '../../../context/ConfirmContext'; // Import useConfirm
+import { useConfirm } from '../../../context/ConfirmContext';
+
 
 export default function AlbumPage({
   album,
@@ -30,22 +30,16 @@ export default function AlbumPage({
 }) {
   const router = useRouter();
   const { data: session } = useSession();
-  const { confirm } = useConfirm(); // Use the confirm function from context
+  const { confirm } = useConfirm();
 
   // Basic album state
   const [currentAlbum, setCurrentAlbum] = useState(album || { photographs: [] });
-
   // Edit mode states
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedTitle, setEditedTitle] = useState(currentAlbum.title || '');
   const [editedDescription, setEditedDescription] = useState(currentAlbum.description || '');
-
-  // 1) Our maximum length
   const MAX_DESCRIPTION_LENGTH = 255;
-  // 2) An error message if the user goes beyond the limit
   const [descriptionError, setDescriptionError] = useState('');
-
-  // For selecting / deleting photos, etc.
   const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
   const [isAddPhotosModalOpen, setIsAddPhotosModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -54,7 +48,27 @@ export default function AlbumPage({
   const [loadingAvailableAlbums, setLoadingAvailableAlbums] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
-  // On prop change, reset local album data
+  // Extract chapters (fetched in getServerSideProps)
+  const chapters = currentAlbum.chapters || [];
+
+  // Refs for chapter sections and album content container.
+  const chapterRefs = useRef({});
+  const albumContentRef = useRef(null);
+
+  // IntersectionObserver state for active chapter and overall scroll progress.
+  const [activeChapterId, setActiveChapterId] = useState(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // State for computed chapter positions (each with chapterId, title, offsetPercent)
+  const [chapterPositions, setChapterPositions] = useState([]);
+
+  // Group photographs by chapter
+  const photosByChapter = chapters.map((chapter) => ({
+    chapter,
+    photos: currentAlbum.photographs.filter((photo) => photo.chapterId === chapter.id),
+  }));
+  const unassignedPhotos = currentAlbum.photographs.filter((photo) => !photo.chapterId);
+
   useEffect(() => {
     setCurrentAlbum(album || { photographs: [] });
     setIsEditMode(false);
@@ -63,12 +77,57 @@ export default function AlbumPage({
     setDescriptionError('');
   }, [album]);
 
-  // -----------------------------------
-  // Handling Title / Description
-  // -----------------------------------
+  useEffect(() => {
+    // Set up IntersectionObserver for chapter sections to update activeChapterId.
+    const observerOptions = {
+      root: albumContentRef.current,
+      rootMargin: '0px',
+      threshold: 0.5,
+    };
+    const observerCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveChapterId(entry.target.id); // e.g., "chapter-<id>"
+        }
+      });
+    };
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    Object.values(chapterRefs.current).forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+    return () => observer.disconnect();
+  }, [chapters]);
+
+  useEffect(() => {
+    // Compute chapter positions relative to the album content container.
+    if (albumContentRef.current && chapters.length > 0) {
+      const container = albumContentRef.current;
+      const totalScrollable = container.scrollHeight - container.clientHeight;
+      const effectiveScrollable = totalScrollable > 0 ? totalScrollable : container.scrollHeight;
+      const positions = chapters.map((chapter) => {
+        const el = chapterRefs.current[`chapter-${chapter.id}`];
+        if (el) {
+          const offsetTop = el.offsetTop;
+          const offsetPercent = (offsetTop / effectiveScrollable) * 100;
+          return { chapterId: chapter.id, title: chapter.title, offsetPercent };
+        } else {
+          return { chapterId: chapter.id, title: chapter.title, offsetPercent: 0 };
+        }
+      });
+      console.log("Computed chapterPositions:", positions);
+      setChapterPositions(positions);
+    }
+  }, [chapters, currentAlbum]);
+
+  // Compute scroll progress as a percentage.
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
+    setScrollProgress(progress);
+  };
+
   const handleDescriptionChange = (value) => {
     setEditedDescription(value);
-
     if (value.length > MAX_DESCRIPTION_LENGTH) {
       setDescriptionError(`Description too long! Max is ${MAX_DESCRIPTION_LENGTH} characters.`);
     } else {
@@ -76,20 +135,15 @@ export default function AlbumPage({
     }
   };
 
-  // Toggle album favourite
   const handleToggleAlbumFavourite = async () => {
     if (!session) {
-      toast.error('Please log in to favourite albums!'); // Replaced alert with toast
+      toast.error('Please log in to favourite albums!');
       return;
     }
-
-    // 1) Optimistic UI update
     setCurrentAlbum((prev) => ({
       ...prev,
       isFavourited: !prev.isFavourited,
     }));
-
-    // 2) Decide POST or DELETE
     const method = currentAlbum.isFavourited ? 'DELETE' : 'POST';
     try {
       const res = await fetch(
@@ -99,16 +153,14 @@ export default function AlbumPage({
       if (!res.ok) throw new Error('Request failed');
     } catch (error) {
       console.error('Error toggling favourite:', error);
-      // Roll back
       setCurrentAlbum((prev) => ({
         ...prev,
         isFavourited: !prev.isFavourited,
       }));
-      toast.error('Failed to toggle favourite status.'); // Optional: Notify user of failure
+      toast.error('Failed to toggle favourite status.');
     }
   };
 
-  // Photo selection for editing
   const toggleSelectPhoto = (photoId) => {
     setSelectedPhotoIds((prev) =>
       prev.includes(photoId) ? prev.filter((pid) => pid !== photoId) : [...prev, photoId]
@@ -122,18 +174,15 @@ export default function AlbumPage({
     setDescriptionError('');
   };
 
-  // Deleting photos
   const handleDeletePhotos = async () => {
     if (selectedPhotoIds.length === 0) return;
-
     const confirmDelete = await confirm('Are you sure you want to delete the selected photos?');
     if (!confirmDelete) return;
-
     try {
       await axios.delete('/api/photographs', {
         data: { photoIds: selectedPhotoIds },
       });
-      toast.success('Selected photos deleted successfully.'); // Replaced alert with toast
+      toast.success('Selected photos deleted successfully.');
       setCurrentAlbum((prev) => ({
         ...prev,
         photographs: prev.photographs.filter((p) => !selectedPhotoIds.includes(p.id)),
@@ -141,11 +190,10 @@ export default function AlbumPage({
       setSelectedPhotoIds([]);
     } catch (error) {
       console.error('Error deleting photos:', error);
-      toast.error('Failed to delete photos.'); // Replaced alert with toast
+      toast.error('Failed to delete photos.');
     }
   };
 
-  // Assigning photos
   const fetchAvailableAlbums = async () => {
     setLoadingAvailableAlbums(true);
     try {
@@ -155,7 +203,7 @@ export default function AlbumPage({
       setAvailableAlbums(res.data.albums || []);
     } catch (error) {
       console.error('Error fetching available albums:', error);
-      toast.error('Failed to fetch available albums.'); // Replaced alert with toast
+      toast.error('Failed to fetch available albums.');
     } finally {
       setLoadingAvailableAlbums(false);
     }
@@ -169,18 +217,16 @@ export default function AlbumPage({
 
   const handleConfirmAssignment = async () => {
     if (!selectedTargetAlbum) {
-      toast.error('Please select an album to assign the photos to.'); // Replaced alert with toast
+      toast.error('Please select an album to assign the photos to.');
       return;
     }
     const targetAlbumId = selectedTargetAlbum.id;
-
     try {
       setAssigning(true);
       await axios.post('/api/photographs/assign', {
         photoIds: selectedPhotoIds,
         targetAlbumId,
       });
-     
       setCurrentAlbum((prev) => ({
         ...prev,
         photographs: prev.photographs.filter((p) => !selectedPhotoIds.includes(p.id)),
@@ -188,20 +234,18 @@ export default function AlbumPage({
       setSelectedPhotoIds([]);
       setIsAssignModalOpen(false);
       setSelectedTargetAlbum(null);
-      toast.success('Photos moved successfully.'); // Optional: Notify user of success
+      toast.success('Photos moved successfully.');
     } catch (error) {
       console.error('Error assigning photos:', error);
-      toast.error('Failed to assign photos.'); // Replaced alert with toast
+      toast.error('Failed to assign photos.');
     } finally {
       setAssigning(false);
     }
   };
 
-  // Save Album changes (title/description)
   const handleSaveAlbumChanges = async () => {
-    // If there's an error or user typed too many chars, block
     if (descriptionError) {
-      toast.error('Please fix the description length before saving.'); // Replaced alert with toast
+      toast.error('Please fix the description length before saving.');
       return;
     }
     try {
@@ -209,40 +253,44 @@ export default function AlbumPage({
         title: editedTitle,
         description: editedDescription,
       });
-      toast.success('Album updated successfully.'); // Replaced alert with toast
+      toast.success('Album updated successfully.');
       setCurrentAlbum((prev) => ({
         ...prev,
         title: response.data.album.title,
         description: response.data.album.description,
-        slug: response.data.album.slug, 
+        slug: response.data.album.slug,
       }));
       setIsEditMode(false);
     } catch (error) {
       console.error('Error updating album:', error);
-      toast.error('Failed to update album.'); // Replaced alert with toast
+      toast.error('Failed to update album.');
     }
   };
 
-  // Delete entire album
   const handleDeleteAlbum = async () => {
     const confirmDelete = await confirm('Are you sure you want to delete this album and all its photos?');
     if (!confirmDelete) return;
-
     try {
       await axios.delete(`/api/albums/${currentAlbum.slug}`);
-      toast.success('Album deleted successfully.'); // Replaced alert with toast
+      toast.success('Album deleted successfully.');
       router.push(`/${photographerUsername}/albums`);
     } catch (error) {
       console.error('Error deleting album:', error);
-      toast.error('Failed to delete album.'); // Replaced alert with toast
+      toast.error('Failed to delete album.');
     }
   };
 
-  // Photos added callback
   const handlePhotosAdded = () => {
-    toast.success('Photos added successfully.'); // Optional: Notify user
-    // reload to see newly added photos
+    toast.success('Photos added successfully.');
     router.reload();
+  };
+
+  // Handler for timeline clicks – scroll to the corresponding chapter section.
+  const handleTimelineClick = (chapterId) => {
+    const el = chapterRefs.current[`chapter-${chapterId}`];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   if (!album) {
@@ -250,138 +298,165 @@ export default function AlbumPage({
   }
 
   return (
-    <div className="album-page">
-      {/* Album Title & Description */}
-      {!isEditMode ? (
-        <>
-          <h1 className="album-title">{currentAlbum.title}</h1>
-          <p className="album-desc">{currentAlbum.description}</p>
+    <div className="album-page" style={{ display: 'flex' }}>
+      {/* Timeline Sidebar with computed chapterPositions and scroll progress */}
+      <Timeline
+        chapterPositions={chapterPositions}
+        progress={scrollProgress}
+        onChapterClick={handleTimelineClick}
+      />
 
-          {/* Favourite (Bookmark) Icon */}
-          {!isOwner && (
-            <IconButton
-              onClick={handleToggleAlbumFavourite}
-              aria-label={
-                currentAlbum.isFavourited ? 'Remove from favourites' : 'Add to favourites'
-              }
-              className="favourite-btn"
-            >
-              {currentAlbum.isFavourited ? <Bookmark /> : <BookmarkBorder />}
-            </IconButton>
-          )}
-
-          {isOwner && (
-            <div className="modal-actions">
-              <button
-                onClick={() => setIsEditMode(true)}
-                className="edit-button"
-                aria-label="Edit Album"
+      <div
+        className="album-content"
+        ref={albumContentRef}
+        style={{ flex: 1, overflowY: 'auto', height: '100vh', padding: '0 20px' }}
+        onScroll={handleScroll}
+      >
+        {/* Album Title & Description */}
+        {!isEditMode ? (
+          <>
+            <h1 className="album-title">{currentAlbum.title}</h1>
+            <p className="album-desc">{currentAlbum.description}</p>
+            {!isOwner && (
+              <IconButton
+                onClick={handleToggleAlbumFavourite}
+                aria-label={currentAlbum.isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                className="favourite-btn"
               >
-                <EditRoundedIcon />
+                {currentAlbum.isFavourited ? <Bookmark /> : <BookmarkBorder />}
+              </IconButton>
+            )}
+            {isOwner && (
+              <div className="modal-actions">
+                <button onClick={() => setIsEditMode(true)} className="edit-button" aria-label="Edit Album">
+                  <EditRoundedIcon />
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <h1>
+              <input
+                type="text"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                className="album-title-edit"
+                aria-label="Edit Album Title"
+              />
+            </h1>
+            <div className="edit-description-wrapper">
+              <textarea
+                value={editedDescription}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
+                className="album-desc-edit"
+                aria-label="Edit Album Description"
+              />
+              <div className="char-counter">
+                {editedDescription.length} / {MAX_DESCRIPTION_LENGTH}
+              </div>
+              {descriptionError && (
+                <p className="error-message" style={{ color: 'red' }}>
+                  {descriptionError}
+                </p>
+              )}
+            </div>
+            <div className="modal-actions">
+              <button onClick={handleSaveAlbumChanges} className="primary-button">
+                Save Changes
+              </button>
+              <button onClick={() => setIsAddPhotosModalOpen(true)} className="primary-button">
+                Add Photos
+              </button>
+              <button
+                onClick={handleDeletePhotos}
+                disabled={selectedPhotoIds.length === 0}
+                className="bulk-delete-button"
+              >
+                Delete Selected Photos
+              </button>
+              <button
+                onClick={handleAssignPhotos}
+                disabled={selectedPhotoIds.length === 0}
+                className="bulk-assign-button"
+              >
+                Move Selected Photos
+              </button>
+              <button onClick={handleDeleteAlbum} className="delete-album-button">
+                Delete Album
+              </button>
+              <button onClick={handleExitEditMode} className="cancel-edit-button">
+                Exit Edit Mode
               </button>
             </div>
-          )}
-        </>
-      ) : (
-        <>
-          <h1>
-            <input
-              type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="album-title-edit"
-              aria-label="Edit Album Title"
-            />
-          </h1>
-          <div className="edit-description-wrapper">
-            <textarea
-              value={editedDescription}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              className="album-desc-edit"
-              aria-label="Edit Album Description"
-            />
+          </>
+        )}
 
-            {/* Character Counter */}
-            <div className="char-counter">
-              {editedDescription.length} / {MAX_DESCRIPTION_LENGTH}
+        {/* Modals for adding/assigning photos */}
+        {isOwner && (
+          <AddPhotosModal
+            isOpen={isAddPhotosModalOpen}
+            onRequestClose={() => setIsAddPhotosModalOpen(false)}
+            albumId={currentAlbum.id}
+            onPhotosAdded={handlePhotosAdded}
+          />
+        )}
+        {isOwner && (
+          <AssignPhotosModal
+            isOpen={isAssignModalOpen}
+            onRequestClose={() => setIsAssignModalOpen(false)}
+            availableAlbums={availableAlbums}
+            selectedTargetAlbum={selectedTargetAlbum}
+            setSelectedTargetAlbum={setSelectedTargetAlbum}
+            loadingAvailableAlbums={loadingAvailableAlbums}
+            handleConfirmAssignment={handleConfirmAssignment}
+            assigning={assigning}
+          />
+        )}
+
+        {/* Render album chapters with associated photos */}
+        {chapters.map((chapter) => {
+          const photosForChapter = currentAlbum.photographs.filter(
+            (photo) => photo.chapterId === chapter.id
+          );
+          return (
+            <section
+              key={chapter.id}
+              id={`chapter-${chapter.id}`}
+              ref={(el) => (chapterRefs.current[`chapter-${chapter.id}`] = el)}
+              style={{ marginBottom: '50px' }}
+            >
+              <h2>{chapter.title}</h2>
+              {chapter.description && <p>{chapter.description}</p>}
+              {photosForChapter.length > 0 ? (
+                <div className="photo-grid">
+                  {photosForChapter.map((photo) => (
+                    <div key={photo.id} className="photo-card">
+                      <img src={photo.image_url} alt={photo.title} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No photos in this chapter.</p>
+              )}
+            </section>
+          );
+        })}
+
+        {/* Optionally, render unassigned photos */}
+        {unassignedPhotos.length > 0 && (
+          <section id="chapter-unassigned" style={{ marginBottom: '50px' }}>
+            <h2>Other Photos</h2>
+            <div className="photo-grid">
+              {unassignedPhotos.map((photo) => (
+                <div key={photo.id} className="photo-card">
+                  <img src={photo.image_url} alt={photo.title} />
+                </div>
+              ))}
             </div>
-            {/* Error message if too long */}
-            {descriptionError && (
-              <p className="error-message" style={{ color: 'red' }}>
-                {descriptionError}
-              </p>
-            )}
-          </div>
-
-          <div className="modal-actions">
-            <button onClick={handleSaveAlbumChanges} className="primary-button">
-              Save Changes
-            </button>
-            <button
-              onClick={() => setIsAddPhotosModalOpen(true)}
-              className="primary-button"
-            >
-              Add Photos
-            </button>
-            <button
-              onClick={handleDeletePhotos}
-              disabled={selectedPhotoIds.length === 0}
-              className="bulk-delete-button"
-            >
-              Delete Selected Photos
-            </button>
-            <button
-              onClick={handleAssignPhotos}
-              disabled={selectedPhotoIds.length === 0}
-              className="bulk-assign-button"
-            >
-              Move Selected Photos
-            </button>
-            <button onClick={handleDeleteAlbum} className="delete-album-button">
-              Delete Album
-            </button>
-            <button onClick={handleExitEditMode} className="cancel-edit-button">
-              Exit Edit Mode
-            </button>
-          </div>
-        </>
-      )}
-
-      {/* Add Photos Modal */}
-      {isOwner && (
-        <AddPhotosModal
-          isOpen={isAddPhotosModalOpen}
-          onRequestClose={() => setIsAddPhotosModalOpen(false)}
-          albumId={currentAlbum.id}
-          onPhotosAdded={handlePhotosAdded}
-        />
-      )}
-
-      {/* Assign Photos Modal */}
-      {isOwner && (
-        <AssignPhotosModal
-          isOpen={isAssignModalOpen}
-          onRequestClose={() => setIsAssignModalOpen(false)}
-          availableAlbums={availableAlbums}
-          selectedTargetAlbum={selectedTargetAlbum}
-          setSelectedTargetAlbum={setSelectedTargetAlbum}
-          loadingAvailableAlbums={loadingAvailableAlbums}
-          handleConfirmAssignment={handleConfirmAssignment}
-          assigning={assigning}
-        />
-      )}
-
-      {/* PhotoSection for the album photos (no filter) */}
-      <PhotoSection
-        scope="album"
-        albumSlug={currentAlbum.slug}
-        initialPhotos={currentAlbum.photographs}
-        enableFilters={false}
-        isOwner={isOwner}
-        isEditMode={isEditMode}
-        onSelectPhoto={toggleSelectPhoto}
-        selectedPhotoIds={selectedPhotoIds}
-      />
+          </section>
+        )}
+      </div>
     </div>
   );
 }
@@ -407,28 +482,21 @@ AlbumPage.getLayout = function getLayout(page) {
       {page}
     </PhotographerLayout>
   );
-};  
-// ------------------------------
-// getServerSideProps
-// ------------------------------
-
+};
 
 export async function getServerSideProps(context) {
   const { username, albumSlug } = context.params;
   const session = await getServerSession(context.req, context.res, authOptions);
-
-  let userId = session?.user?.id ?? -1;;
+  let userId = session?.user?.id ?? -1;
   let anonymousId = null;
   let viewUserId = null;
 
   if (session?.user?.id) {
     viewUserId = session.user.id;
   } else {
-    // Not logged in, so get or create an anonymousId cookie
     anonymousId = getOrSetAnonymousId(context.req, context.res);
   }
 
-  // Fetch the photographer (with fallback for subscription, etc.)
   const user = await prisma.user.findUnique({
     where: { username },
     include: {
@@ -449,7 +517,6 @@ export async function getServerSideProps(context) {
     },
   });
 
-  // If photographer not found, 404
   if (!user || !user.Photographer) {
     return { notFound: true };
   }
@@ -457,7 +524,6 @@ export async function getServerSideProps(context) {
   const photographer = user.Photographer;
   const photographerId = photographer.photo_id;
 
-  // Fetch the specific album (omitting created_at/updated_at)
   const albumData = await prisma.album.findUnique({
     where: {
       slug_photographer_id: {
@@ -466,19 +532,14 @@ export async function getServerSideProps(context) {
       },
     },
     select: {
-      // Basic fields
       id: true,
       slug: true,
       title: true,
       description: true,
-
-      // Relationship: favourites (only need to check if user has any)
       favourites: {
         where: { user_id: userId },
         select: { id: true },
       },
-
-      // Relationship: photographs (omitting created_at, updated_at)
       photographs: {
         select: {
           id: true,
@@ -492,6 +553,7 @@ export async function getServerSideProps(context) {
           exposure: true,
           focalLength: true,
           likes_count: true,
+          chapterId: true,
           likes: {
             where: { user_id: userId },
             select: { id: true },
@@ -515,22 +577,22 @@ export async function getServerSideProps(context) {
           },
         },
       },
-
-      // Relationship: main Photographer
       Photographer: {
         select: {
           photo_id: true,
           profile_picture: true,
-          // Add other fields if needed
         },
       },
-
-      // Relationship: Category
       Category: {
         select: {
           id: true,
           name: true,
         },
+      },
+      // Fetch chapters ordered by their "order" field
+      chapters: {
+        orderBy: { order: 'asc' },
+        select: { id: true, title: true, order: true },
       },
     },
   });
@@ -539,14 +601,9 @@ export async function getServerSideProps(context) {
     return { notFound: true };
   }
 
-  // Check if user has favourited the album
   const userHasAlbumFavourited = albumData.favourites.length > 0;
+  const isOwner = session?.user?.role === 'photographer' && session.user.username === username;
 
-  // Determine ownership
-  const isOwner =
-    session?.user?.role === 'photographer' && session.user.username === username;
-
-  // Build our final "album" object with booleans for isFavourited, isLiked, etc.
   const album = {
     ...albumData,
     isFavourited: userHasAlbumFavourited,
@@ -562,7 +619,6 @@ export async function getServerSideProps(context) {
     })),
   };
 
-  // Fetch all albums for the sidebar (also omitting created_at/updated_at)
   const allAlbumsData = await prisma.album.findMany({
     where: { photographer_id: photographerId },
     select: {
@@ -578,12 +634,11 @@ export async function getServerSideProps(context) {
     orderBy: { created_at: 'asc' },
   });
 
-  // Log view
   if (!isOwner) {
     await analyticsDb.albumViewEvent.create({
       data: {
         userId: viewUserId,
-        anonymousId: anonymousId, 
+        anonymousId: anonymousId,
         albumId: albumData.id,
       },
     });

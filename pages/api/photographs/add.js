@@ -56,6 +56,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid album ID' });
     }
 
+    // New: get chapterId from fields, if provided
+    const chapterId = fields.chapterId ? parseInt(fields.chapterId, 10) : null;
+
     const album = await prisma.album.findUnique({ where: { id: albumId } });
     if (!album || album.photographer_id !== photographerId) {
       return res.status(404).json({ error: 'Album not found or no permission' });
@@ -93,11 +96,8 @@ export default async function handler(req, res) {
         const originalMetadata = await sharp(absolutePath).metadata();
 
         let thumbnail_url, thumbnail_width, thumbnail_height;
-        // Check if the file size is greater than 3MB (3 * 1024 * 1024 bytes)
+        // If the file size is greater than 2MB, generate a thumbnail.
         if (image.size > 2 * 1024 * 1024) {
-          // Generate a thumbnail:
-          // 1. Resize the image to a fixed width (300px) while maintaining aspect ratio.
-          // 2. Convert to JPEG with high quality (90%) to avoid excessive compression.
           const thumbFilename = `thumb-${path.basename(image.filepath, path.extname(image.filepath))}.jpg`;
           const thumbPath = path.join(uploadDir, thumbFilename);
           await sharp(absolutePath)
@@ -110,7 +110,7 @@ export default async function handler(req, res) {
           thumbnail_width = thumbMetadata.width;
           thumbnail_height = thumbMetadata.height;
         } else {
-          // If the file is 3MB or smaller, use the original image as the thumbnail.
+          // Use original image dimensions for the thumbnail.
           thumbnail_url = relativePath;
           thumbnail_width = originalMetadata.width;
           thumbnail_height = originalMetadata.height;
@@ -129,6 +129,8 @@ export default async function handler(req, res) {
             thumbnail_width,
             thumbnail_height,
             ...metadata,
+            // New: Include chapterId if provided.
+            chapterId: chapterId,
           },
         });
       });

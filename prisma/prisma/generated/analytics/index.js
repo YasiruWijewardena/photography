@@ -152,7 +152,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/yasiruwijewardena/Desktop/Photography/photography/prisma/prisma/generated/analytics",
+      "value": "/Users/dinethpanagoda/Documents/Startup/Photography/photography/prisma/prisma/generated/analytics",
       "fromEnvVar": null
     },
     "config": {
@@ -166,7 +166,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/yasiruwijewardena/Desktop/Photography/photography/prisma/analytics.schema.prisma",
+    "sourceFilePath": "/Users/dinethpanagoda/Documents/Startup/Photography/photography/prisma/analytics.schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -189,8 +189,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "datasource analyticsDb {\n  provider = \"mysql\"\n  url      = env(\"ANALYTICS_DATABASE_URL\")\n}\n\ngenerator analyticsClient {\n  provider = \"prisma-client-js\"\n  output   = \"./prisma/generated/analytics\"\n}\n\nmodel ProfileViewEvent {\n  id            Int      @id @default(autoincrement())\n  userId        Int?\n  anonymousId   String?\n  // The user or photographer’s ID you’re viewing\n  profileUserId Int\n  createdAt     DateTime @default(now())\n\n  @@index([profileUserId])\n  @@index([createdAt])\n}\n\nmodel AlbumViewEvent {\n  id          Int      @id @default(autoincrement())\n  userId      Int?\n  anonymousId String?\n  albumId     Int\n  createdAt   DateTime @default(now())\n\n  @@index([albumId])\n  @@index([createdAt])\n}\n\nmodel PhotoViewEvent {\n  id          Int      @id @default(autoincrement())\n  userId      Int?\n  anonymousId String?\n  photoId     Int\n  createdAt   DateTime @default(now())\n\n  @@index([photoId])\n  @@index([createdAt])\n}\n",
-  "inlineSchemaHash": "160323d99319e20fae5f0bf760c44d377ed03a4f6694294f44bad65939023da3",
+  "inlineSchema": "datasource analyticsDb {\n  provider = \"mysql\"\n  url      = env(\"ANALYTICS_DATABASE_URL\")\n}\n\ngenerator analyticsClient {\n  provider = \"prisma-client-js\"\n  output   = \"../prisma/prisma/generated/analytics\"\n}\n\nmodel ProfileViewEvent {\n  id            Int      @id @default(autoincrement())\n  userId        Int?\n  anonymousId   String?\n  // The user or photographer’s ID you’re viewing\n  profileUserId Int\n  createdAt     DateTime @default(now())\n\n  @@index([profileUserId])\n  @@index([createdAt])\n}\n\nmodel AlbumViewEvent {\n  id          Int      @id @default(autoincrement())\n  userId      Int?\n  anonymousId String?\n  albumId     Int\n  createdAt   DateTime @default(now())\n\n  @@index([albumId])\n  @@index([createdAt])\n}\n\nmodel PhotoViewEvent {\n  id          Int      @id @default(autoincrement())\n  userId      Int?\n  anonymousId String?\n  photoId     Int\n  createdAt   DateTime @default(now())\n\n  @@index([photoId])\n  @@index([createdAt])\n}\n",
+  "inlineSchemaHash": "ddad2843e48939dd0618e2895c90b2f6199a0e2aaff3dde598c485f3743542d4",
   "copyEngine": true
 }
 

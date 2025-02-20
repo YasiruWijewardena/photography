@@ -9,37 +9,23 @@ import PropTypes from 'prop-types';
 export default async function handler(req, res) {
   // Authenticate the user
   const session = await getServerSession(req, res, authOptions);
-
-  // Debugging log to verify session details
   console.log('Session in /api/albums:', session);
-
-  // Authorization: Only allow photographers
   if (!session || session.user.role !== 'photographer') {
-    console.log('Unauthorized access attempt:', {
-      session,
-      requiredRole: 'photographer',
-    });
+    console.log('Unauthorized access attempt:', { session, requiredRole: 'photographer' });
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Initialize photographerId
+  // Get the photographer's ID from the Photographer table using session.user.id
   let photographerId;
-
   try {
-    // Fetch the Photographer record associated with the current user
     const photographer = await prisma.photographer.findUnique({
-      where: { photo_id: session.user.id }, // Correctly using photo_id to reference User.id
+      where: { photo_id: session.user.id },
     });
-
-    // Debugging log to verify photographer retrieval
     console.log('Photographer fetched:', photographer);
-
     if (!photographer) {
       console.log('Photographer not found for user id:', session.user.id);
       return res.status(403).json({ error: 'Photographer profile not found.' });
     }
-
-    // Assign photographerId using photo_id from Photographer
     photographerId = photographer.photo_id;
     console.log('Photographer ID:', photographerId);
   } catch (error) {
@@ -47,46 +33,36 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error' });
   }
 
-  // Handle GET and POST requests
   if (req.method === 'GET') {
-    const { excludeId } = req.query; // Fetch excludeId from query parameters
-
-    // Build the 'where' clause for Prisma query
-    const where = {
-      photographer_id: photographerId, // Ensure albums belong to the authenticated photographer
-    };
-
+    const { excludeId } = req.query;
+    const where = { photographer_id: photographerId };
     if (excludeId) {
       const excludeAlbumId = Number(excludeId);
       if (isNaN(excludeAlbumId)) {
         console.log('Invalid excludeId format:', excludeId);
         return res.status(400).json({ error: 'Invalid excludeId format' });
       }
-      where.id = { not: excludeAlbumId }; // Exclude the specified album
+      where.id = { not: excludeAlbumId };
       console.log('Excluding album ID:', excludeAlbumId);
     }
 
     try {
-      // Fetch albums based on the 'where' clause
       const albums = await prisma.album.findMany({
         where,
         orderBy: { created_at: 'desc' },
-        include: { Category: true }, // Include related Category data
+        include: { Category: true, chapters: true },
       });
-
-      // Debugging log to verify fetched albums
       console.log('Fetched albums:', albums);
-
       return res.status(200).json({ albums });
     } catch (error) {
       console.error('Error fetching albums:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   } else if (req.method === 'POST') {
-    const { title, description, category_id } = req.body;
+    // Expecting title, description, category_id and optionally chapters from req.body
+    const { title, description, category_id, chapters } = req.body;
     const category_id_int = Number(category_id);
 
-    // Input Validation
     if (!title) {
       console.log('Title is required for album creation.');
       return res.status(400).json({ error: 'Title is required' });
@@ -96,7 +72,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid category ID format' });
     }
 
-    // Validate the existence of the category
+    // Validate category existence
     const category = await prisma.category.findUnique({ where: { id: category_id_int } });
     if (!category) {
       console.log('Invalid category:', category_id_int);
@@ -107,38 +83,36 @@ export default async function handler(req, res) {
       // Generate a unique slug for the album
       const slug = await generateUniqueSlug(title, photographerId);
 
-      // Create the new album with the generated slug
+      // Create the new album and, if provided, create nested chapters
       const album = await prisma.album.create({
         data: {
           title,
           description: description || '',
           photographer_id: photographerId,
           category_id: category_id_int,
-          slug, // Assign the generated slug
+          slug,
+          // Create chapters if provided
+          chapters: chapters && chapters.length > 0 ? { create: chapters } : undefined,
         },
         include: {
           Category: true,
-          photographs: true, // Include related photographs if needed
-          // Include other relations as necessary
+          photographs: true,
+          chapters: true,
         },
       });
 
-      // Debugging log to confirm album creation
       console.log('Album created successfully:', album);
-
       return res.status(200).json({ album });
     } catch (error) {
       console.error('Error creating album:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   } else {
-    // Method Not Allowed
     res.setHeader('Allow', ['GET', 'POST']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
 
-// PropTypes validation for handler function
 handler.propTypes = {
   req: PropTypes.object.isRequired,
   res: PropTypes.object.isRequired,

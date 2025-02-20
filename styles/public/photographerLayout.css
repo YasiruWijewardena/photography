@@ -8,37 +8,27 @@ body.photographer-layout {
   overflow: hidden;
 }
 
-.photogrpager-sidebar-container {
-  flex-shrink: 0; 
-  width: 250px; 
-  overflow: hidden;
-
+/* Sidebar: Always hidden by default */
+.photographer-sidebar-container {
+  position: fixed;
+  top: 0;
+  left: -100%; /* Hidden off-screen */
+  width: 70%;
+  max-width: 300px;
+  height: 100%;
+  z-index: 3000;
+  background-color: #fff;
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  overflow-y: auto;
 }
 
-.photographer-content-container {
-  flex: 1;
-  overflow-Y: auto;
-  overflow-X: hidden;
-  /* padding-left: 50px; */
-  padding-bottom: 150px;
+/* When .open is added, sidebar slides in */
+.photographer-sidebar-container.open {
+  left: 0;
 }
 
-/* .photographer-layout {
-    display: grid;
-    grid-template-columns: 0.5fr 3fr;
-    height: 100vh;
-    border: 0;
-    padding-top: 0px;
-    outline: none;
-}
-
-.photographer-content {
-    border-radius: 20px 0 0 20px;
-    padding: 20px;
-} */
-
-/* sidebars */
-/* main sidebar */
+/* Sidebar inner container (if any) */
 .sidebar-container {
   width: 210px;
   height: 100vh;
@@ -55,11 +45,10 @@ body.photographer-layout {
   justify-content: center;
   height: 100%;
   padding: 0;
-  
 }
 
 .sidebar-container ul li {
-  padding: 20px 20px 20px 20px;
+  padding: 20px;
   text-align: left;
 }
 
@@ -76,17 +65,17 @@ body.photographer-layout {
 
 .sidebar-container .sidebar-link-home {
   font-family: "Poppins", serif;
-font-size: 18px;
-line-height: 1.7em;
-color: #ffffff;
-background-color: #000000;
-border-radius: 20px;
-display: flex;
-align-items: center;
-padding: 10px 20px;
-column-gap: 8px;
-margin-top: 20px;
-width: fit-content;
+  font-size: 18px;
+  line-height: 1.7em;
+  color: #ffffff;
+  background-color: #000000;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  column-gap: 8px;
+  margin-top: 20px;
+  width: fit-content;
 }
 
 .sidebar-container .back-button {
@@ -123,9 +112,9 @@ width: fit-content;
   transform: translateX(-100%);
 }
 
-
+/* Always show hamburger button so user can open sidebar */
 .mobile-hamburger-btn {
-  display: none; /* default hidden on large screens */
+  display: flex !important;
   position: fixed;
   top: 70px; 
   left: 0px;
@@ -133,14 +122,14 @@ width: fit-content;
   border: none;
   color: #000;
   cursor: pointer;
-  z-index: 2000; /* above content but below sidebar if 'open'? tweak as needed */
+  z-index: 2000;
   font-size: 1.6em;
   padding: 8px;
   border-radius: 0 50% 50% 0;
   width: fit-content;
   box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
   transition: transform 0.3s ease-in-out;
-  transform: translateX(0); /* default visible */
+  transform: translateX(0);
 }
 
 .sidebar-overlay {
@@ -149,11 +138,11 @@ width: fit-content;
   top: 0; left: 0; 
   right: 0; bottom: 0;
   background-color: rgba(0,0,0,0.5);
-  z-index: 2500; /* just below the sidebar (which might be 3000) */
+  z-index: 2500;
 }
 
 .sidebar-close-button {
-  display: none; /* hidden on desktop */
+  display:flex;
   background: none;
   border: none;
   font-size: 1.4em;
@@ -164,7 +153,6 @@ width: fit-content;
   color: #444;
   z-index: 10;
 }
-
 
 /* sub sidebar */
 .sub-item:before {
@@ -790,6 +778,20 @@ text-align: left;
   background-clip: padding-box;
 }
 
+.photo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  grid-auto-rows: auto; /* Let rows size automatically */
+}
+
+@media screen and (min-width: 1024px) {
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: auto;
+  }
+}
+
 /* Photo Card */
 .photo-card {
   position: relative;
@@ -798,11 +800,14 @@ text-align: left;
   transition: transform 0.2s;
   background-color: #f9f9f9;
   cursor: pointer;
+  height: auto;
 }
 
 .photo-card img {
+  display: block;
   width: 100%!important;
-  height: 100%!important;
+  height: auto!important;
+  object-fit: contain; /* preserves aspect ratio, letterboxing only if container forces a different ratio */
   border-radius: 10px;
 }
 
@@ -832,8 +837,9 @@ text-align: left;
 }
 
 .photo-card.landscape img {
-  height: 100%;
-  width: 100%;
+  width: 100%!important;
+  height: auto!important;
+  object-fit: contain;
 }
 
 /* Portrait Images */
@@ -843,8 +849,10 @@ text-align: left;
 
 .photo-card.portrait img {
   height: 100%;
-  width: 100%;
+  height: auto!important;
+  object-fit: contain;
 }
+
 
 /* Responsive Adjustments */
 @media (max-width: 800px) {

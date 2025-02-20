@@ -135,8 +135,24 @@ model Album {
   likes           Like[]        @relation("AlbumLikes")
   favourites      Favourite[]   @relation("AlbumFavourites")
 
+  chapters        Chapter[]
+
   @@unique([slug, photographer_id], name: "slug_photographer_id")
   @@map("albums")
+}
+
+model Chapter {
+  id          Int         @id @default(autoincrement())
+  album       Album       @relation(fields: [albumId], references: [id])
+  albumId     Int
+  title       String      @db.VarChar(100)
+  description String?     @db.VarChar(255)
+  order       Int         // This will allow you to sort chapters (e.g., 1, 2, 3, ...)
+  created_at  DateTime    @default(now())
+
+  photographs Photograph[]  // Photos that are part of this chapter
+
+  @@map("chapters")
 }
 
 model Photograph {
@@ -167,6 +183,10 @@ model Photograph {
   favourites      Favourite[]   @relation("PhotographFavourites")
   reviews         Review[]      @relation("PhotographReviews")
   tags            Tag[]         @relation("PhotographTags")
+
+  // New optional field for chapter assignment
+  chapterId        Int? 
+  Chapter          Chapter?      @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   @@map("photographs")
 }

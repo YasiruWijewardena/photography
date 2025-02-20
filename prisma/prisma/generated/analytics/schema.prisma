@@ -5,7 +5,7 @@ datasource analyticsDb {
 
 generator analyticsClient {
   provider = "prisma-client-js"
-  output   = "./prisma/generated/analytics"
+  output   = "../prisma/prisma/generated/analytics"
 }
 
 model ProfileViewEvent {
