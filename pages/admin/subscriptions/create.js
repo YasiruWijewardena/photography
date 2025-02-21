@@ -127,7 +127,7 @@ export default function CreateSubscription() {
             ))}
           </div>
           <div className="subs-submit-container">
-            <button type="submit">Create Subscription Plan</button>
+            <button type="submit" className='admin-primary-btn'>Create Subscription Plan</button>
           </div>
         </form>
       </div>

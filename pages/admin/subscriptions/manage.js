@@ -204,7 +204,7 @@ export default function ManageSubscriptions() {
               </div>
               <div className="subs-submit-container">
                 <button type="button" onClick={deleteSubscription}>Delete Subscription Plan</button>
-                <button type="submit">Update Subscription Plan</button>
+                <button type="submit" className='admin-secondary-btn'>Update Subscription Plan</button>
               </div>
             </form>
           </div>

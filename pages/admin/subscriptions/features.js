@@ -5,7 +5,7 @@ import { authOptions } from '../../api/auth/[...nextauth]';
 
 export default function ManageFeatures() {
   const [features, setFeatures] = useState([]);
-  const [newFeature, setNewFeature] = useState({ key: '', description: '', dataType: 'string' });
+  const [newFeature, setNewFeature] = useState({ key: '', description: '', dataType: 'number' });
 
   useEffect(() => {
     fetchFeatures();
@@ -35,7 +35,7 @@ export default function ManageFeatures() {
     });
     if (res.ok) {
       alert('Feature added successfully');
-      setNewFeature({ key: '', description: '', dataType: 'string' });
+      setNewFeature({ key: '', description: '', dataType: 'number' });
       fetchFeatures();
     } else {
       alert('Error adding feature');
@@ -95,8 +95,8 @@ export default function ManageFeatures() {
           
           
           <select name="dataType" value={newFeature.dataType} onChange={handleNewFeatureChange}>
-            <option value="string">String</option>
             <option value="number">Number</option>
+            <option value="storage">Storage</option>
             <option value="boolean">Boolean</option>
           </select>
           <button type="submit">Add Feature</button>
