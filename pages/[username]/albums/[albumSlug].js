@@ -11,6 +11,7 @@ import prisma from '../../../lib/prisma';
 import axios from 'axios';
 import AddPhotosModal from '../../../components/AddPhotosModal';
 import AssignPhotosModal from '../../../components/AssignPhotosModal';
+import PhotoSection from '../../../components/PhotoSection';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import { Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
@@ -120,11 +121,18 @@ export default function AlbumPage({
   }, [chapters, currentAlbum]);
 
   // Compute scroll progress as a percentage.
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
-    setScrollProgress(progress);
-  };
+  // Remove the onScroll from the container and add a window scroll listener:
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      // Use document.documentElement for cross-browser support.
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleWindowScroll);
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, []);
 
   const handleDescriptionChange = (value) => {
     setEditedDescription(value);
@@ -287,9 +295,24 @@ export default function AlbumPage({
 
   // Handler for timeline clicks – scroll to the corresponding chapter section.
   const handleTimelineClick = (chapterId) => {
-    const el = chapterRefs.current[`chapter-${chapterId}`];
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (chapterId === 'end') {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      });
+    } else {
+      const el = chapterRefs.current[`chapter-${chapterId}`];
+      if (el) {
+        // Get the element's position relative to the document
+        const elementTop = el.getBoundingClientRect().top + window.pageYOffset;
+        // Calculate an offset (25% of the viewport height)
+        const offset = window.innerHeight * 0.25;
+        // Scroll so that the element's top is offset by 25% of the viewport height
+        window.scrollTo({
+          top: elementTop - offset,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
@@ -308,9 +331,8 @@ export default function AlbumPage({
 
       <div
         className="album-content"
+        style={{ flex: 1, padding: '0 20px 0 150px' }}
         ref={albumContentRef}
-        style={{ flex: 1, overflowY: 'auto', height: '100vh', padding: '0 20px' }}
-        onScroll={handleScroll}
       >
         {/* Album Title & Description */}
         {!isEditMode ? (
@@ -416,26 +438,28 @@ export default function AlbumPage({
 
         {/* Render album chapters with associated photos */}
         {chapters.map((chapter) => {
+          // Filter photos for the current chapter.
           const photosForChapter = currentAlbum.photographs.filter(
             (photo) => photo.chapterId === chapter.id
           );
+
           return (
             <section
               key={chapter.id}
               id={`chapter-${chapter.id}`}
-              ref={(el) => (chapterRefs.current[`chapter-${chapter.id}`] = el)}
               style={{ marginBottom: '50px' }}
+              ref={(el) => (chapterRefs.current[`chapter-${chapter.id}`] = el)}
             >
               <h2>{chapter.title}</h2>
-              {chapter.description && <p>{chapter.description}</p>}
               {photosForChapter.length > 0 ? (
-                <div className="photo-grid">
-                  {photosForChapter.map((photo) => (
-                    <div key={photo.id} className="photo-card">
-                      <img src={photo.image_url} alt={photo.title} />
-                    </div>
-                  ))}
-                </div>
+                <PhotoSection
+                  scope="album"
+                  albumSlug={currentAlbum.slug}
+                  // Pass the filtered photos to PhotoSection
+                  initialPhotos={photosForChapter}
+                  enableFilters={false}  // Disable filters if not needed for chapter views
+                  isOwner={isOwner}
+                />
               ) : (
                 <p>No photos in this chapter.</p>
               )}

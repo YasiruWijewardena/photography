@@ -1,11 +1,15 @@
-body.photographer-layout {
+/* body.photographer-layout {
   overflow: hidden;
-}
+} */
 
 .photographer-page {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  /* height: 100vh;
+  overflow: hidden; */
+}
+
+.photographer-content-container {
+  width: 100%;
 }
 
 /* Sidebar: Always hidden by default */

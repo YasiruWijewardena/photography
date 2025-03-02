@@ -89,11 +89,18 @@ export default async function handler(req, res) {
           const thumbPath = path.join(process.cwd(), 'public', photo.thumbnail_url);
           await safeUnlink(thumbPath);
         }
-
-        // Then remove from DB
+    
+        // Remove all photographs from DB
         await prisma.photograph.deleteMany({ where: { album_id: album.id } });
-        await prisma.album.delete({ where: { slug_photographer_id: { slug, photographer_id: photographerId } } });
-
+    
+        // Delete chapters associated with this album
+        await prisma.chapter.deleteMany({ where: { albumId: album.id } });
+    
+        // Finally, delete the album
+        await prisma.album.delete({ 
+          where: { slug_photographer_id: { slug, photographer_id: photographerId } } 
+        });
+    
         return res.status(200).json({ message: 'Album deleted successfully' });
       } catch (err) {
         console.error('Error deleting album:', err);

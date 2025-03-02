@@ -1,74 +1,60 @@
-// components/Timeline.js
-
 import PropTypes from 'prop-types';
 import React from 'react';
+import '../styles/public/timeline.css';
 
 export default function Timeline({ chapterPositions, progress, onChapterClick }) {
+  // The total number of labels is the number of chapters plus one for the "End" label.
+  const totalLabels = chapterPositions.length + 1;
+
+  // Create an array of label objects.
+  // For index 0 to totalLabels - 2, use the chapter title.
+  // For the last label, use the word "End."
+  const labels = chapterPositions.map((chapter, index) => ({
+    id: chapter.chapterId,
+    title: chapter.title,
+    top: (index / (totalLabels - 1)) * 100,
+  }));
+  labels.push({
+    id: 'end',
+    title: 'End',
+    top: 100,
+  });
+
   return (
-    <div className="timeline" style={styles.timelineContainer}>
-      {/* Animated progress bar */}
+    <div className="timelineContainer">
+      {/* Animated progress bar, its height corresponds to the scroll progress */}
       <div
-        className="timeline-progress"
-        style={{ ...styles.timelineProgress, height: `${progress}%` }}
+        className="timelineProgress"
+        style={{ height: `${progress}%` }}
       />
-      {/* Render chapter labels absolutely positioned based on computed offsets */}
-      {chapterPositions.map((pos) => (
+      {/* Render chapter labels (and the "End" label) evenly spaced */}
+      {labels.map((label) => (
         <div
-          key={pos.chapterId}
-          className="timeline-label"
-          style={{ ...styles.timelineLabel, top: `${pos.offsetPercent}%` }}
-          onClick={() => onChapterClick(pos.chapterId)}
+          key={label.id}
+          className="timelineLabel"
+          style={{ top: `${label.top}%` }}
+          onClick={() => {
+            // Only trigger chapter click for chapter labels (not the "End" label)
+            if (label.id !== 'end') {
+              onChapterClick(label.id);
+            }
+          }}
         >
-          {pos.title}
+          {label.title}
         </div>
       ))}
     </div>
   );
 }
 
-const styles = {
-  timelineContainer: {
-    position: 'sticky',
-    top: '20px',
-    width: '80px', // collapsed sidebar width
-    padding: '5px',
-    background: '#ffffff',
-    borderRight: 'none', // remove border for a cleaner look
-    height: '80vh',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  timelineProgress: {
-    position: 'absolute',
-    left: '50%',
-    transform: 'translateX(-50%)', // Only translate horizontally
-    top: 0,
-    width: '3px',
-    backgroundColor: '#000000',
-    transition: 'height 0.3s ease-out',
-    zIndex: 1,
-  },
-  timelineLabel: {
-    position: 'absolute',
-    left: '50%',
-    transform: 'translateX(-50%)', // Remove vertical centering
-    padding: '4px 8px',
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    zIndex: 2,
-    fontSize: '15px',
-    textAlign: 'center',
-    whiteSpace: 'nowrap',
-  },
-};
-
 Timeline.propTypes = {
+  // Expect an array of chapter objects that include an id and a title.
   chapterPositions: PropTypes.arrayOf(
     PropTypes.shape({
       chapterId: PropTypes.number.isRequired,
       title: PropTypes.string.isRequired,
-      offsetPercent: PropTypes.number.isRequired,
+      // offsetPercent is no longer used for positioning in this version.
+      offsetPercent: PropTypes.number,
     })
   ).isRequired,
   progress: PropTypes.number,
