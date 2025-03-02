@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef  } from 'react';
 import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
@@ -26,22 +26,22 @@ export default function Navbar() {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [dropdownAnimation, setDropdownAnimation] = useState('');
 
+  const lastScrollYRef = useRef(0);
+
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = scrollInfo.scrollY;
+    const currentScrollY = scrollInfo.scrollY;
 
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowNavbar(false);
-      } else {
-        setShowNavbar(true);
-      }
-    
-      setHasShadow(currentScrollY > 0);
-      setLastScrollY(currentScrollY);
-    };
+    // Compare current scroll with the last scroll stored in ref
+    if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
+      setShowNavbar(false);
+    } else {
+      setShowNavbar(true);
+    }
 
-    handleScroll(); 
-  }, [scrollInfo.scrollY, lastScrollY]);
+    setHasShadow(currentScrollY > 0);
+    // Update the ref with the current scroll position
+    lastScrollYRef.current = currentScrollY;
+  }, [scrollInfo.scrollY]);
 
   const openDropdown = () => {
     setIsDropdownVisible(true);
